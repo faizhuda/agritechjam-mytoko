@@ -23,7 +23,7 @@ export default function Footer() {
         <div className="text-center md:text-right text-sm text-slate-500">
           <p>© {new Date().getFullYear()} Snackku. All rights reserved.</p>
           <p className="mt-1">
-            Made by <span className="font-medium text-slate-700">My Toko</span>
+            Made by <span className="font-medium text-slate-700">MyToko</span>
           </p>
         </div>
       </div>
