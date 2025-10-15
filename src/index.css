@@ -6,3 +6,11 @@
   html { scroll-behavior: smooth; }
   ::selection { @apply bg-slate-900 text-white; }
 }
+
+/* Biar layout gak geser saat scrollbar muncul/hilang */
+html { scrollbar-gutter: stable; }
+
+/* Fallback browser lama */
+@supports not (scrollbar-gutter: stable) {
+  html { overflow-y: scroll; }
+}
