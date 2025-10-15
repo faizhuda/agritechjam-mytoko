@@ -1,5 +1,6 @@
 # 🛍️ AgritechJam MyToko
 
+Halo Gais!
 Aplikasi toko online sederhana berbasis **React + Vite + TailwindCSS + Supabase**  
 Dibuat untuk kompetisi **AgriTechJam 2025**.
 
@@ -8,6 +9,7 @@ Dibuat untuk kompetisi **AgriTechJam 2025**.
 ## 🚀 Quick Start
 
 ### 1️⃣ Clone Repository
+
 ```bash
 git clone https://github.com/faizhuda/agritechjam-mytoko.git
 cd agritechjam-mytoko
@@ -16,6 +18,7 @@ npm install
 ```
 
 ### 2️⃣ Setup Environment
+
 Buat file `.env` di root project (bukan di `src`):
 
 ```
@@ -27,6 +30,7 @@ VITE_SUPABASE_ANON_KEY=<your-anon-key>
 > Nilai diambil dari Supabase → **Project Settings → API**.
 
 ### 3️⃣ Jalankan Project
+
 ```bash
 npm run dev
 ```
@@ -57,6 +61,7 @@ src/
 ---
 
 ## 🛠️ Tech Stack
+
 - **React + Vite** → Frontend framework & bundler
 - **TailwindCSS v3** → Styling cepat & konsisten
 - **React Router DOM** → Routing antar halaman
@@ -65,14 +70,15 @@ src/
 ---
 
 ## 🌿 Branch Workflow
-| Branch | Fungsi |
-|--------|---------|
-| `main` | Kode stabil / siap deploy |
-| `dev` | Integrasi harian |
+
+| Branch      | Fungsi                              |
+| ----------- | ----------------------------------- |
+| `main`      | Kode stabil / siap deploy           |
+| `dev`       | Integrasi harian                    |
 | `feature/*` | Pengembangan fitur baru per anggota |
 
-> ✨ Semua fitur dikembangkan di `feature/<nama-fitur>` lalu di-*merge* ke `dev` via Pull Request.  
-> Setelah `dev` stabil, baru di-*merge* ke `main`.
+> ✨ Semua fitur dikembangkan di `feature/<nama-fitur>` lalu di-_merge_ ke `dev` via Pull Request.  
+> Setelah `dev` stabil, baru di-_merge_ ke `main`.
 
 ---
 
@@ -98,14 +104,16 @@ src/
 ---
 
 ## 👥 Tim Pengembang
-| Nama | Peran | Kontak |
-|------|--------|--------|
-| **Faiz Naufal Huda** | Project Lead / Backend | — |
-| **Hilfani Rayyanne Subagio** | Frontend Dev | — |
-| **Daffa Naufal Mumtaz** | Fullstack / Deployment | — |
+
+| Nama                         | Peran                  | Kontak |
+| ---------------------------- | ---------------------- | ------ |
+| **Faiz Naufal Huda**         | Project Lead / Backend | —      |
+| **Hilfani Rayyanne Subagio** | Frontend Dev           | —      |
+| **Daffa Naufal Mumtaz**      | Fullstack / Deployment | —      |
 
 ---
 
 ## 📜 Lisensi
+
 Proyek ini dikembangkan untuk **Kompetisi AgriTechJam 2025**  
 © 2025 MyToko Team. All rights reserved.
