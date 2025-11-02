@@ -69,6 +69,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     )
   }
 
+  // Use 0 stars when there are no reviews
+  const averageRating = reviews.length > 0
+    ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+    : 0
+
   const handleAddToCart = () => {
     addToCart({
       id: product.id,
@@ -116,13 +121,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     <Star
                       key={i}
                       size={20}
-                      className={i < Math.floor(product.rating) ? "fill-red-600 text-red-600" : "text-gray-300"}
+                      className={i < Math.floor(averageRating) ? "fill-red-600 text-red-600" : "text-gray-300"}
                     />
                   ))}
                 </div>
-                <span className="text-black font-bold">
-                  {product.rating} ({product.reviews} reviews)
-                </span>
+                <span className="text-black font-bold">{averageRating.toFixed(1)} ({reviews.length} reviews)</span>
               </div>
             </div>
 

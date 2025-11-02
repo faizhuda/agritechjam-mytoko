@@ -52,14 +52,24 @@ export function useAuth() {
 
   const signInWithGoogle = useCallback(async (opts?: { redirectTo?: string }) => {
     if (!isSupabaseConfigured()) throw new Error("Supabase env not configured")
-    const { error } = await supabase.auth.signInWithOAuth({
+
+    const redirectTo =
+      opts?.redirectTo ?? (typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined)
+
+    // Ask supabase for the auth URL with our redirect, then navigate ourselves
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo:
-          opts?.redirectTo ?? (typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined),
+        redirectTo,
+        queryParams: redirectTo ? { redirect_to: redirectTo } : undefined,
+        skipBrowserRedirect: true,
       },
     })
     if (error) throw error
+    if (data?.url) {
+      // Ensure we navigate using the URL that contains our redirect target
+      if (typeof window !== "undefined") window.location.assign(data.url)
+    }
   }, [])
 
   const signOut = useCallback(async () => {

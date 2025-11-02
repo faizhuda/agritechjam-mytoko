@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Star, ShoppingCart } from "lucide-react"
 import type { Product } from "@/lib/product-data"
+import { fetchReviewStatsForProductIds } from "@/lib/db/products"
 import { useCart } from "@/lib/cart-context"
 import { normalizeSearch, formatIDR } from "@/lib/utils"
 import { useRouter } from "next/navigation"
@@ -22,6 +23,7 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
   const maxPrice = prices.length ? Math.ceil(Math.max(...prices)) : 0
   const [priceRange, setPriceRange] = useState<[number, number]>([minPrice, maxPrice])
   const [addedItem, setAddedItem] = useState<number | null>(null)
+  const [stats, setStats] = useState<Record<number, { count: number; average: number }>>({})
 
   // Keep the URL's `search` param in sync with what's typed here
   // so the Navbar search reads the same value.
@@ -50,6 +52,13 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
     return () => window.clearTimeout(debounceRef.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm])
+
+  // Fetch review stats for the currently visible set when product list changes
+  useEffect(() => {
+    const ids = products.map((p) => p.id)
+    if (ids.length === 0) return
+    fetchReviewStatsForProductIds(ids).then(setStats).catch(() => setStats({}))
+  }, [products])
 
   const handleAddToCart = (product: Product) => {
     addToCart({ id: product.id, name: product.name, price: product.price, quantity: 1, image: product.image })
@@ -173,14 +182,17 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
                     </h3>
                   </Link>
                   <div className="flex items-center gap-1 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        size={16}
-                        className={`${i < Math.floor(product.rating) ? "fill-red-600 text-red-600" : "text-gray-300"}`}
-                      />
-                    ))}
-                    <span className="text-xs text-black font-bold ml-1">({product.rating})</span>
+                    {(() => {
+                      const avg = stats[product.id]?.average ?? 0
+                      return (
+                        <>
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} size={16} className={`${i < Math.floor(avg) ? "fill-red-600 text-red-600" : "text-gray-300"}`} />
+                          ))}
+                          <span className="text-xs text-black font-bold ml-1">{avg.toFixed(1)} · {stats[product.id]?.count ?? 0}</span>
+                        </>
+                      )
+                    })()}
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xl font-bold text-blue-600">{formatIDR(product.price)}</span>

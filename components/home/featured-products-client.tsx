@@ -4,12 +4,19 @@ import Link from "next/link"
 import { Star, ShoppingCart } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
 import { formatIDR } from "@/lib/utils"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { Product } from "@/lib/product-data"
+import { fetchReviewStatsForProductIds } from "@/lib/db/products"
 
 export default function FeaturedProductsClient({ products }: { products: Product[] }) {
   const { addToCart } = useCart()
   const [addedItem, setAddedItem] = useState<number | null>(null)
+  const [stats, setStats] = useState<Record<number, { count: number; average: number }>>({})
+
+  useEffect(() => {
+    const ids = products.map((p) => p.id)
+    fetchReviewStatsForProductIds(ids).then(setStats).catch(() => setStats({}))
+  }, [products])
 
   const handleAddToCart = (product: Product) => {
     addToCart({
@@ -46,14 +53,17 @@ export default function FeaturedProductsClient({ products }: { products: Product
                 </h3>
               </Link>
               <div className="flex items-center gap-1 mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={16}
-                    className={i < Math.floor(product.rating ?? 0) ? "fill-red-600 text-red-600" : "text-gray-300"}
-                  />
-                ))}
-                <span className="text-sm text-black font-semibold ml-2">({product.rating ?? 0})</span>
+                {(() => {
+                  const avg = stats[product.id]?.average ?? 0
+                  return (
+                    <>
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} size={16} className={i < Math.floor(avg) ? "fill-red-600 text-red-600" : "text-gray-300"} />
+                      ))}
+                      <span className="text-sm text-black font-semibold ml-2">{avg.toFixed(1)} · {stats[product.id]?.count ?? 0}</span>
+                    </>
+                  )
+                })()}
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xl font-bold text-blue-600">{formatIDR(product.price)}</span>

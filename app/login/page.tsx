@@ -131,9 +131,21 @@ export default function LoginPage() {
                     toast({ title: "Google sign-in failed", description: err?.message ?? "Check provider config" })
                   }
                 }}
-                className="w-full py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-100 transition font-bold text-black text-sm"
+                className="w-full py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-100 transition font-bold text-black text-sm flex items-center justify-center gap-2"
               >
-                Continue with Google
+                <svg
+                  className="w-5 h-5"
+                  viewBox="0 0 48 48"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path fill="#FFC107" d="M43.6 20.5h-1.9v-.1H24v7.2h11.3C33.9 31.6 29.5 35 24 35c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.1-5.1C33.7 6 29.1 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.9z"/>
+                  <path fill="#FF3D00" d="M6.3 14.7l5.9 4.3C13.6 16 18.4 12 24 12c3 0 5.7 1.1 7.8 2.9l5.1-5.1C33.7 6 29.1 4 24 4 15.4 4 8 8.9 6.3 14.7z"/>
+                  <path fill="#4CAF50" d="M24 44c5.4 0 10.4-2.1 14.1-5.5l-6.5-5.5C29.7 34.8 27 36 24 36c-5.5 0-9.9-3.4-11.6-8.2l-6.6 5.1C8 39 15.4 44 24 44z"/>
+                  <path fill="#1976D2" d="M43.6 20.5h-1.9v-.1H24v7.2h11.3c-1.3 3.8-4.9 6.3-9.3 6.3-5.5 0-9.9-3.4-11.6-8.2l-6.6 5.1C8 39 15.4 44 24 44c8 0 14.8-5.4 17.1-12.9.8-2.3 1.2-4.7 1.2-7.1 0-1.3-.1-2.7-.4-3.9z"/>
+                </svg>
+                <span>Google</span>
               </button>
             </div>
           </div>

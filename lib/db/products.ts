@@ -106,3 +106,59 @@ export async function fetchReviewsByProductId(productId: number): Promise<Review
     helpful: Number(r.helpful ?? 0),
   }))
 }
+
+/**
+ * Fetch aggregated review stats (count and average rating) for a set of product IDs.
+ * Uses Supabase when configured; otherwise computes from local sampleReviews.
+ */
+export async function fetchReviewStatsForProductIds(
+  productIds: number[]
+): Promise<Record<number, { count: number; average: number }>> {
+  const result: Record<number, { count: number; average: number }> = {}
+
+  if (!productIds || productIds.length === 0) return result
+
+  if (!isSupabaseConfigured()) {
+    const filtered = sampleReviews.filter((r) => productIds.includes(r.productId))
+    const sums: Record<number, { sum: number; count: number }> = {}
+    for (const r of filtered) {
+      const key = r.productId
+      if (!sums[key]) sums[key] = { sum: 0, count: 0 }
+      sums[key].sum += r.rating
+      sums[key].count += 1
+    }
+    for (const id of productIds) {
+      const s = sums[id]
+      const count = s?.count ?? 0
+      const average = count > 0 ? s!.sum / count : 0
+      result[id] = { count, average }
+    }
+    return result
+  }
+
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("product_id, rating")
+    .in("product_id", productIds)
+
+  if (error) {
+    console.error("Supabase fetchReviewStatsForProductIds error:", error)
+    return result
+  }
+
+  const sums: Record<number, { sum: number; count: number }> = {}
+  for (const row of data || []) {
+    const pid = Number(row.product_id)
+    if (!sums[pid]) sums[pid] = { sum: 0, count: 0 }
+    sums[pid].sum += Number(row.rating ?? 0)
+    sums[pid].count += 1
+  }
+  for (const id of productIds) {
+    const s = sums[id]
+    const count = s?.count ?? 0
+    const average = count > 0 ? s!.sum / count : 0
+    result[id] = { count, average }
+  }
+
+  return result
+}
