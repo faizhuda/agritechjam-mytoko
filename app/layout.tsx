@@ -5,6 +5,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import Navbar from "@/components/navbar"
 import { CartProvider } from "@/lib/cart-context"
+import { WishlistProvider } from "@/lib/wishlist-context"
 import { Toaster } from "@/components/ui/toaster"
 
 const geistSans = Geist({ subsets: ["latin"] })
@@ -25,9 +26,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.className} bg-background text-foreground`}>
         <CartProvider>
-          <Navbar />
-          <main>{children}</main>
-          <Toaster />
+          <WishlistProvider>
+            <Navbar />
+            <main>{children}</main>
+            <Toaster />
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>

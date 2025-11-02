@@ -1,57 +1,42 @@
-export default function PrivacyPage() {
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+
+export default function PrivacyPolicyPage() {
   return (
-    <div className="container max-w-3xl mx-auto py-12 prose">
-      <h1>Kebijakan Privasi</h1>
-      <p>
-        Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, menyimpan, dan melindungi data
-        pribadi Anda saat menggunakan layanan MyToko. Dengan menggunakan situs ini, Anda menyetujui praktik yang
-        dijelaskan dalam kebijakan ini.
-      </p>
+    <div className="container mx-auto max-w-3xl py-12 px-4">
+      <Card className="rounded-2xl shadow-lg border">
+        <CardHeader>
+          <CardTitle className="text-2xl font-semibold">Privacy Policy</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm leading-relaxed text-muted-foreground">
+          <p>
+            This Privacy Policy describes how <strong>MyToko</strong> collects, uses, and protects your personal
+            information when you use our website and services.
+          </p>
 
-      <h2>Informasi yang Kami Kumpulkan</h2>
-      <ul>
-        <li>Data akun: alamat email dan nama (jika diisi).</li>
-        <li>Data pesanan: produk yang dibeli, jumlah, harga, total dan riwayat transaksi.</li>
-        <li>Data perangkat dan penggunaan: alamat IP, jenis perangkat, dan analitik penggunaan untuk meningkatkan layanan.</li>
-      </ul>
+          <h2 className="text-lg font-medium mt-6">1. Information We Collect</h2>
+          <p>
+            We may collect personal information such as your name, email address, and activity data when you register,
+            make purchases, or interact with our platform.
+          </p>
 
-      <h2>Bagaimana Kami Menggunakan Data</h2>
-      <ul>
-        <li>Memproses pesanan dan menyediakan layanan yang Anda minta.</li>
-        <li>Autentikasi dan keamanan akun (melalui Supabase Auth).</li>
-        <li>Meningkatkan performa aplikasi dan pengalaman pengguna.</li>
-        <li>Komunikasi terkait layanan, seperti konfirmasi pesanan dan dukungan.</li>
-      </ul>
+          <h2 className="text-lg font-medium mt-6">2. How We Use Information</h2>
+          <p>
+            Your information is used to provide and improve our services, communicate with you, and ensure platform
+            security.
+          </p>
 
-      <h2>Penyimpanan dan Keamanan</h2>
-      <p>
-        Data disimpan di infrastruktur Supabase dan/atau penyedia hosting kami (Vercel). Kami menerapkan praktik
-        keamanan standar industri, termasuk kontrol akses dan enkripsi saat transit. Namun, tidak ada metode transmisi
-        data melalui internet yang sepenuhnya aman; gunakan layanan ini dengan pertimbangan Anda.
-      </p>
+          <h2 className="text-lg font-medium mt-6">3. Data Protection</h2>
+          <p>We take reasonable measures to protect your data against unauthorized access or disclosure.</p>
 
-      <h2>Berbagi Data dengan Pihak Ketiga</h2>
-      <p>
-        Kami tidak menjual data pribadi Anda. Data dapat dibagikan kepada penyedia layanan yang membantu operasional
-        aplikasi (mis. Supabase, Vercel) sesuai kebutuhan dan tunduk pada perjanjian pemrosesan data mereka.
-      </p>
+          <h2 className="text-lg font-medium mt-6">4. Changes to This Policy</h2>
+          <p>
+            We may update this Privacy Policy periodically. You are encouraged to review it regularly to stay informed
+            about how we protect your data.
+          </p>
 
-      <h2>Hak Anda</h2>
-      <ul>
-        <li>Mengakses, memperbarui, atau menghapus data akun Anda.</li>
-        <li>Meminta informasi tentang bagaimana data Anda diproses.</li>
-        <li>Mencabut persetujuan tertentu, sejauh diizinkan oleh hukum yang berlaku.</li>
-      </ul>
-
-      <h2>Kontak</h2>
-      <p>
-        Pertanyaan terkait privasi: +6287787128257 atau <a href="mailto:faiznaufal2015@gmail.com">faiznaufal2015@gmail.com</a>
-      </p>
-
-      <h2>Pembaruan Kebijakan</h2>
-      <p>
-        Kebijakan ini dapat diperbarui sewaktu-waktu. Perubahan signifikan akan diberitahukan melalui situs.
-      </p>
+          <p className="mt-8">Last updated: <strong>November 2025</strong></p>
+        </CardContent>
+      </Card>
     </div>
   )
 }

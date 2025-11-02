@@ -1,60 +1,73 @@
 "use client"
 
 import { useState } from "react"
-import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
+  const router = useRouter()
+  const supabase = createClientComponentClient()
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
-    setMessage(null)
-    try {
-      if (!isSupabaseConfigured()) throw new Error("Supabase env not configured")
-      const origin = typeof window !== "undefined" ? window.location.origin : ""
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${origin}/reset-password`,
-      })
-      if (error) throw error
-      setMessage("Check your email for a password reset link.")
-    } catch (err: any) {
-      setError(err.message ?? "Something went wrong")
-    } finally {
-      setLoading(false)
+    const origin = typeof window !== "undefined" ? window.location.origin : ""
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${origin}/auth/reset-password`,
+    })
+    setLoading(false)
+
+    if (error) {
+      toast({ title: "Reset failed", description: error.message })
+    } else {
+      toast({ title: "Email sent!", description: "Check your inbox for the password reset link." })
+      router.push("/login")
     }
   }
 
   return (
-    <div className="container max-w-md mx-auto py-16">
-      <h1 className="text-2xl font-bold mb-6">Forgot password</h1>
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <label htmlFor="email" className="block text-sm font-medium">Email</label>
-          <input
-            id="email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border rounded-md px-3 py-2"
-            placeholder="you@example.com"
-          />
+    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white border-2 border-gray-300 rounded-xl p-8 shadow-lg">
+          <h1 className="text-3xl font-bold text-center mb-2 text-black">Forgot Password</h1>
+          <p className="text-center text-black mb-8 font-bold">Enter your email to reset your password</p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-black mb-2">Email Address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition mt-6"
+            >
+              {loading ? "Sending..." : "Send Reset Link"}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-black font-bold">
+              Remembered your password? {" "}
+              <a href="/login" className="text-blue-600 hover:text-blue-800 font-bold">
+                Login
+              </a>
+            </p>
+          </div>
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-black text-white px-4 py-2 rounded-md disabled:opacity-50"
-        >
-          {loading ? "Sending…" : "Send reset link"}
-        </button>
-      </form>
-      {message && <p className="mt-4 text-green-600">{message}</p>}
-      {error && <p className="mt-4 text-red-600">{error}</p>}
+      </div>
     </div>
   )
 }

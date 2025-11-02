@@ -1,43 +1,45 @@
-export default function TermsPage() {
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+
+export default function TermsOfServicePage() {
   return (
-    <div className="container max-w-3xl mx-auto py-12 prose">
-      <h1>Syarat & Ketentuan</h1>
-      <p>
-        Dengan mengakses atau menggunakan MyToko, Anda menyetujui Syarat & Ketentuan berikut. Harap baca dengan saksama
-        sebelum menggunakan layanan kami.
-      </p>
+    <div className="container mx-auto max-w-3xl py-12 px-4">
+      <Card className="rounded-2xl shadow-lg border">
+        <CardHeader>
+          <CardTitle className="text-2xl font-semibold">Terms of Service</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm leading-relaxed text-muted-foreground">
+          <p>
+            Welcome to <strong>MyToko</strong>. By accessing or using our website and services, you agree to comply with
+            and be bound by the following Terms of Service.
+          </p>
 
-      <h2>Akses dan Penggunaan</h2>
-      <ul>
-        <li>Anda bertanggung jawab atas aktivitas yang terjadi pada akun Anda.</li>
-        <li>Dilarang melakukan penyalahgunaan, peretasan, scraping berlebihan, atau upaya melewati mekanisme keamanan.</li>
-        <li>Kami dapat menangguhkan atau menghentikan akses jika ada pelanggaran.</li>
-      </ul>
+          <h2 className="text-lg font-medium mt-6">1. Use of Service</h2>
+          <p>
+            You may use our services only for lawful purposes and in accordance with these Terms. You agree not to
+            misuse or interfere with the proper functioning of the platform.
+          </p>
 
-      <h2>Pemesanan, Pembayaran, dan Pengiriman</h2>
-      <ul>
-        <li>Harga dan ketersediaan produk dapat berubah tanpa pemberitahuan.</li>
-        <li>Pajak 10% dan biaya pengiriman tetap Rp10 akan ditambahkan sesuai kebijakan saat ini.</li>
-        <li>Estimasi pengiriman bergantung pada alamat dan kurir yang tersedia.</li>
-      </ul>
+          <h2 className="text-lg font-medium mt-6">2. Accounts</h2>
+          <p>
+            You are responsible for maintaining the confidentiality of your account credentials and for all activities
+            that occur under your account.
+          </p>
 
-      <h2>Pengembalian dan Refund</h2>
-      <p>
-        Pengembalian barang hanya berlaku untuk kondisi tertentu sesuai kebijakan toko. Hubungi kami dalam 7 hari sejak
-        pesanan diterima untuk bantuan lebih lanjut.
-      </p>
+          <h2 className="text-lg font-medium mt-6">3. Limitation of Liability</h2>
+          <p>
+            MyToko will not be liable for any indirect, incidental, or consequential damages arising from your use of
+            the service.
+          </p>
 
-      <h2>Hak Kekayaan Intelektual</h2>
-      <p>Konten, logo, dan materi lain pada situs ini dilindungi hak cipta dan tidak boleh digunakan tanpa izin.</p>
+          <h2 className="text-lg font-medium mt-6">4. Changes to These Terms</h2>
+          <p>
+            We may update these Terms from time to time. Continued use of the Service means you accept the updated
+            Terms.
+          </p>
 
-      <h2>Penafian</h2>
-      <p>Layanan disediakan "sebagaimana adanya" tanpa jaminan tersurat maupun tersirat.</p>
-
-      <h2>Perubahan Syarat</h2>
-      <p>Kami dapat memperbarui Syarat & Ketentuan ini sewaktu-waktu. Versi terbaru akan dipublikasikan di situs.</p>
-
-      <h2>Kontak</h2>
-      <p>Butuh bantuan? +6287787128257 atau <a href="mailto:faiznaufal2015@gmail.com">faiznaufal2015@gmail.com</a></p>
+          <p className="mt-8">Last updated: <strong>November 2025</strong></p>
+        </CardContent>
+      </Card>
     </div>
   )
 }

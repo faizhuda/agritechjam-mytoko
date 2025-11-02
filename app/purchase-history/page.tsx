@@ -1,66 +1,81 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Eye, Star, CheckCircle2 } from "lucide-react"
+import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
 
+interface PurchaseItem { name: string; quantity: number; price: number }
 interface Purchase {
   id: string
   orderNumber: string
   date: string
-  items: Array<{
-    name: string
-    quantity: number
-    price: number
-  }>
+  items: PurchaseItem[]
   total: number
-  status: "Delivered" | "Processing" | "Shipped"
+  status: "Delivered" | "Processing" | "Shipped" | "Pending"
   rating?: number
   arrivedConfirmed?: boolean
 }
 
-export default function PurchaseHistoryPage() {
-  const [purchases, setPurchases] = useState<Purchase[]>([
-    {
-      id: "1",
-      orderNumber: "#ORD-2024-001234",
-      date: "2024-10-15",
-      items: [
-        { name: "Premium Headphones", quantity: 1, price: 299.99 },
-        { name: "Wireless Mouse", quantity: 2, price: 49.99 },
-      ],
-      total: 449.97,
-      status: "Delivered",
-      arrivedConfirmed: true,
-      rating: 5,
-    },
-    {
-      id: "2",
-      orderNumber: "#ORD-2024-001233",
-      date: "2024-10-08",
-      items: [
-        { name: "USB-C Cable", quantity: 3, price: 12.99 },
-        { name: "Phone Stand", quantity: 1, price: 24.99 },
-      ],
-      total: 113.96,
-      status: "Delivered",
-      arrivedConfirmed: false,
-    },
-    {
-      id: "3",
-      orderNumber: "#ORD-2024-001232",
-      date: "2024-09-28",
-      items: [{ name: "Wireless Mouse", quantity: 1, price: 49.99 }],
-      total: 54.99,
-      status: "Shipped",
-      arrivedConfirmed: false,
-    },
-  ])
+const mapDbStatus = (s?: string): Purchase["status"] => {
+  switch ((s || "paid").toLowerCase()) {
+    case "delivered":
+      return "Delivered"
+    case "shipped":
+      return "Shipped"
+    case "pending":
+      return "Pending"
+    default:
+      return "Processing"
+  }
+}
 
+export default function PurchaseHistoryPage() {
+  const [purchases, setPurchases] = useState<Purchase[]>([])
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [showRatingModal, setShowRatingModal] = useState<string | null>(null)
   const [rating, setRating] = useState(0)
   const [review, setReview] = useState("")
+
+  useEffect(() => {
+    const load = async () => {
+      if (!isSupabaseConfigured()) {
+        setPurchases([])
+        return
+      }
+      const { data: orders, error } = await supabase
+        .from("orders")
+        .select(
+          `id, created_at, status, total,
+           order_items(quantity, price, product_id, products(name))`
+        )
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        console.error("purchase-history load error", error)
+        setPurchases([])
+        return
+      }
+      const mapped: Purchase[] = (orders || []).map((o: any) => {
+        const items: PurchaseItem[] = (o.order_items || []).map((it: any) => ({
+          name: it.products?.name ?? `Product #${it.product_id}`,
+          quantity: Number(it.quantity),
+          price: Number(it.price),
+        }))
+        return {
+          id: String(o.id),
+          orderNumber: String(o.id),
+          date: o.created_at,
+          items,
+          total: Number(o.total ?? items.reduce((s, x) => s + x.price * x.quantity, 0)),
+          status: mapDbStatus(o.status),
+          arrivedConfirmed: false,
+        }
+      })
+      setPurchases(mapped)
+    }
+    load()
+  }, [])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -70,6 +85,8 @@ export default function PurchaseHistoryPage() {
         return "bg-blue-100 text-blue-800"
       case "Processing":
         return "bg-yellow-100 text-yellow-800"
+      case "Pending":
+        return "bg-orange-100 text-orange-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
@@ -220,7 +237,7 @@ export default function PurchaseHistoryPage() {
 
                     <div className="flex gap-3 flex-wrap">
                       <Link
-                        href={`/invoice?order=${purchase.orderNumber}`}
+                        href={`/invoice?orderId=${purchase.orderNumber}`}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition"
                       >
                         <Eye size={18} />
