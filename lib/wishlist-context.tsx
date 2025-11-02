@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 import { useAuth } from "@/hooks/use-auth"
+import { isSupabaseConfigured } from "@/lib/supabase/browser"
+import { addToWishlist as dbAdd, clearWishlist as dbClear, listWishlist as dbList, removeFromWishlist as dbRemove } from "@/lib/db/wishlist"
 
 export type WishlistItem = {
   id: number
@@ -27,12 +29,22 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey)
-      setWishlistItems(raw ? (JSON.parse(raw) as WishlistItem[]) : [])
-    } catch {
-      setWishlistItems([])
+    const load = async () => {
+      if (user && isSupabaseConfigured()) {
+        const rows = await dbList(user.id)
+        setWishlistItems(
+          rows.map((r) => ({ id: r.productId, name: r.name, price: r.price, image: r.image, rating: r.rating, reviews: r.reviews }))
+        )
+      } else {
+        try {
+          const raw = localStorage.getItem(storageKey)
+          setWishlistItems(raw ? (JSON.parse(raw) as WishlistItem[]) : [])
+        } catch {
+          setWishlistItems([])
+        }
+      }
     }
+    load()
   }, [storageKey])
 
   useEffect(() => {
@@ -43,11 +55,22 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
   const addToWishlist = (item: WishlistItem) => {
     setWishlistItems((prev) => (prev.some((x) => x.id === item.id) ? prev : [...prev, item]))
+    if (user && isSupabaseConfigured()) {
+      dbAdd(user.id, item.id).catch((e) => console.error("wishlist dbAdd error", e))
+    }
   }
   const removeFromWishlist = (id: number) => {
     setWishlistItems((prev) => prev.filter((x) => x.id !== id))
+    if (user && isSupabaseConfigured()) {
+      dbRemove(user.id, id).catch((e) => console.error("wishlist dbRemove error", e))
+    }
   }
-  const clearWishlist = () => setWishlistItems([])
+  const clearWishlist = () => {
+    setWishlistItems([])
+    if (user && isSupabaseConfigured()) {
+      dbClear(user.id).catch((e) => console.error("wishlist dbClear error", e))
+    }
+  }
 
   return (
     <WishlistContext.Provider value={{ wishlistItems, addToWishlist, removeFromWishlist, clearWishlist }}>
