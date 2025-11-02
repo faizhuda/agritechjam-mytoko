@@ -55,3 +55,43 @@ end;
 $$;
 
 grant execute on function public.set_order_status(uuid, text) to authenticated;
+
+-- =====================================================
+-- PROFILES: auto-provision rows for new auth.users
+-- =====================================================
+
+-- Trigger function: create a profile row whenever a new auth user is created
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+begin
+  insert into public.profiles (id, full_name, avatar_url)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'full_name', new.email),
+    coalesce(new.raw_user_meta_data->>'avatar_url', '')
+  )
+  on conflict (id) do update
+    set full_name = excluded.full_name,
+        avatar_url = excluded.avatar_url;
+  return new;
+end;
+$$;
+
+-- Trigger on auth.users
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute function public.handle_new_user();
+
+-- Backfill existing auth users into profiles (run once)
+insert into public.profiles (id, full_name, avatar_url)
+select u.id,
+       coalesce(u.raw_user_meta_data->>'full_name', u.email) as full_name,
+       coalesce(u.raw_user_meta_data->>'avatar_url', '') as avatar_url
+from auth.users u
+left join public.profiles p on p.id = u.id
+where p.id is null;
