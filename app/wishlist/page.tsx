@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Heart, ShoppingCart, ArrowLeft } from "lucide-react"
 import { useWishlist } from "@/lib/wishlist-context"
 import { useCart } from "@/lib/cart-context"
+import { formatIDR } from "@/lib/utils"
 
 export default function WishlistPage() {
   const { wishlistItems, removeFromWishlist } = useWishlist()
@@ -70,7 +71,7 @@ export default function WishlistPage() {
                   </div>
 
                   {/* Price */}
-                  <p className="text-2xl font-bold text-blue-600 mb-4">${item.price.toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-blue-600 mb-4">{formatIDR(item.price)}</p>
 
                   {/* Actions */}
                   <div className="flex gap-2">

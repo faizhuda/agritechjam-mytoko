@@ -3,6 +3,7 @@
 import { Trash2, Plus, Minus } from "lucide-react"
 import Link from "next/link"
 import { useCart } from "@/lib/cart-context"
+import { formatIDR } from "@/lib/utils"
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart } = useCart()
@@ -30,7 +31,7 @@ export default function CartPage() {
                     />
                     <div className="flex-1">
                       <h3 className="font-bold text-lg mb-2 text-black">{item.name}</h3>
-                      <p className="text-blue-600 font-bold mb-4">${item.price}</p>
+                      <p className="text-blue-600 font-bold mb-4">{formatIDR(item.price)}</p>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -48,7 +49,7 @@ export default function CartPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold mb-4 text-black">${(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-bold mb-4 text-black">{formatIDR(item.price * item.quantity)}</p>
                       <button
                         onClick={() => removeFromCart(item.id)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded transition font-bold"
@@ -71,15 +72,15 @@ export default function CartPage() {
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between">
                     <span className="text-black font-bold">Subtotal</span>
-                    <span className="font-bold text-black">${subtotal.toFixed(2)}</span>
+                    <span className="font-bold text-black">{formatIDR(subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-black font-bold">Tax (10%)</span>
-                    <span className="font-bold text-black">${tax.toFixed(2)}</span>
+                    <span className="font-bold text-black">{formatIDR(tax)}</span>
                   </div>
                   <div className="border-t-2 border-gray-300 pt-4 flex justify-between">
                     <span className="font-bold text-black">Total</span>
-                    <span className="text-xl font-bold text-blue-600">${total.toFixed(2)}</span>
+                    <span className="text-xl font-bold text-blue-600">{formatIDR(total)}</span>
                   </div>
                 </div>
                 <Link

@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { formatIDR } from "@/lib/utils"
 
 export default function CheckoutPage() {
   const { cartItems, clearCart, updateQuantity, removeFromCart } = useCart()
@@ -338,7 +339,7 @@ export default function CheckoutPage() {
                       <span>
                         {item.name} x{item.quantity}
                       </span>
-                      <span>${(item.price * item.quantity).toFixed(2)}</span>
+                      <span>{formatIDR(item.price * item.quantity)}</span>
                     </div>
                   ))
                 )}
@@ -346,15 +347,15 @@ export default function CheckoutPage() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm text-black font-bold">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{formatIDR(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-black font-bold">
                   <span>Tax (10%)</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>{formatIDR(tax)}</span>
                 </div>
                 <div className="border-t-2 border-gray-300 pt-3 flex justify-between font-bold text-black">
                   <span>Total</span>
-                  <span className="text-blue-600 text-lg">${cartTotal.toFixed(2)}</span>
+                  <span className="text-blue-600 text-lg">{formatIDR(cartTotal)}</span>
                 </div>
               </div>
             </div>

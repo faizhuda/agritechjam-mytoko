@@ -36,10 +36,10 @@ export default function AdminDashboard() {
   ]
 
   const recentTransactions = [
-    { id: 1, customer: "John Doe", amount: "$299.99", status: "Completed", date: "2024-01-15" },
-    { id: 2, customer: "Jane Smith", amount: "$149.99", status: "Pending", date: "2024-01-14" },
-    { id: 3, customer: "Bob Johnson", amount: "$79.99", status: "Completed", date: "2024-01-13" },
-    { id: 4, customer: "Alice Brown", amount: "$199.99", status: "Completed", date: "2024-01-12" },
+    { id: 1, customer: "John Doe", amount: 299000, status: "Completed", date: "2024-01-15" },
+    { id: 2, customer: "Jane Smith", amount: 149000, status: "Pending", date: "2024-01-14" },
+    { id: 3, customer: "Bob Johnson", amount: 79000, status: "Completed", date: "2024-01-13" },
+    { id: 4, customer: "Alice Brown", amount: 199000, status: "Completed", date: "2024-01-12" },
   ]
 
   const getStatusColor = (status: string) => {
@@ -66,7 +66,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-bold text-black">Total Revenue</p>
-                <p className="text-3xl font-bold text-black">$24,580</p>
+                <p className="text-3xl font-bold text-black">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(24580000)}</p>
               </div>
               <DollarSign size={32} className="text-blue-600" />
             </div>
@@ -152,7 +152,7 @@ export default function AdminDashboard() {
                 {recentTransactions.map((transaction) => (
                   <tr key={transaction.id} className="border-b border-gray-300 hover:bg-gray-50 transition">
                     <td className="py-3 px-4 text-black font-bold">{transaction.customer}</td>
-                    <td className="py-3 px-4 text-black font-bold">{transaction.amount}</td>
+                    <td className="py-3 px-4 text-black font-bold">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(transaction.amount)}</td>
                     <td className="py-3 px-4">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-bold ${getStatusColor(transaction.status)}`}
@@ -242,7 +242,7 @@ export default function AdminDashboard() {
                 {productDatabase.slice(0, 6).map((product) => (
                   <tr key={product.id} className="border-b border-gray-300 hover:bg-gray-50 transition">
                     <td className="py-3 px-4 text-black font-bold">{product.name}</td>
-                    <td className="py-3 px-4 text-black font-bold">${product.price}</td>
+                    <td className="py-3 px-4 text-black font-bold">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price)}</td>
                     <td className="py-3 px-4 text-black font-bold">{product.stock}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-1">

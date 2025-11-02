@@ -18,7 +18,7 @@ export default function UserDashboard() {
     address: "123 Main St, New York, NY 10001",
     memberSince: "January 2024",
     totalOrders: 12,
-    totalSpent: "$2,847.50",
+  totalSpent: "Rp 28.475.000",
   })
 
   const [editedUser, setEditedUser] = useState(user)
@@ -251,7 +251,7 @@ export default function UserDashboard() {
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className="text-sm text-black font-semibold">Total</p>
-                        <p className="font-bold text-black text-lg">${order.total.toFixed(2)}</p>
+                        <p className="font-bold text-black text-lg">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(order.total)}</p>
                       </div>
                       <span
                         className={`px-4 py-2 rounded-full font-bold text-sm capitalize ${statusColors[order.status]}`}
@@ -276,7 +276,7 @@ export default function UserDashboard() {
                             <span>
                               {item.productName} x{item.quantity}
                             </span>
-                            <span>${(item.price * item.quantity).toFixed(2)}</span>
+                            <span>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.price * item.quantity)}</span>
                           </div>
                         ))}
                       </div>

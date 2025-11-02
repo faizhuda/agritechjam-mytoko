@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Star, ShoppingCart } from "lucide-react"
 import type { Product } from "@/lib/product-data"
 import { useCart } from "@/lib/cart-context"
-import { normalizeSearch } from "@/lib/utils"
+import { normalizeSearch, formatIDR } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 
 type Props = { initialProducts: Product[]; initialSearch?: string }
@@ -124,8 +124,8 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
                 className="w-full accent-blue-600"
               />
               <div className="flex justify-between text-sm font-bold text-black">
-                <span>${priceRange[0]}</span>
-                <span>${priceRange[1]}</span>
+                <span>{formatIDR(priceRange[0])}</span>
+                <span>{formatIDR(priceRange[1])}</span>
               </div>
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
                     <span className="text-xs text-black font-bold ml-1">({product.rating})</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold text-blue-600">${product.price}</span>
+                    <span className="text-xl font-bold text-blue-600">{formatIDR(product.price)}</span>
                     <button
                       onClick={() => handleAddToCart(product)}
                       className={`p-2 rounded-lg font-semibold transition flex items-center gap-1 ${

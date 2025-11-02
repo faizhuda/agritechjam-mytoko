@@ -46,8 +46,8 @@ export const productDatabase: Product[] = [
   {
     id: 1,
     name: "Premium Headphones",
-    price: 299.99,
-    originalPrice: 349.99,
+    price: 1250000,
+    originalPrice: 1499000,
     category: "electronics",
     rating: 4.5,
     reviews: 128,
@@ -62,7 +62,7 @@ export const productDatabase: Product[] = [
   {
     id: 2,
     name: "Wireless Mouse",
-    price: 49.99,
+    price: 120000,
     category: "electronics",
     rating: 4.2,
     reviews: 89,
@@ -77,7 +77,7 @@ export const productDatabase: Product[] = [
   {
     id: 3,
     name: "USB-C Cable",
-    price: 19.99,
+    price: 25000,
     category: "accessories",
     rating: 4.8,
     reviews: 256,
@@ -92,7 +92,7 @@ export const productDatabase: Product[] = [
   {
     id: 4,
     name: "Phone Stand",
-    price: 29.99,
+    price: 35000,
     category: "accessories",
     rating: 4.3,
     reviews: 145,
@@ -107,8 +107,8 @@ export const productDatabase: Product[] = [
   {
     id: 5,
     name: "Mechanical Keyboard",
-    price: 149.99,
-    originalPrice: 179.99,
+    price: 850000,
+    originalPrice: 999000,
     category: "electronics",
     rating: 4.7,
     reviews: 203,
@@ -123,7 +123,7 @@ export const productDatabase: Product[] = [
   {
     id: 6,
     name: "Screen Protector",
-    price: 9.99,
+    price: 20000,
     category: "accessories",
     rating: 4.1,
     reviews: 178,
@@ -138,7 +138,7 @@ export const productDatabase: Product[] = [
   {
     id: 7,
     name: "Laptop Stand",
-    price: 79.99,
+    price: 150000,
     category: "accessories",
     rating: 4.4,
     reviews: 167,
@@ -153,7 +153,7 @@ export const productDatabase: Product[] = [
   {
     id: 8,
     name: "Portable Charger",
-    price: 59.99,
+    price: 230000,
     category: "electronics",
     rating: 4.6,
     reviews: 195,
@@ -171,27 +171,27 @@ export const sampleOrders: Order[] = [
   {
     id: "ORD-001",
     date: "2024-01-15",
-    total: 349.99,
+    total: 1375000,
     status: "delivered",
-    items: [{ productId: 1, productName: "Premium Headphones", quantity: 1, price: 299.99 }],
+    items: [{ productId: 1, productName: "Premium Headphones", quantity: 1, price: 1250000 }],
     rating: 5,
     review: "Excellent headphones! Great sound quality and very comfortable.",
   },
   {
     id: "ORD-002",
     date: "2024-01-20",
-    total: 79.98,
+    total: 264000,
     status: "delivered",
-    items: [{ productId: 2, productName: "Wireless Mouse", quantity: 2, price: 49.99 }],
+    items: [{ productId: 2, productName: "Wireless Mouse", quantity: 2, price: 120000 }],
   },
   {
     id: "ORD-003",
     date: "2024-02-05",
-    total: 149.97,
+    total: 132000,
     status: "shipped",
     items: [
-      { productId: 3, productName: "USB-C Cable", quantity: 2, price: 19.99 },
-      { productId: 4, productName: "Phone Stand", quantity: 2, price: 29.99 },
+      { productId: 3, productName: "USB-C Cable", quantity: 2, price: 25000 },
+      { productId: 4, productName: "Phone Stand", quantity: 2, price: 35000 },
     ],
   },
 ]

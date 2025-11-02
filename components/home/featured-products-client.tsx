@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Star, ShoppingCart } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
+import { formatIDR } from "@/lib/utils"
 import { useState } from "react"
 import type { Product } from "@/lib/product-data"
 
@@ -55,7 +56,7 @@ export default function FeaturedProductsClient({ products }: { products: Product
                 <span className="text-sm text-black font-semibold ml-2">({product.rating ?? 0})</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xl font-bold text-blue-600">${product.price}</span>
+                <span className="text-xl font-bold text-blue-600">{formatIDR(product.price)}</span>
                 <button
                   onClick={() => handleAddToCart(product)}
                   className={`p-2 rounded-lg font-semibold transition flex items-center gap-1 ${

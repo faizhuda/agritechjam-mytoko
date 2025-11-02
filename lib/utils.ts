@@ -20,3 +20,15 @@ export function normalizeSearch(input: string) {
     .replace(/\s+/g, " ")
     .trim()
 }
+
+// Currency: Indonesian Rupiah formatter
+// Usage: formatIDR(125000) -> "Rp 125.000"
+export function formatIDR(value: number | string | null | undefined) {
+  const num = typeof value === "string" ? Number(value) : value
+  if (num == null || Number.isNaN(num)) return "Rp 0"
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(num)
+}

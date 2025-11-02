@@ -5,6 +5,7 @@ import { Download, Printer, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer'
 import { supabaseBrowser, isSupabaseConfigured } from "@/lib/supabase/browser"
+import { formatIDR } from "@/lib/utils"
 
 export default function InvoicePage() {
   const [orderId, setOrderId] = useState<string | null>(null)
@@ -293,8 +294,8 @@ export default function InvoicePage() {
                   <tr key={item.id} className="border-b border-gray-300">
                     <td className="py-3 px-4 text-black font-bold">{item.name}</td>
                     <td className="text-right py-3 px-4 text-black font-bold">{item.quantity}</td>
-                    <td className="text-right py-3 px-4 text-black font-bold">${item.unitPrice.toFixed(2)}</td>
-                    <td className="text-right py-3 px-4 text-black font-bold">${item.total.toFixed(2)}</td>
+                    <td className="text-right py-3 px-4 text-black font-bold">{formatIDR(item.unitPrice)}</td>
+                    <td className="text-right py-3 px-4 text-black font-bold">{formatIDR(item.total)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -307,20 +308,20 @@ export default function InvoicePage() {
               <div className="space-y-2 mb-4 pb-4 border-b-2 border-gray-300">
                 <div className="flex justify-between text-sm">
                   <span className="text-black font-bold">Subtotal</span>
-                  <span className="text-black font-bold">${data.subtotal.toFixed(2)}</span>
+                  <span className="text-black font-bold">{formatIDR(data.subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-black font-bold">Tax</span>
-                  <span className="text-black font-bold">${data.tax.toFixed(2)}</span>
+                  <span className="text-black font-bold">{formatIDR(data.tax)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-black font-bold">Shipping</span>
-                  <span className="text-black font-bold">${data.shipping.toFixed(2)}</span>
+                  <span className="text-black font-bold">{formatIDR(data.shipping)}</span>
                 </div>
               </div>
               <div className="flex justify-between text-xl font-bold text-black">
                 <span>Total</span>
-                <span className="text-blue-600">${data.total.toFixed(2)}</span>
+                <span className="text-blue-600">{formatIDR(data.total)}</span>
               </div>
             </div>
           </div>
@@ -589,8 +590,8 @@ function InvoicePDF({ data }: { data: any }) {
             <View key={index} style={styles.tableRow}>
               <Text style={[styles.text, styles.tableCol1]}>{item.name}</Text>
               <Text style={[styles.text, styles.tableCol2]}>{item.quantity}</Text>
-              <Text style={[styles.text, styles.tableCol3]}>${item.unitPrice.toFixed(2)}</Text>
-              <Text style={[styles.text, styles.tableCol4]}>${item.total.toFixed(2)}</Text>
+              <Text style={[styles.text, styles.tableCol3]}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.unitPrice)}</Text>
+              <Text style={[styles.text, styles.tableCol4]}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.total)}</Text>
             </View>
           ))}
         </View>
@@ -599,19 +600,19 @@ function InvoicePDF({ data }: { data: any }) {
         <View style={styles.totals}>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Subtotal</Text>
-            <Text style={styles.totalValue}>${data.subtotal.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(data.subtotal)}</Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Tax (10%)</Text>
-            <Text style={styles.totalValue}>${data.tax.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(data.tax)}</Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Shipping</Text>
-            <Text style={styles.totalValue}>${data.shipping.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(data.shipping)}</Text>
           </View>
           <View style={styles.grandTotal}>
             <Text style={styles.grandTotalLabel}>Total</Text>
-            <Text style={styles.grandTotalValue}>${data.total.toFixed(2)}</Text>
+            <Text style={styles.grandTotalValue}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(data.total)}</Text>
           </View>
         </View>
 

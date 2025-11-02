@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Eye, Star, CheckCircle2 } from "lucide-react"
 import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
+import { formatIDR } from "@/lib/utils"
 
 interface PurchaseItem { name: string; quantity: number; price: number }
 interface Purchase {
@@ -167,7 +168,7 @@ export default function PurchaseHistoryPage() {
 
                     <div className="text-right">
                       <p className="text-xs font-bold text-black uppercase mb-1">Total</p>
-                      <p className="text-xl font-bold text-blue-600">${purchase.total.toFixed(2)}</p>
+                      <p className="text-xl font-bold text-blue-600">{formatIDR(purchase.total)}</p>
                     </div>
                   </div>
                 </div>
@@ -186,7 +187,7 @@ export default function PurchaseHistoryPage() {
                               <p className="font-bold text-black">{item.name}</p>
                               <p className="text-sm text-black font-semibold">Quantity: {item.quantity}</p>
                             </div>
-                            <p className="font-bold text-black">${(item.price * item.quantity).toFixed(2)}</p>
+                            <p className="font-bold text-black">{formatIDR(item.price * item.quantity)}</p>
                           </div>
                         ))}
                       </div>

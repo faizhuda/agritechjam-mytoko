@@ -4,6 +4,7 @@ import { useEffect, useState, use } from "react"
 import Link from "next/link"
 import { Star, ShoppingCart, ArrowLeft, Minus, Plus, Heart, ThumbsUp } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
+import { formatIDR } from "@/lib/utils"
 import type { Product, Review } from "@/lib/product-data"
 import { fetchProductById, fetchProducts, fetchReviewsByProductId } from "@/lib/db/products"
 
@@ -128,9 +129,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <div className="bg-blue-50 rounded-lg p-6 border-2 border-blue-600">
               <p className="text-black text-sm mb-2 font-bold">Price</p>
               <div className="flex items-baseline gap-3">
-                <p className="text-4xl font-bold text-blue-600">${product.price}</p>
+                <p className="text-4xl font-bold text-blue-600">{formatIDR(product.price)}</p>
                 {product.originalPrice && (
-                  <p className="text-lg text-black line-through font-bold">${product.originalPrice}</p>
+                  <p className="text-lg text-black line-through font-bold">{formatIDR(product.originalPrice)}</p>
                 )}
               </div>
             </div>
@@ -265,7 +266,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                       ))}
                       <span className="text-xs text-black font-bold ml-1">({relatedProduct.rating})</span>
                     </div>
-                    <p className="text-lg font-bold text-blue-600">${relatedProduct.price}</p>
+                    <p className="text-lg font-bold text-blue-600">{formatIDR(relatedProduct.price)}</p>
                   </div>
                 </Link>
               ))}
