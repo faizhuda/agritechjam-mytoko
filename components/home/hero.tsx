@@ -43,9 +43,9 @@ export default function Hero() {
             index === currentSlide ? "opacity-100" : "opacity-0"
           } ${slide.color}`}
         >
-          <div className="flex flex-col items-center justify-center h-full text-white">
-            <h1 className="text-5xl font-bold text-balance">{slide.title}</h1>
-            <p className="text-xl mt-4 font-semibold">{slide.subtitle}</p>
+          <div className="flex flex-col items-center justify-center h-full text-white px-6">
+            <h1 className="text-center text-3xl sm:text-4xl md:text-5xl font-bold text-balance">{slide.title}</h1>
+            <p className="text-center text-base sm:text-lg md:text-xl mt-4 font-semibold">{slide.subtitle}</p>
           </div>
         </div>
       ))}
@@ -53,13 +53,13 @@ export default function Hero() {
       {/* Carousel Controls */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-white hover:bg-gray-100 rounded-full transition shadow-md"
+        className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-white hover:bg-gray-100 rounded-full transition shadow-md"
       >
         <ChevronLeft size={24} className="text-black" />
       </button>
       <button
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-white hover:bg-gray-100 rounded-full transition shadow-md"
+        className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-white hover:bg-gray-100 rounded-full transition shadow-md"
       >
         <ChevronRight size={24} className="text-black" />
       </button>
