@@ -1,9 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { User, ShoppingBag, TrendingUp, Menu, X, Edit2, Save, Package } from "lucide-react"
-import { sampleOrders } from "@/lib/product-data"
+import { User, ShoppingBag, TrendingUp, Menu, X, Edit2, Save, Package, Heart, ShieldCheck } from "lucide-react"
+import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
+import { formatIDR } from "@/lib/utils"
+
+type OrderRow = { id: string; created_at: string; status?: string | null; total?: number | null }
 
 export default function UserDashboard() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -11,21 +14,39 @@ export default function UserDashboard() {
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [activeTab, setActiveTab] = useState<"overview" | "profile" | "orders">("overview")
 
-  const [user, setUser] = useState({
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Main St, New York, NY 10001",
-    memberSince: "January 2024",
-    totalOrders: 12,
-  totalSpent: "Rp 28.475.000",
+  const [profile, setProfile] = useState<{ full_name: string; phone?: string; address?: string; is_admin?: boolean } | null>(null)
+  const [authEmail, setAuthEmail] = useState<string>("")
+  const [memberSince, setMemberSince] = useState<string>("")
+  const [orders, setOrders] = useState<OrderRow[]>([])
+
+  const [editedUser, setEditedUser] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
   })
 
-  const [editedUser, setEditedUser] = useState(user)
-
-  const handleSaveProfile = () => {
-    setUser(editedUser)
-    setIsEditingProfile(false)
+  const handleSaveProfile = async () => {
+    try {
+      if (!isSupabaseConfigured()) return
+      const { data: userData } = await supabase.auth.getUser()
+      const uid = userData.user?.id
+      if (!uid) return
+      // Update profiles table (full_name, phone, address)
+      await supabase
+        .from("profiles")
+        .update({ full_name: editedUser.name, phone: editedUser.phone, address: editedUser.address })
+        .eq("id", uid)
+      // Email change: attempt to update auth email if different
+      if (editedUser.email && editedUser.email !== authEmail) {
+        await supabase.auth.updateUser({ email: editedUser.email })
+      }
+      setProfile((p) => (p ? { ...p, full_name: editedUser.name, phone: editedUser.phone, address: editedUser.address } : p))
+      setAuthEmail(editedUser.email)
+      setIsEditingProfile(false)
+    } catch (e) {
+      console.error("save profile error", e)
+    }
   }
 
   const statusColors: Record<string, string> = {
@@ -35,12 +56,50 @@ export default function UserDashboard() {
     delivered: "bg-green-100 text-green-800",
   }
 
+  useEffect(() => {
+    const load = async () => {
+      if (!isSupabaseConfigured()) return
+      const { data: auth } = await supabase.auth.getUser()
+      const u = auth.user
+      if (!u) return
+      setAuthEmail(u.email ?? "")
+      try {
+        setMemberSince(
+          u.created_at ? new Date(u.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : ""
+        )
+      } catch {}
+      const { data: prof } = await supabase.from("profiles").select("full_name, phone, address, is_admin").eq("id", u.id).maybeSingle()
+      setProfile(prof as any)
+      setEditedUser({
+        name: (prof as any)?.full_name ?? u.email ?? "",
+        email: u.email ?? "",
+        phone: (prof as any)?.phone ?? "",
+        address: (prof as any)?.address ?? "",
+      })
+      const { data: ords, error } = await supabase
+        .from("orders")
+        .select("id, created_at, status, total")
+        .order("created_at", { ascending: false })
+      if (!error) setOrders((ords || []).map((o: any) => ({
+        id: String(o.id),
+        created_at: o.created_at,
+        status: o.status,
+        total: Number(o.total ?? 0),
+      })))
+    }
+    load()
+  }, [])
+
+  const totalOrders = orders.length
+  const totalSpent = orders.reduce((s, o) => s + (o.total || 0), 0)
+  const recentOrders = orders.filter((o) => (o.status || "").toLowerCase() === "shipped").length
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-12">
-          <h1 className="text-4xl font-bold text-black">User Dashboard</h1>
+          <h1 className="text-4xl font-bold text-black">User Profile</h1>
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-black">
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -85,11 +144,11 @@ export default function UserDashboard() {
                     <User size={32} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="font-bold text-lg text-black">{user.name}</h2>
-                    <p className="text-sm text-black font-semibold">{user.email}</p>
+                    <h2 className="font-bold text-lg text-black">{profile?.full_name ?? authEmail}</h2>
+                    <p className="text-sm text-black font-semibold">{authEmail}</p>
                   </div>
                 </div>
-                <p className="text-sm text-black font-semibold">Member since {user.memberSince}</p>
+                <p className="text-sm text-black font-semibold">Member since {memberSince}</p>
                 <button
                   onClick={() => setActiveTab("profile")}
                   className="mt-4 w-full py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition"
@@ -104,7 +163,7 @@ export default function UserDashboard() {
                   <h3 className="font-bold text-black text-sm">Total Orders</h3>
                   <ShoppingBag size={24} className="text-blue-600" />
                 </div>
-                <p className="text-3xl font-bold text-black">{user.totalOrders}</p>
+                <p className="text-3xl font-bold text-black">{totalOrders}</p>
               </div>
 
               <div className="bg-white border-2 border-gray-300 rounded-xl p-6 shadow-lg">
@@ -112,7 +171,7 @@ export default function UserDashboard() {
                   <h3 className="font-bold text-black text-sm">Total Spent</h3>
                   <TrendingUp size={24} className="text-green-600" />
                 </div>
-                <p className="text-3xl font-bold text-black">{user.totalSpent}</p>
+                <p className="text-3xl font-bold text-black">{formatIDR(totalSpent)}</p>
               </div>
 
               <div className="bg-white border-2 border-gray-300 rounded-xl p-6 shadow-lg">
@@ -120,16 +179,14 @@ export default function UserDashboard() {
                   <h3 className="font-bold text-black text-sm">Recent Orders</h3>
                   <Package size={24} className="text-orange-600" />
                 </div>
-                <p className="text-3xl font-bold text-black">
-                  {sampleOrders.filter((o) => o.status === "shipped").length}
-                </p>
+                <p className="text-3xl font-bold text-black">{recentOrders}</p>
               </div>
             </div>
 
             {/* Quick Links */}
             <div className="bg-white border-2 border-gray-300 rounded-xl p-6 shadow-lg">
               <h2 className="text-2xl font-bold text-black mb-4">Quick Links</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Link
                   href="/catalog"
                   className="p-4 bg-blue-50 border-2 border-blue-300 rounded-lg text-blue-600 font-bold hover:bg-blue-100 transition text-center"
@@ -148,6 +205,20 @@ export default function UserDashboard() {
                 >
                   Go to Cart
                 </Link>
+                <Link
+                  href="/wishlist"
+                  className="p-4 bg-pink-50 border-2 border-pink-300 rounded-lg text-pink-600 font-bold hover:bg-pink-100 transition text-center flex items-center justify-center gap-2"
+                >
+                  <Heart size={16} /> Wishlist
+                </Link>
+                {profile?.is_admin && (
+                  <Link
+                    href="/admin"
+                    className="p-4 bg-purple-50 border-2 border-purple-300 rounded-lg text-purple-700 font-bold hover:bg-purple-100 transition text-center flex items-center justify-center gap-2 md:col-span-2"
+                  >
+                    <ShieldCheck size={16} /> Admin Page
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -181,7 +252,7 @@ export default function UserDashboard() {
                 <label className="block text-black font-bold mb-2">Full Name</label>
                 <input
                   type="text"
-                  value={isEditingProfile ? editedUser.name : user.name}
+                  value={isEditingProfile ? editedUser.name : (profile?.full_name ?? authEmail)}
                   onChange={(e) => isEditingProfile && setEditedUser({ ...editedUser, name: e.target.value })}
                   disabled={!isEditingProfile}
                   className="w-full p-3 border-2 border-gray-300 rounded-lg text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:bg-gray-100"
@@ -192,7 +263,7 @@ export default function UserDashboard() {
                 <label className="block text-black font-bold mb-2">Email Address</label>
                 <input
                   type="email"
-                  value={isEditingProfile ? editedUser.email : user.email}
+                  value={isEditingProfile ? editedUser.email : authEmail}
                   onChange={(e) => isEditingProfile && setEditedUser({ ...editedUser, email: e.target.value })}
                   disabled={!isEditingProfile}
                   className="w-full p-3 border-2 border-gray-300 rounded-lg text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:bg-gray-100"
@@ -203,7 +274,7 @@ export default function UserDashboard() {
                 <label className="block text-black font-bold mb-2">Phone Number</label>
                 <input
                   type="tel"
-                  value={isEditingProfile ? editedUser.phone : user.phone}
+                  value={isEditingProfile ? editedUser.phone : (profile?.phone ?? "")}
                   onChange={(e) => isEditingProfile && setEditedUser({ ...editedUser, phone: e.target.value })}
                   disabled={!isEditingProfile}
                   className="w-full p-3 border-2 border-gray-300 rounded-lg text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:bg-gray-100"
@@ -213,7 +284,7 @@ export default function UserDashboard() {
               <div>
                 <label className="block text-black font-bold mb-2">Address</label>
                 <textarea
-                  value={isEditingProfile ? editedUser.address : user.address}
+                  value={isEditingProfile ? editedUser.address : (profile?.address ?? "")}
                   onChange={(e) => isEditingProfile && setEditedUser({ ...editedUser, address: e.target.value })}
                   disabled={!isEditingProfile}
                   className="w-full p-3 border-2 border-gray-300 rounded-lg text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:bg-gray-100 resize-none"

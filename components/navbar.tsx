@@ -106,7 +106,7 @@ export default function Navbar() {
             {user ? (
               <div className="flex items-center gap-4">
                 <Link href="/dashboard" className="text-black hover:text-blue-600 transition font-bold">
-                  Dashboard
+                  Profile
                 </Link>
                 <button
                   onClick={() => signOut()}
@@ -168,7 +168,7 @@ export default function Navbar() {
                   href="/dashboard"
                   className="block px-4 py-2 text-black hover:bg-gray-100 rounded-lg transition font-bold"
                 >
-                  Dashboard
+                  Profile
                 </Link>
                 <button
                   onClick={() => signOut()}
