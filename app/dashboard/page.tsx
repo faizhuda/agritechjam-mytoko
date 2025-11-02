@@ -6,7 +6,8 @@ import { User, ShoppingBag, TrendingUp, Menu, X, Edit2, Save, Package, Heart, Sh
 import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
 import { formatIDR } from "@/lib/utils"
 
-type OrderRow = { id: string; created_at: string; status?: string | null; total?: number | null }
+type OrderItem = { productName: string; quantity: number; price: number }
+type OrderRow = { id: string; date: string; status: string; total: number; items: OrderItem[]; rating?: number; review?: string }
 
 export default function UserDashboard() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -78,14 +79,26 @@ export default function UserDashboard() {
       })
       const { data: ords, error } = await supabase
         .from("orders")
-        .select("id, created_at, status, total")
+        .select(`id, created_at, status, total,
+                 order_items(quantity, price, product_id, products(name))`)
         .order("created_at", { ascending: false })
-      if (!error) setOrders((ords || []).map((o: any) => ({
-        id: String(o.id),
-        created_at: o.created_at,
-        status: o.status,
-        total: Number(o.total ?? 0),
-      })))
+      if (!error) {
+        const mapped: OrderRow[] = (ords || []).map((o: any) => {
+          const items: OrderItem[] = (o.order_items || []).map((it: any) => ({
+            productName: it.products?.name ?? `Product #${it.product_id}`,
+            quantity: Number(it.quantity ?? 0),
+            price: Number(it.price ?? 0),
+          }))
+          return {
+            id: String(o.id),
+            date: o.created_at,
+            status: String(o.status ?? "pending"),
+            total: Number(o.total ?? items.reduce((s: number, x: OrderItem) => s + x.price * x.quantity, 0)),
+            items,
+          }
+        })
+        setOrders(mapped)
+      }
     }
     load()
   }, [])
@@ -309,7 +322,7 @@ export default function UserDashboard() {
           <div>
             <h2 className="text-2xl font-bold text-black mb-6">Order History</h2>
             <div className="space-y-4">
-              {sampleOrders.map((order) => (
+              {orders.map((order: OrderRow) => (
                 <div
                   key={order.id}
                   className="border-2 border-gray-300 rounded-lg p-4 hover:shadow-md transition bg-white"
@@ -317,15 +330,17 @@ export default function UserDashboard() {
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
                     <div className="flex-1">
                       <h3 className="font-bold text-black text-lg">{order.id}</h3>
-                      <p className="text-sm text-black font-semibold">{order.date}</p>
+                      <p className="text-sm text-black font-semibold">{new Date(order.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</p>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className="text-sm text-black font-semibold">Total</p>
-                        <p className="font-bold text-black text-lg">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(order.total)}</p>
+                        <p className="font-bold text-black text-lg">{formatIDR(order.total)}</p>
                       </div>
                       <span
-                        className={`px-4 py-2 rounded-full font-bold text-sm capitalize ${statusColors[order.status]}`}
+                        className={`px-4 py-2 rounded-full font-bold text-sm capitalize ${
+                          statusColors[(order.status || "").toLowerCase()] || "bg-gray-100 text-gray-800"
+                        }`}
                       >
                         {order.status}
                       </span>
@@ -342,12 +357,12 @@ export default function UserDashboard() {
                   {expandedOrder === order.id && (
                     <div className="mt-4 pt-4 border-t-2 border-gray-300">
                       <div className="space-y-3 mb-4">
-                        {order.items.map((item, idx) => (
+                        {order.items.map((item: OrderItem, idx: number) => (
                           <div key={idx} className="flex justify-between text-black font-semibold">
                             <span>
                               {item.productName} x{item.quantity}
                             </span>
-                            <span>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.price * item.quantity)}</span>
+                            <span>{formatIDR(item.price * item.quantity)}</span>
                           </div>
                         ))}
                       </div>
