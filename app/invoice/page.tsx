@@ -60,6 +60,49 @@ export default function InvoicePage() {
         return
       }
       try {
+        // First try admin endpoint (if current user is admin, it will succeed)
+        try {
+          const resp = await fetch(`/api/admin/orders/${orderId}`, { cache: 'no-store' })
+          if (resp.ok) {
+            const j = await resp.json()
+            const ord = j.order
+            const items = (j.items || []).map((it: any) => ({
+              id: Number(it.product_id),
+              name: it.products?.name ?? `Product #${it.product_id}`,
+              quantity: Number(it.quantity),
+              unitPrice: Number(it.price),
+              total: Number(it.price) * Number(it.quantity),
+            }))
+            const subtotal = items.reduce((s: number, x: any) => s + x.total, 0)
+            const preferredTax = Math.round(subtotal * 0.10)
+            const preferredShipping = subtotal > 0 ? 10000 : 0
+            const inv = {
+              orderNumber: String(ord.order_number || ord.id),
+              invoiceDate: new Date(ord.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }),
+              dueDate: new Date(new Date(ord.created_at).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }),
+              status: String(ord.status || "paid").replace(/^./, (c) => c.toUpperCase()),
+              customer: {
+                name: (j.customer?.full_name || `${j.customer?.first_name ?? ''} ${j.customer?.last_name ?? ''}`.trim() || 'Customer'),
+                email: j.customer?.email ?? '',
+                phone: j.customer?.phone ?? '',
+                address: j.customer?.address ?? '',
+                city: j.customer?.city ?? '',
+                zipCode: j.customer?.zip_code ?? '',
+              },
+              items,
+              subtotal,
+              tax: preferredTax,
+              shipping: preferredShipping,
+              total: subtotal + preferredTax + preferredShipping,
+              paymentMethod: 'QRIS',
+              transactionId: String(ord.id),
+            }
+            setInvoiceData(inv)
+            setLoading(false)
+            return
+          }
+        } catch {}
+
         const { data: order, error: orderErr } = await supabaseBrowser
           .from("orders")
           .select("id, order_number, total, created_at, status")
