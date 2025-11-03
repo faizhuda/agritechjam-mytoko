@@ -1,3 +1,6 @@
+// Always fetch fresh products for Catalog
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 import { fetchProducts } from "@/lib/db/products"
 import CatalogClient from "@/components/catalog/catalog-client"
 import Link from "next/link"
