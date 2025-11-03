@@ -61,6 +61,8 @@ export default function AdminDashboard() {
     price: "",
     category: "electronics",
     stock: "",
+    description: "",
+    features: "",
   })
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [editOpen, setEditOpen] = useState(false)
@@ -183,11 +185,31 @@ export default function AdminDashboard() {
     load()
   }, [isAdmin])
 
+  // Derive live review stats for displayed products to ensure rating is consistent with reviews in DB
+  const [reviewStats, setReviewStats] = useState<Record<number, { count: number; average: number }>>({})
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const ids = products.map((p) => p.id)
+        if (!ids.length) return
+        const { fetchReviewStatsForProductIds } = await import("@/lib/db/products")
+        const stats = await fetchReviewStatsForProductIds(ids)
+        setReviewStats(stats)
+      } catch (_) {}
+    }
+    run()
+  }, [products])
+
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isSupabaseConfigured() || !isAdmin) return
     const price = Number(newProduct.price)
     const stock = Number(newProduct.stock || 0)
+    const description = newProduct.description?.trim() || ""
+    const featuresArray = (newProduct.features || "")
+      .split(/[,\n]/)
+      .map((s) => s.trim())
+      .filter(Boolean)
     let imageUrl: string | undefined = undefined
     try {
       if (imageFile) {
@@ -210,9 +232,9 @@ export default function AdminDashboard() {
       rating: 0,
       reviews: 0,
       image: imageUrl || "",
-      description: "",
-      long_description: "",
-      features: [],
+      description,
+      long_description: description,
+      features: featuresArray,
     }
     const { error, data } = await supabase.from("products").insert(payload).select("*").single()
     if (!error && data) {
@@ -240,7 +262,7 @@ export default function AdminDashboard() {
     }
     setShowAddProduct(false)
     setImageFile(null)
-    setNewProduct({ name: "", price: "", category: "electronics", stock: "" })
+    setNewProduct({ name: "", price: "", category: "electronics", stock: "", description: "", features: "" })
   }
 
   const handleEditProduct = async (p: Product) => {
@@ -498,6 +520,26 @@ export default function AdminDashboard() {
                   className="px-4 py-2 border-2 border-blue-600 rounded-lg bg-white text-black font-bold file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700"
                 />
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-bold text-black mb-2">Description</label>
+                  <textarea
+                    placeholder="Short description shown on product page"
+                    value={newProduct.description}
+                    onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                    className="w-full min-h-24 px-4 py-2 border-2 border-blue-600 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-black mb-2">Key Features</label>
+                  <textarea
+                    placeholder="Comma or newline separated, e.g. Fast charging, Durable cable, 1-year warranty"
+                    value={newProduct.features}
+                    onChange={(e) => setNewProduct({ ...newProduct, features: e.target.value })}
+                    className="w-full min-h-24 px-4 py-2 border-2 border-blue-600 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+              </div>
               <div className="flex gap-2">
                 <button
                   type="submit"
@@ -539,10 +581,10 @@ export default function AdminDashboard() {
                           <Star
                             key={i}
                             size={16}
-                            className={`${i < Math.floor(product.rating) ? "fill-red-600 text-red-600" : "text-gray-300"}`}
+                            className={`${i < Math.floor((reviewStats[product.id]?.average ?? product.rating)) ? "fill-red-600 text-red-600" : "text-gray-300"}`}
                           />
                         ))}
-                        <span className="text-sm font-bold text-black ml-1">({product.rating})</span>
+                        <span className="text-sm font-bold text-black ml-1">({(reviewStats[product.id]?.average ?? product.rating).toFixed(1)})</span>
                       </div>
                     </td>
                     <td className="py-3 px-4">
