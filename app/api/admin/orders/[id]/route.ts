@@ -57,11 +57,34 @@ export async function GET(
   if (itemsErr) return NextResponse.json({ error: itemsErr.message }, { status: 400 })
 
   // Fetch customer profile
-  const { data: cust } = await client
+  const { data: custProfile } = await client
     .from("profiles")
-    .select("first_name, last_name, full_name, phone, address, city, zip_code, email")
+    .select("first_name, last_name, full_name, phone, address, city, zip_code")
     .eq("id", order.user_id)
     .maybeSingle()
 
-  return NextResponse.json({ order, items, customer: cust || null })
+  // Try to fetch auth user (email, possibly name) if we have a service key
+  let email: string | null = null
+  let metaFullName: string | null = null
+  try {
+    if ('auth' in client && (client as any).auth?.admin && serviceKey) {
+      const { data: adminUser } = await (client as any).auth.admin.getUserById(order.user_id)
+      email = adminUser?.user?.email ?? null
+      const md = (adminUser?.user as any)?.user_metadata
+      metaFullName = md?.full_name || md?.name || null
+    }
+  } catch {}
+
+  const customer = {
+    first_name: (custProfile as any)?.first_name ?? null,
+    last_name: (custProfile as any)?.last_name ?? null,
+    full_name: (custProfile as any)?.full_name ?? metaFullName ?? null,
+    phone: (custProfile as any)?.phone ?? null,
+    address: (custProfile as any)?.address ?? null,
+    city: (custProfile as any)?.city ?? null,
+    zip_code: (custProfile as any)?.zip_code ?? null,
+    email,
+  }
+
+  return NextResponse.json({ order, items, customer })
 }

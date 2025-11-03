@@ -113,7 +113,7 @@ export default function InvoicePage() {
 
         const { data: order, error: orderErr } = await supabaseBrowser
           .from("orders")
-          .select("id, order_number, total, created_at, status")
+          .select("id, order_number, total, created_at, status, user_id")
           .eq("id", orderId)
           .maybeSingle()
 
@@ -140,11 +140,13 @@ export default function InvoicePage() {
           return
         }
 
-        // Load customer profile for BILL TO
+        // Load customer profile for BILL TO (by order.user_id)
         let customer = { name: "Customer", email: "", phone: "", address: "", city: "", zipCode: "" }
         try {
+          // Use the order's user_id to fetch profile (RLS will allow if it's the same user)
+          const uid = (order as any)?.user_id as string | undefined
           const { data: authData } = await supabaseBrowser.auth.getUser()
-          const uid = authData.user?.id
+          const authedEmail = authData.user?.email ?? ""
           if (uid) {
             const { data: profile } = await supabaseBrowser
               .from("profiles")
@@ -155,8 +157,8 @@ export default function InvoicePage() {
               const first = profile.first_name || (profile.full_name ? String(profile.full_name).split(" ")[0] : "")
               const last = profile.last_name || (profile.full_name ? String(profile.full_name).split(" ").slice(1).join(" ") : "")
               customer = {
-                name: `${first} ${last}`.trim() || "Customer",
-                email: authData.user?.email ?? "",
+                name: `${first} ${last}`.trim() || (profile.full_name || "Customer"),
+                email: authedEmail,
                 phone: profile.phone ?? "",
                 address: profile.address ?? "",
                 city: profile.city ?? "",
