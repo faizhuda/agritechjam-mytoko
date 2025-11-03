@@ -260,7 +260,13 @@ export default function UserDashboard() {
                             <p className="font-bold text-black text-sm">{o.orderNumber ?? o.id}</p>
                             <p className="text-xs text-black font-semibold capitalize">{o.status}</p>
                           </div>
-                          <Link href="/dashboard" className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">Track</Link>
+                          <Link
+                            href={`/invoice?orderId=${o.id}`}
+                            className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700"
+                            title="Track order"
+                          >
+                            Track
+                          </Link>
                         </div>
                       ))}
                     </div>
