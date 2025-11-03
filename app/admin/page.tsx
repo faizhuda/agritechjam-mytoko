@@ -94,14 +94,12 @@ export default function AdminDashboard() {
     const load = async () => {
       if (!isSupabaseConfigured() || !isAdmin) return
 
-      // Load orders for metrics and charts
-      const { data: orders } = await supabase
-        .from("orders")
-        .select("id, user_id, total, status, created_at")
-        .order("created_at", { ascending: false })
-        .limit(500)
+      // Load orders via server API (uses service role when available)
+      const resp = await fetch('/api/admin/orders', { cache: 'no-store' })
+      const j = await resp.json().catch(() => ({}))
+      const apiOrders = Array.isArray(j?.orders) ? j.orders : []
 
-      const orderRows: OrderRow[] = (orders || []).map((o: any) => ({
+      const orderRows: OrderRow[] = (apiOrders || []).map((o: any) => ({
         id: String(o.id),
         user_id: String(o.user_id),
         total: Number(o.total ?? 0),
@@ -147,26 +145,14 @@ export default function AdminDashboard() {
       const monthly = Array.from(byMonth.entries()).map(([month, v]) => ({ month, ...v }))
       setSalesData(monthly)
 
-      // Recent transactions with customer names
-      const recentOrders = orderRows.slice(0, 8)
-      const userIds = Array.from(new Set(recentOrders.map((o) => o.user_id)))
-      const names = new Map<string, string>()
-      if (userIds.length > 0) {
-        const { data: pf } = await supabase
-          .from("profiles")
-          .select("id, full_name, first_name, last_name")
-          .in("id", userIds)
-        for (const p of pf || []) {
-          const name = p.full_name || [p.first_name, p.last_name].filter(Boolean).join(" ") || "Customer"
-          names.set(String(p.id), name)
-        }
-      }
-      const txns: TxnRow[] = recentOrders.map((o) => ({
-        id: o.id,
-        customer: names.get(o.user_id) || "Customer",
+      // Recent transactions; customer names provided by API
+      const recentOrders = (apiOrders as any[]).slice(0, 8)
+      const txns: TxnRow[] = recentOrders.map((o: any) => ({
+        id: String(o.id),
+        customer: String(o.customer || "Customer"),
         amount: o.total || 0,
-  status: capitalize(String(o.status || "pending")),
-        date: new Date(o.created_at).toISOString().slice(0, 10),
+        status: capitalize(String(o.status || "pending")),
+        date: new Date(String(o.created_at)).toISOString().slice(0, 10),
       }))
       setRecent(txns)
 
