@@ -133,6 +133,49 @@ export async function fetchReviewsByProductId(productId: number): Promise<Review
 }
 
 /**
+ * Fetch multiple products by their IDs with a single query when possible.
+ * Falls back to local sample data when Supabase isn't configured.
+ */
+export async function fetchProductsByIds(ids: number[]): Promise<Product[]> {
+  const uniqueIds = Array.from(new Set(ids.filter((x) => Number.isFinite(x)))) as number[]
+  if (uniqueIds.length === 0) return []
+
+  if (!isSupabaseConfigured()) {
+    return productDatabase.filter((p) => uniqueIds.includes(p.id))
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      "id, name, price, original_price, category, rating, reviews, image, description, long_description, features, stock, in_stock"
+    )
+    .in("id", uniqueIds)
+
+  if (error) {
+    console.error("Supabase fetchProductsByIds error:", error)
+    return []
+  }
+
+  const mapped: Product[] = (data || []).map((p: any) => ({
+    id: Number(p.id),
+    name: p.name,
+    price: Number(p.price),
+    originalPrice: p.original_price != null ? Number(p.original_price) : undefined,
+    category: p.category,
+    rating: Number(p.rating ?? 0),
+    reviews: Number(p.reviews ?? 0),
+    image: p.image ?? "",
+    description: p.description ?? "",
+    longDescription: p.long_description ?? "",
+    features: Array.isArray(p.features) ? p.features : [],
+    stock: Number(p.stock ?? 0),
+    inStock: Boolean(p.in_stock ?? (p.stock ?? 0) > 0),
+  }))
+
+  return mapped
+}
+
+/**
  * Fetch aggregated review stats (count and average rating) for a set of product IDs.
  * Uses Supabase when configured; otherwise computes from local sampleReviews.
  */

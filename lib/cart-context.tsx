@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react"
 import { isSupabaseConfigured } from "@/lib/supabase/browser"
+import { fetchProductsByIds } from "@/lib/db/products"
 import { useAuth } from "@/hooks/use-auth"
 import {
   listCartItems as dbList,
@@ -53,6 +54,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
+
+  // Rehydrate guest cart item details (name/price/image) from DB to avoid stale snapshots
+  useEffect(() => {
+    const rehydrate = async () => {
+      if (user) return // user-synced path already handled above
+      if (!isSupabaseConfigured()) return
+      const ids = cartItems.map((i) => i.id)
+      if (ids.length === 0) return
+      try {
+        const fresh = await fetchProductsByIds(ids)
+        if (!fresh || fresh.length === 0) return
+        const byId = new Map(fresh.map((p) => [p.id, p]))
+        setCartItems((prev) =>
+          prev.map((i) => {
+            const p = byId.get(i.id)
+            if (!p) return i
+            // Only update if values changed to avoid unnecessary re-renders
+            if (i.name === p.name && i.price === p.price && i.image === p.image) return i
+            return { ...i, name: p.name, price: p.price, image: p.image }
+          })
+        )
+      } catch (e) {
+        console.error("cart rehydrate failed", e)
+      }
+    }
+    // Fire-and-forget; doesn't need to block UI
+    rehydrate()
+    // Only re-run when ids set changes to limit calls
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, cartItems.map((i) => i.id).join(",")])
 
   const addToCart = (item: CartItem) => {
     setCartItems((prevItems) => {

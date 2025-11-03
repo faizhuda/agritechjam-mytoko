@@ -3,15 +3,15 @@ export const dynamic = "force-dynamic"
 export const revalidate = 0
 import { fetchProducts } from "@/lib/db/products"
 import CatalogClient from "@/components/catalog/catalog-client"
-import Link from "next/link"
 
 export default async function CatalogPage({
   searchParams,
 }: {
-  searchParams?: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const products = await fetchProducts()
-  const initialSearch = typeof searchParams?.search === "string" ? searchParams!.search : ""
+  const params = await searchParams
+  const initialSearch = typeof params?.search === "string" ? params.search : ""
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
