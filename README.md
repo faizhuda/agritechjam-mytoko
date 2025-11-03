@@ -1,4 +1,15 @@
-# MyToko — Next.js + Supabase E‑Commerce
+<div align="center">
+
+# MyToko
+
+Modern e‑commerce built with Next.js 16, TypeScript, Tailwind, and Supabase — fast, secure, and IDR‑first.
+
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/) 
+[![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=000)](https://react.dev/) 
+[![Supabase](https://img.shields.io/badge/Supabase-Postgres-3fcf8e?logo=supabase&logoColor=fff)](https://supabase.com/) 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](#license)
+
+</div>
 
 A minimalist e‑commerce app built with Next.js 16 (App Router), TypeScript, Tailwind, and Supabase for auth, database, RPCs, and Storage.
 
@@ -24,6 +35,17 @@ A minimalist e‑commerce app built with Next.js 16 (App Router), TypeScript, Ta
 - Tailwind CSS, shadcn/ui atoms
 - Supabase: Postgres + Auth + Storage + RPC
 - Recharts for admin charts, @react-pdf/renderer for invoices
+
+## Architecture
+
+- Next.js 16 App Router (TypeScript, React 18)
+- Tailwind + small shadcn/ui atoms
+- Supabase
+  - Auth (client + server helpers)
+  - Postgres with RLS policies
+  - RPCs: create orders, set order status, toggle review helpful
+  - Storage bucket `products` for images (public read, admin‑only writes)
+- Charts: Recharts; PDF: `@react-pdf/renderer`
 
 ## Quick start
 
@@ -57,6 +79,18 @@ npm run build
 npm start
 ```
 
+## Environment & Config
+
+- Put env vars in `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+- Place favicon at `app/favicon.ico` (preferred) or `public/favicon.ico`.
+- Optional icons: `app/icon.png` (512×512), `app/apple-touch-icon.png` (180×180).
+
 ## Database setup (Supabase)
 
 Run these SQL scripts in Supabase SQL editor (or convert them to CLI migrations):
@@ -70,6 +104,19 @@ Run these SQL scripts in Supabase SQL editor (or convert them to CLI migrations)
   - `orders_create_rpc.sql`, `orders_add_order_number.sql`, `orders_policies.sql`
 - Reviews helpful RPC: `reviews_helpful_rpc.sql`
 - Products public read: `products_public_read.sql`
+
+## Admin APIs
+
+All admin mutations are server‑side with auth + admin checks.
+
+- PATCH `/api/orders/[id]/status`
+  - Body: `{ "status": "pending|paid|shipped|delivered|cancelled" }`
+  - Calls `set_order_status` RPC; returns `{ ok: true }` or error
+
+- PATCH `/api/products/[id]`
+  - Whitelisted: `name`, `long_description`, `category`, `stock`, `image`
+  - Blocked: `in_stock`, `price`, `original_price`, `rating`, `reviews`
+  - Validates lengths/enums/ranges and image URL; returns `{ product: {...} }`
 
 ### Keep `in_stock` DB‑managed
 
@@ -104,6 +151,15 @@ We do NOT write `in_stock` from the app. Choose one approach in DB:
 - Storage SQL errors
   - `CREATE POLICY IF NOT EXISTS` not supported → script uses conditional DO blocks with `pg_policies` checks instead.
   - `must be owner of table objects` → we don’t ALTER `storage.objects`; only create bucket + policies.
+
+## Development Scripts
+
+```bash
+npm run dev    # start dev server
+npm run build  # production build
+npm start      # run built app
+npm run lint   # optional: configure ESLint
+```
 
 ## Scripts
 
