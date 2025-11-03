@@ -234,6 +234,9 @@ export default function AdminDashboard() {
           inStock: Number(data.stock ?? 0) > 0,
         },
       ])
+    } else if (error) {
+      alert(error.message)
+      return
     }
     setShowAddProduct(false)
     setImageFile(null)
