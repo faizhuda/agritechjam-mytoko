@@ -9,6 +9,7 @@ import { formatIDR } from "@/lib/utils"
 
 export default function InvoicePage() {
   const [orderId, setOrderId] = useState<string | null>(null)
+  const [parsed, setParsed] = useState(false)
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -20,13 +21,20 @@ export default function InvoicePage() {
       const url = new URL(window.location.href)
       const id = url.searchParams.get("orderId")
       setOrderId(id)
+      setParsed(true)
     } catch (_) {
       setOrderId(null)
+      setParsed(true)
     }
   }, [])
 
   useEffect(() => {
     const load = async () => {
+      // Wait until URL query parsing is completed to avoid a race
+      if (!parsed) return
+      // reset state for a fresh attempt when orderId changes
+      setError(null)
+      setLoading(true)
       if (!orderId) {
         // Fallback: try the most recent order for the logged-in user
         try {
@@ -55,7 +63,7 @@ export default function InvoicePage() {
         }
       }
       if (!isSupabaseConfigured()) {
-  setError("Supabase is not configured.")
+        setError("Supabase is not configured.")
         setLoading(false)
         return
       }
@@ -220,7 +228,7 @@ export default function InvoicePage() {
       }
     }
     load()
-  }, [orderId])
+  }, [orderId, parsed])
 
   const handlePrint = () => {
     window.print()

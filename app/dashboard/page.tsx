@@ -483,7 +483,7 @@ export default function UserDashboard() {
             const last = (prof as any)?.last_name || ((prof as any)?.full_name ? String((prof as any).full_name).split(" ").slice(1).join(" ") : "")
             const author = `${first} ${last}`.trim() || "Customer"
 
-            await supabase
+            const { error } = await supabase
               .from("reviews")
               .insert({
                 user_id: uid,
@@ -493,6 +493,18 @@ export default function UserDashboard() {
                 title: null,
                 comment: r.comment || null,
               })
+            if (error) {
+              const msg = String(error.message || "Failed to submit review")
+              // Unique violation (one review per user per product)
+              if ((error as any).code === "23505" || /unique/i.test(msg)) {
+                alert("You have already reviewed this product.")
+              } else if (/violates row-level security|RLS/i.test(msg) || /not authorized/i.test(msg)) {
+                alert("You can only review products you've purchased.")
+              } else {
+                alert(msg)
+              }
+              return setRatingOpen(false)
+            }
             // Optimistically remove from pending reviews
             setReviewToWrite((prev) => prev.filter((x) => x.productId !== ratingTarget.productId))
             setRatingOpen(false)
