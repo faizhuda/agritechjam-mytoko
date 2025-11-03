@@ -55,6 +55,13 @@ export async function PATCH(
     if (desc.length > 5000) return NextResponse.json({ error: "Description too long" }, { status: 400 })
     allow.long_description = desc
   }
+  if (Array.isArray(body.features)) {
+    const arr = body.features
+      .map((x: any) => (typeof x === "string" ? x.trim() : ""))
+      .filter((x: string) => x.length > 0)
+      .slice(0, 50)
+    allow.features = arr
+  }
   if (typeof body.category === "string") {
     const cat = body.category.toLowerCase()
     const ok = ["electronics", "accessories"].includes(cat)

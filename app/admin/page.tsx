@@ -67,7 +67,7 @@ export default function AdminDashboard() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Product | null>(null)
-  const [editForm, setEditForm] = useState<{ name: string; description: string; category: string; stock: string }>({ name: "", description: "", category: "electronics", stock: "" })
+  const [editForm, setEditForm] = useState<{ name: string; description: string; features: string; category: string; stock: string }>({ name: "", description: "", features: "", category: "electronics", stock: "" })
   const [editImage, setEditImage] = useState<File | null>(null)
 
   // Gate: only admins allowed
@@ -592,7 +592,7 @@ export default function AdminDashboard() {
                         <button
                           onClick={() => {
                             setEditTarget(product)
-                            setEditForm({ name: product.name, description: product.longDescription || "", category: product.category, stock: String(product.stock) })
+                            setEditForm({ name: product.name, description: product.longDescription || "", features: (product.features||[]).join(", "), category: product.category, stock: String(product.stock) })
                             setEditImage(null)
                             setEditOpen(true)
                           }}
@@ -638,6 +638,10 @@ export default function AdminDashboard() {
               const payload: any = {
                 name: editForm.name,
                 long_description: editForm.description,
+                features: (editForm.features || "")
+                  .split(/[\n,]/)
+                  .map((s) => s.trim())
+                  .filter(Boolean),
                 category: editForm.category,
                 stock,
               }
@@ -697,6 +701,15 @@ export default function AdminDashboard() {
             <div>
               <label className="block text-sm font-bold text-black mb-2">Description</label>
               <textarea value={editForm.description} onChange={(e)=>setEditForm({...editForm, description:e.target.value})} className="w-full min-h-24 px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-black mb-2">Key Features</label>
+              <textarea
+                value={editForm.features}
+                onChange={(e)=>setEditForm({...editForm, features:e.target.value})}
+                placeholder="Comma or newline separated"
+                className="w-full min-h-24 px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold"
+              />
             </div>
             <div className="flex justify-end gap-2">
               <button type="button" onClick={()=>{setEditOpen(false); setEditTarget(null)}} className="px-6 py-2 border-2 border-gray-300 text-black rounded-lg font-bold hover:bg-gray-100">Cancel</button>

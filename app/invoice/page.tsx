@@ -329,15 +329,15 @@ export default function InvoicePage() {
           </div>
 
           {/* Invoice Details */}
-          <div className="grid grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div>
               <p className="text-sm text-black font-bold mb-2">BILL TO</p>
-              <div className="space-y-1">
-                <p className="font-bold text-black">{data.customer.name}</p>
-                <p className="text-sm text-black font-bold">{data.customer.email}</p>
-                <p className="text-sm text-black font-bold">{data.customer.phone}</p>
-                <p className="text-sm text-black font-bold">{data.customer.address}</p>
-                <p className="text-sm text-black font-bold">{data.customer.city} {data.customer.zipCode}</p>
+              <div className="space-y-1 break-words">
+                <p className="font-bold text-black break-words">{data.customer.name}</p>
+                <p className="text-sm text-black font-bold break-words">{data.customer.email}</p>
+                <p className="text-sm text-black font-bold break-words">{data.customer.phone}</p>
+                <p className="text-sm text-black font-bold break-words">{data.customer.address}</p>
+                <p className="text-sm text-black font-bold break-words">{data.customer.city} {data.customer.zipCode}</p>
               </div>
             </div>
             <div className="text-right">
@@ -359,7 +359,7 @@ export default function InvoicePage() {
           </div>
 
           {/* Items Table */}
-          <div className="mb-8">
+          <div className="mb-8 overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b-2 border-gray-300">
@@ -372,7 +372,7 @@ export default function InvoicePage() {
               <tbody>
                 {data.items.map((item: any) => (
                   <tr key={item.id} className="border-b border-gray-300">
-                    <td className="py-3 px-4 text-black font-bold">{item.name}</td>
+                    <td className="py-3 px-4 text-black font-bold break-words">{item.name}</td>
                     <td className="text-right py-3 px-4 text-black font-bold">{item.quantity}</td>
                     <td className="text-right py-3 px-4 text-black font-bold">{formatIDR(item.unitPrice)}</td>
                     <td className="text-right py-3 px-4 text-black font-bold">{formatIDR(item.total)}</td>
