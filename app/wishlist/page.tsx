@@ -1,22 +1,34 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Heart, ShoppingCart, ArrowLeft } from "lucide-react"
 import { useWishlist } from "@/lib/wishlist-context"
 import { useCart } from "@/lib/cart-context"
 import { formatIDR } from "@/lib/utils"
+import { fetchReviewStatsForProductIds } from "@/lib/db/products"
 
 export default function WishlistPage() {
   const { wishlistItems, removeFromWishlist } = useWishlist()
   const { addToCart } = useCart()
   const [addedToCart, setAddedToCart] = useState<number | null>(null)
+  const [stats, setStats] = useState<Record<number, { count: number; average: number }>>({})
 
   const handleAddToCart = (item: any) => {
     addToCart({ id: item.id, name: item.name, price: item.price, quantity: 1, image: item.image })
     setAddedToCart(item.id)
     setTimeout(() => setAddedToCart(null), 2000)
   }
+
+  // Fetch live review stats for wishlist items from Supabase (or sample fallback inside function)
+  useEffect(() => {
+    const ids = wishlistItems.map((w) => w.id)
+    if (ids.length === 0) {
+      setStats({})
+      return
+    }
+    fetchReviewStatsForProductIds(ids).then(setStats).catch(() => setStats({}))
+  }, [wishlistItems])
 
   return (
     <div className="min-h-screen bg-white">
@@ -49,8 +61,8 @@ export default function WishlistPage() {
                 {/* Product Image */}
                 <div className="relative h-48 bg-gray-100 overflow-hidden">
                   <img src={item.image || "/placeholder.svg"} alt={item.name} className="w-full h-full object-cover hover:scale-105 transition duration-300" />
-                  <button onClick={() => removeFromWishlist(item.id)} className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg hover:bg-red-50 transition" title="Remove from wishlist">
-                    <Heart size={20} className="fill-red-600 text-red-600" />
+                  <button onClick={() => removeFromWishlist(item.id)} className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg hover:bg-green-50 transition" title="Remove from wishlist">
+                    <Heart size={20} className="fill-green-600 text-green-600" />
                   </button>
                 </div>
 
@@ -63,11 +75,14 @@ export default function WishlistPage() {
                   {/* Rating */}
                   <div className="flex items-center gap-2 my-2">
                     <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <span key={star} className={`text-sm ${star <= Math.round(item.rating || 0) ? "text-yellow-400" : "text-gray-300"}`}>★</span>
-                      ))}
+                      {(() => {
+                        const avg = stats[item.id]?.average ?? 0
+                        return [1, 2, 3, 4, 5].map((star) => (
+                          <span key={star} className={`text-sm ${star <= Math.round(avg) ? "text-yellow-400" : "text-gray-300"}`}>★</span>
+                        ))
+                      })()}
                     </div>
-                    <span className="text-sm text-black font-semibold">{item.rating ?? 0} ({item.reviews ?? 0})</span>
+                    <span className="text-sm text-black font-semibold">{(stats[item.id]?.average ?? 0).toFixed(1)} ({stats[item.id]?.count ?? 0})</span>
                   </div>
 
                   {/* Price */}
@@ -75,7 +90,12 @@ export default function WishlistPage() {
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    <button onClick={() => handleAddToCart(item)} className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => handleAddToCart(item)}
+                      className={`flex-1 py-2 rounded-lg font-bold transition flex items-center justify-center gap-2 ${
+                        addedToCart === item.id ? "bg-green-600 text-white" : "bg-blue-600 text-white hover:bg-blue-700"
+                      }`}
+                    >
                       <ShoppingCart size={18} />
                       {addedToCart === item.id ? "Added!" : "Add to Cart"}
                     </button>

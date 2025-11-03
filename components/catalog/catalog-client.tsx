@@ -30,6 +30,13 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
   const router = useRouter()
   const debounceRef = useRef<number | undefined>(undefined)
 
+  // When the server-provided initialSearch changes due to a navigation
+  // (e.g., typing in the Navbar and pushing /catalog?search=...),
+  // keep this client's state in sync so filtering updates correctly.
+  useEffect(() => {
+    setSearchTerm(initialSearch ?? "")
+  }, [initialSearch])
+
   useEffect(() => {
     if (typeof window === "undefined") return
     const { pathname, search } = window.location

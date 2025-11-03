@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-import { useMemo, useState } from "react"
+import React, { useMemo, useState, useEffect } from "react"
 import Link from "next/link"
 import { CheckCircle } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
@@ -37,10 +36,88 @@ export default function CheckoutPage() {
   })
   const [orderPlaced, setOrderPlaced] = useState(false)
   const [orderId, setOrderId] = useState<string | null>(null)
+  const [orderNumber, setOrderNumber] = useState<string | null>(null)
+  const [profileLoaded, setProfileLoaded] = useState(false)
+  const [hasProfile, setHasProfile] = useState(false)
+  const [signedIn, setSignedIn] = useState(false)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  // Prefill from profile on first mount (when fields are empty)
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!isSupabaseConfigured()) return setProfileLoaded(true)
+      const { data: auth } = await supabaseBrowser.auth.getUser()
+      const u = auth.user
+      if (!u) return setProfileLoaded(true)
+      setSignedIn(true)
+      const { data: prof } = await supabaseBrowser
+        .from("profiles")
+        .select("full_name, first_name, last_name, phone, address, city, zip_code")
+        .eq("id", u.id)
+        .maybeSingle()
+      const p: any = prof || {}
+      const email = u.email ?? ""
+      const first = (p.first_name as string) || (p.full_name ? String(p.full_name).split(" ")[0] : "")
+      const last = (p.last_name as string) || (p.full_name ? String(p.full_name).split(" ").slice(1).join(" ") : "")
+      const next = {
+        email,
+        firstName: first,
+        lastName: last,
+        phone: p.phone ?? "",
+        address: p.address ?? "",
+        city: p.city ?? "",
+        zipCode: p.zip_code ?? "",
+        cardName: "",
+        cardNumber: "",
+        expiryDate: "",
+        cvv: "",
+      }
+      setHasProfile(Boolean(first || last || p.phone || p.address || p.city || p.zip_code))
+      // Only prefill fields that are empty, so we don't override user edits
+      setFormData((prev) => ({
+        ...prev,
+        email: prev.email || next.email,
+        firstName: prev.firstName || next.firstName,
+        lastName: prev.lastName || next.lastName,
+        phone: prev.phone || next.phone,
+        address: prev.address || next.address,
+        city: prev.city || next.city,
+        zipCode: prev.zipCode || next.zipCode,
+      }))
+      setProfileLoaded(true)
+    }
+    loadProfile()
+  }, [])
+
+  const fillFromProfile = async () => {
+    if (!isSupabaseConfigured()) return
+    const { data: auth } = await supabaseBrowser.auth.getUser()
+    const u = auth.user
+    if (!u) return
+    const { data: prof } = await supabaseBrowser
+      .from("profiles")
+      .select("full_name, first_name, last_name, phone, address, city, zip_code")
+      .eq("id", u.id)
+      .maybeSingle()
+    const p: any = prof || {}
+    const email = u.email ?? ""
+    const first = (p.first_name as string) || (p.full_name ? String(p.full_name).split(" ")[0] : "")
+    const last = (p.last_name as string) || (p.full_name ? String(p.full_name).split(" ").slice(1).join(" ") : "")
+    setFormData((prev) => ({
+      ...prev,
+      email,
+      firstName: first,
+      lastName: last,
+      phone: p.phone ?? "",
+      address: p.address ?? "",
+      city: p.city ?? "",
+      zipCode: p.zip_code ?? "",
+    }))
+    toast?.success?.("Shipping info filled from your profile")
   }
 
   const [placing, setPlacing] = useState(false)
@@ -105,6 +182,7 @@ export default function CheckoutPage() {
       }
       // Success
       if (data?.orderId) setOrderId(String(data.orderId))
+      if (data?.orderNumber) setOrderNumber(String(data.orderNumber))
       clearCart()
       setOrderPlaced(true)
     } catch (err: any) {
@@ -132,7 +210,8 @@ export default function CheckoutPage() {
     [cartItems]
   )
   const tax = useMemo(() => subtotal * 0.1, [subtotal])
-  const cartTotal = useMemo(() => subtotal + tax, [subtotal, tax])
+  const shippingFee = useMemo(() => (subtotal > 0 ? 10000 : 0), [subtotal])
+  const cartTotal = useMemo(() => subtotal + tax + shippingFee, [subtotal, tax, shippingFee])
 
   if (orderPlaced) {
     return (
@@ -144,7 +223,8 @@ export default function CheckoutPage() {
             <p className="text-black mb-6 text-base font-bold">
               Thank you for your purchase. Your order has been confirmed.
             </p>
-            <p className="text-sm text-black mb-8 font-bold">Order ID: {orderId ?? "-"}</p>
+            <p className="text-sm text-black mb-1 font-bold">Order ID: {orderId ?? "-"}</p>
+            <p className="text-sm text-black mb-8 font-bold">Order Number: {orderNumber ?? "-"}</p>
             <div className="space-y-3">
               <Link
                 href={orderId ? `/invoice?orderId=${orderId}` : "/invoice"}
@@ -200,7 +280,18 @@ export default function CheckoutPage() {
             <form onSubmit={handleSubmit} className="bg-white border-2 border-gray-300 rounded-xl p-8 shadow-lg">
               {step === 1 && (
                 <div className="space-y-4">
-                  <h2 className="text-2xl font-bold mb-6 text-black">Shipping Information</h2>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-black">Shipping Information</h2>
+                    {signedIn && (
+                      <button
+                        type="button"
+                        onClick={fillFromProfile}
+                        className="text-blue-600 font-bold hover:underline"
+                      >
+                        Use my profile
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="email"
                     name="email"
@@ -352,6 +443,10 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm text-black font-bold">
                   <span>Tax (10%)</span>
                   <span>{formatIDR(tax)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-black font-bold">
+                  <span>Shipping</span>
+                  <span>{formatIDR(shippingFee)}</span>
                 </div>
                 <div className="border-t-2 border-gray-300 pt-3 flex justify-between font-bold text-black">
                   <span>Total</span>

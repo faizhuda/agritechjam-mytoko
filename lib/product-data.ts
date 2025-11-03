@@ -40,6 +40,7 @@ export interface Review {
   comment: string
   date: string
   helpful: number
+  liked?: boolean
 }
 
 export const productDatabase: Product[] = [

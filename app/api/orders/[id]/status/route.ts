@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const res = new NextResponse()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,6 +27,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
+  const { id } = await params
+
   let body: any
   try {
     body = await req.json()
@@ -39,7 +44,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", auth.user.id).maybeSingle()
   if (!profile?.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const { error } = await supabase.rpc("set_order_status", { p_order_id: params.id, p_status: newStatus })
+  const { error } = await supabase.rpc("set_order_status", { p_order_id: id, p_status: newStatus })
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
   return NextResponse.json({ ok: true })

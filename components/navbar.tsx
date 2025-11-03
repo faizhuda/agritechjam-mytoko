@@ -7,12 +7,14 @@ import { useCart } from "@/lib/cart-context"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
 import { normalizeSearch } from "@/lib/utils"
+import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
 
 export default function Navbar() {
   const { cartItems } = useCart()
   const [isOpen, setIsOpen] = useState(false)
   const { user, signOut } = useAuth()
   const [isAdmin, setIsAdmin] = useState(false)
+  const [displayName, setDisplayName] = useState<string>("Profile")
   const [query, setQuery] = useState("")
   const router = useRouter()
   // Keep navbar search in sync with URL and Catalog client updates without using
@@ -34,6 +36,28 @@ export default function Navbar() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  
+  // Load display name and admin flag
+  React.useEffect(() => {
+    const load = async () => {
+      if (!user || !isSupabaseConfigured()) {
+        setDisplayName("Profile")
+        setIsAdmin(false)
+        return
+      }
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name, first_name, last_name, is_admin")
+        .eq("id", user.id)
+        .maybeSingle()
+      const p: any = prof || {}
+      const full = (p.full_name as string | undefined) || [p.first_name, p.last_name].filter(Boolean).join(" ")
+      const dn = full && full.trim().length > 0 ? full : (user.email ?? "Profile")
+      setDisplayName(dn)
+      setIsAdmin(Boolean(p?.is_admin))
+    }
+    load()
+  }, [user])
   
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
@@ -106,7 +130,7 @@ export default function Navbar() {
             {user ? (
               <div className="flex items-center gap-4">
                 <Link href="/dashboard" className="text-black hover:text-blue-600 transition font-bold">
-                  Profile
+                  {displayName}
                 </Link>
                 <button
                   onClick={() => signOut()}
@@ -168,7 +192,7 @@ export default function Navbar() {
                   href="/dashboard"
                   className="block px-4 py-2 text-black hover:bg-gray-100 rounded-lg transition font-bold"
                 >
-                  Profile
+                  {displayName}
                 </Link>
                 <button
                   onClick={() => signOut()}

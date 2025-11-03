@@ -136,6 +136,35 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Global interactive states for all buttons */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled) {
+    @apply transition duration-150 ease-in-out;
+  }
+
+  button:not(:disabled):hover,
+  [role="button"]:not([aria-disabled="true"]):hover,
+  input[type="button"]:not(:disabled):hover,
+  input[type="submit"]:not(:disabled):hover {
+    @apply brightness-95;
+  }
+
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active,
+  input[type="button"]:not(:disabled):active,
+  input[type="submit"]:not(:disabled):active {
+    @apply scale-95;
+  }
+
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input[type="button"]:focus-visible,
+  input[type="submit"]:focus-visible {
+    @apply outline-none ring-2 ring-ring/50;
+  }
 }
 
 html {

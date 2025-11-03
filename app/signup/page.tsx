@@ -44,7 +44,9 @@ export default function SignupPage() {
       return
     }
     try {
-      const { user, session } = await signUpWithPassword(formData.email, formData.password)
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim()
+      const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined
+      const { user, session } = await signUpWithPassword(formData.email, formData.password, { fullName, redirectTo })
       if (!session) {
         // Email confirmation mode
         toast({ title: "Check your email", description: "We sent you a confirmation link." })

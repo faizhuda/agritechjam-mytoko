@@ -10,7 +10,8 @@ export default function CartPage() {
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const tax = subtotal * 0.1
-  const total = subtotal + tax
+  const shippingFee = subtotal > 0 ? 10000 : 0
+  const total = subtotal + tax + shippingFee
 
   return (
     <div className="min-h-screen bg-white">
@@ -77,6 +78,10 @@ export default function CartPage() {
                   <div className="flex justify-between">
                     <span className="text-black font-bold">Tax (10%)</span>
                     <span className="font-bold text-black">{formatIDR(tax)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-black font-bold">Shipping</span>
+                    <span className="font-bold text-black">{formatIDR(shippingFee)}</span>
                   </div>
                   <div className="border-t-2 border-gray-300 pt-4 flex justify-between">
                     <span className="font-bold text-black">Total</span>

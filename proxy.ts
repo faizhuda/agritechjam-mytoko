@@ -29,7 +29,7 @@ export default async function proxy(req: NextRequest) {
       data: { session },
     } = await supabase.auth.getSession()
 
-    const protectedPaths = ["/checkout", "/profile", "/purchase-history", "/wishlist"]
+  const protectedPaths = ["/checkout", "/profile", "/wishlist"]
     const isProtected = protectedPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 
     if (isProtected && !session) {
@@ -47,5 +47,5 @@ export default async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/checkout/:path*", "/profile/:path*", "/purchase-history/:path*", "/wishlist/:path*"],
+  matcher: ["/checkout/:path*", "/profile/:path*", "/wishlist/:path*"],
 }

@@ -16,11 +16,28 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     const ensureSession = async () => {
-      const { data } = await supabase.auth.getSession()
-      if (!data.session) {
-        setTimeout(ensureSession, 400)
-      } else {
-        setSessionReady(true)
+      try {
+        // New flow: Supabase sends a `code` in the query for password recovery (PKCE)
+        if (typeof window !== "undefined") {
+          const url = new URL(window.location.href)
+          const code = url.searchParams.get("code")
+          if (code) {
+            const { error } = await supabase.auth.exchangeCodeForSession(code)
+            if (error) {
+              setError(error.message)
+            }
+          }
+        }
+
+        // Fetch session (also covers the legacy hash-based flow)
+        const { data } = await supabase.auth.getSession()
+        setSessionReady(Boolean(data.session))
+        if (!data.session) {
+          // Retry briefly in case the session is being established
+          setTimeout(ensureSession, 400)
+        }
+      } catch (e: any) {
+        setError(e?.message ?? "Failed to prepare reset session")
       }
     }
     ensureSession()

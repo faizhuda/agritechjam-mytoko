@@ -35,34 +35,34 @@ export default function InvoicePage() {
           if (!uid) throw new Error("Unauthorized")
           const { data: recent, error: recentErr } = await supabaseBrowser
             .from("orders")
-            .select("id, total, created_at, status")
+            .select("id, order_number, total, created_at, status")
             .eq("user_id", uid)
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle()
 
           if (!recent || recentErr) {
-            setError("Order ID tidak ditemukan. Buka invoice dari halaman Checkout atau riwayat pesanan.")
+            setError("Order ID not found. Open the invoice from Checkout or your Order History.")
             setLoading(false)
             return
           }
           setOrderId(recent.id as string)
           return
         } catch (_e) {
-          setError("Order ID tidak ditemukan. Buka invoice dari halaman Checkout atau riwayat pesanan.")
+          setError("Order ID not found. Open the invoice from Checkout or your Order History.")
           setLoading(false)
           return
         }
       }
       if (!isSupabaseConfigured()) {
-        setError("Supabase belum dikonfigurasi.")
+  setError("Supabase is not configured.")
         setLoading(false)
         return
       }
       try {
         const { data: order, error: orderErr } = await supabaseBrowser
           .from("orders")
-          .select("id, total, created_at, status")
+          .select("id, order_number, total, created_at, status")
           .eq("id", orderId)
           .maybeSingle()
 
@@ -74,7 +74,7 @@ export default function InvoicePage() {
           if (uid) {
             const { data: recent } = await supabaseBrowser
               .from("orders")
-              .select("id, total, created_at, status")
+              .select("id, order_number, total, created_at, status")
               .eq("user_id", uid)
               .order("created_at", { ascending: false })
               .limit(1)
@@ -84,10 +84,36 @@ export default function InvoicePage() {
               return
             }
           }
-          setError("Order tidak ditemukan atau Anda tidak berhak mengaksesnya.")
+          setError("Order not found or you are not authorized to access it.")
           setLoading(false)
           return
         }
+
+        // Load customer profile for BILL TO
+        let customer = { name: "Customer", email: "", phone: "", address: "", city: "", zipCode: "" }
+        try {
+          const { data: authData } = await supabaseBrowser.auth.getUser()
+          const uid = authData.user?.id
+          if (uid) {
+            const { data: profile } = await supabaseBrowser
+              .from("profiles")
+              .select("first_name, last_name, full_name, phone, address, city, zip_code")
+              .eq("id", uid)
+              .maybeSingle()
+            if (profile) {
+              const first = profile.first_name || (profile.full_name ? String(profile.full_name).split(" ")[0] : "")
+              const last = profile.last_name || (profile.full_name ? String(profile.full_name).split(" ").slice(1).join(" ") : "")
+              customer = {
+                name: `${first} ${last}`.trim() || "Customer",
+                email: authData.user?.email ?? "",
+                phone: profile.phone ?? "",
+                address: profile.address ?? "",
+                city: profile.city ?? "",
+                zipCode: profile.zip_code ?? "",
+              }
+            }
+          }
+        } catch {}
 
         const { data: items, error: itemsErr } = await supabaseBrowser
           .from("order_items")
@@ -106,45 +132,38 @@ export default function InvoicePage() {
 
         const subtotal = mapped.reduce((s: number, x: any) => s + x.total, 0)
         const dbTotal = Number(order.total)
-        // Preferred breakdown (matches current RPC): tax=10% of subtotal, shipping=10
-        const preferredTax = Math.round(subtotal * 0.10 * 100) / 100
-        const preferredShipping = 10
-        const preferredTotal = Math.round((subtotal + preferredTax + preferredShipping) * 100) / 100
+  // Preferred breakdown (matches current RPC): tax=10% of subtotal, shipping=Rp 10.000
+  const preferredTax = Math.round(subtotal * 0.10)
+  const preferredShipping = subtotal > 0 ? 10000 : 0
+  const preferredTotal = subtotal + preferredTax + preferredShipping
 
         let tax = preferredTax
         let shipping = preferredShipping
 
-        if (Math.abs(dbTotal - preferredTotal) > 0.01) {
-          // First fallback: keep 10% tax, derive shipping from DB total
-          const derivedShipping = Math.max(0, Math.round(((dbTotal - subtotal - preferredTax) * 100)) / 100)
-          const totalWithDerivedShipping = Math.round((subtotal + preferredTax + derivedShipping) * 100) / 100
-          if (Math.abs(dbTotal - totalWithDerivedShipping) <= 0.01) {
+        if (Math.abs(dbTotal - preferredTotal) > 1) {
+          // First fallback for older orders: keep 10% tax, derive shipping from DB total
+          const derivedShipping = Math.max(0, Math.round(dbTotal - subtotal - preferredTax))
+          const totalWithDerivedShipping = subtotal + preferredTax + derivedShipping
+          if (Math.abs(dbTotal - totalWithDerivedShipping) <= 1) {
             shipping = derivedShipping
           } else {
             // Second fallback (older orders): push difference into tax and set shipping 0
             shipping = 0
-            tax = Math.max(0, Math.round(((dbTotal - subtotal) * 100)) / 100)
+            tax = Math.max(0, Math.round(dbTotal - subtotal))
           }
         }
 
         const inv = {
-          orderNumber: String(order.id),
+          orderNumber: String((order as any).order_number || order.id),
           invoiceDate: new Date(order.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }),
           dueDate: new Date(new Date(order.created_at).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }),
           status: String(order.status || "paid").replace(/^./, (c) => c.toUpperCase()),
-          customer: {
-            name: "Customer",
-            email: "",
-            phone: "",
-            address: "",
-            city: "",
-            zipCode: "",
-          },
+          customer,
           items: mapped,
           subtotal,
           tax,
           shipping,
-          total: dbTotal,
+          total: subtotal + tax + shipping,
           paymentMethod: "QRIS",
           transactionId: String(order.id),
         }
@@ -195,13 +214,21 @@ export default function InvoicePage() {
       <div className="min-h-screen bg-white grid place-items-center p-6">
         <div className="max-w-xl text-center">
           <p className="text-black font-bold mb-4">{error}</p>
-          <Link href="/purchase-history" className="text-blue-600 font-bold">Lihat Riwayat Pesanan</Link>
+          <Link href="/dashboard" className="text-blue-600 font-bold">View Order History</Link>
         </div>
       </div>
     )
   }
 
   const data = invoiceData!
+  const statusClass = (() => {
+    const s = String(data.status || "").toLowerCase()
+    if (s === "pending") return "bg-yellow-100 text-yellow-800"
+    if (s === "paid" || s === "shipped") return "bg-blue-100 text-blue-800"
+    if (s === "delivered" || s === "completed") return "bg-green-100 text-green-800"
+    if (s === "cancelled") return "bg-red-100 text-red-800"
+    return "bg-gray-100 text-gray-800"
+  })()
 
   return (
     <div className="min-h-screen bg-white">
@@ -242,7 +269,7 @@ export default function InvoicePage() {
               <p className="text-sm text-black font-bold">Invoice Number</p>
               <p className="text-xl font-bold text-black">{data.orderNumber}</p>
               <p className="text-sm text-black font-bold mt-4">Status</p>
-              <span className="inline-block px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-bold mt-1">
+              <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold mt-1 ${statusClass}`}>
                 {data.status}
               </span>
             </div>
@@ -340,7 +367,7 @@ export default function InvoicePage() {
               </p>
               <p className="text-sm text-black">
                 <span className="font-bold">Payment Status:</span>{" "}
-                <span className="font-bold text-blue-600">{data.status}</span>
+                <span className={`font-bold px-2 py-0.5 rounded-full ${statusClass}`}>{data.status}</span>
               </p>
             </div>
           </div>

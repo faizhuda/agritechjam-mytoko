@@ -95,7 +95,7 @@ export async function fetchReviewsByProductId(productId: number): Promise<Review
     return sampleReviews.filter((r) => r.productId === productId)
   }
 
-  return (data || []).map((r: any) => ({
+  const mapped = (data || []).map((r: any) => ({
     id: String(r.id),
     productId: Number(r.product_id),
     author: r.author ?? "Anonymous",
@@ -104,7 +104,32 @@ export async function fetchReviewsByProductId(productId: number): Promise<Review
     comment: r.comment ?? "",
     date: r.created_at ?? new Date().toISOString(),
     helpful: Number(r.helpful ?? 0),
+    liked: false,
   }))
+
+  try {
+    const { data: userRes } = await supabase.auth.getUser()
+    const userId = userRes?.user?.id
+    if (userId && mapped.length > 0) {
+      const reviewIds = mapped.map((r) => r.id)
+      const { data: likedRows, error: likedErr } = await supabase
+        .from("review_helpfuls")
+        .select("review_id")
+        .eq("user_id", userId)
+        .in("review_id", reviewIds)
+
+      if (!likedErr && likedRows) {
+        const likedSet = new Set((likedRows as any[]).map((row) => String(row.review_id)))
+        for (const r of mapped) {
+          r.liked = likedSet.has(r.id)
+        }
+      }
+    }
+  } catch (e) {
+    // ignore user fetch errors; default liked=false
+  }
+
+  return mapped
 }
 
 /**

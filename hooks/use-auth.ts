@@ -43,12 +43,27 @@ export function useAuth() {
     return data
   }, [])
 
-  const signUpWithPassword = useCallback(async (email: string, password: string) => {
-    if (!isSupabaseConfigured()) throw new Error("Supabase env not configured")
-    const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) throw error
-    return data
-  }, [])
+  const signUpWithPassword = useCallback(
+    async (
+      email: string,
+      password: string,
+      opts?: { fullName?: string; redirectTo?: string }
+    ) => {
+      if (!isSupabaseConfigured()) throw new Error("Supabase env not configured")
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: opts?.fullName ? { full_name: opts.fullName } : undefined,
+          emailRedirectTo:
+            opts?.redirectTo ?? (typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined),
+        },
+      })
+      if (error) throw error
+      return data
+    },
+    []
+  )
 
   const signInWithGoogle = useCallback(async (opts?: { redirectTo?: string }) => {
     if (!isSupabaseConfigured()) throw new Error("Supabase env not configured")

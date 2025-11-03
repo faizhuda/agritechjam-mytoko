@@ -4,9 +4,11 @@ import { useEffect, useState, use } from "react"
 import Link from "next/link"
 import { Star, ShoppingCart, ArrowLeft, Minus, Plus, Heart, ThumbsUp } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
+import { useWishlist } from "@/lib/wishlist-context"
 import { formatIDR } from "@/lib/utils"
 import type { Product, Review } from "@/lib/product-data"
 import { fetchProductById, fetchProducts, fetchReviewsByProductId } from "@/lib/db/products"
+import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [quantity, setQuantity] = useState(1)
@@ -20,6 +22,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [reviews, setReviews] = useState<Review[]>([])
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlist()
 
   useEffect(() => {
     let mounted = true
@@ -41,6 +44,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       mounted = false
     }
   }, [productId])
+
+  // keep heart state in sync with wishlist context
+  useEffect(() => {
+    if (!product) return
+    setIsFavorite(wishlistItems.some((w) => w.id === product.id))
+  }, [wishlistItems, product])
 
   if (!loading && !product) {
     return (
@@ -189,14 +198,29 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 {addedToCart ? "Added to Cart!" : "Add to Cart"}
               </button>
               <button
-                onClick={() => setIsFavorite(!isFavorite)}
+                onClick={() => {
+                  if (!product) return
+                  if (isFavorite) {
+                    removeFromWishlist(product.id)
+                  } else {
+                    addToWishlist({
+                      id: product.id,
+                      name: product.name,
+                      price: product.price,
+                      image: product.image,
+                      rating: product.rating,
+                      reviews: product.reviews,
+                    })
+                  }
+                  setIsFavorite((v) => !v)
+                }}
                 className={`p-3 rounded-lg border-2 transition ${
                   isFavorite
-                    ? "bg-red-600 text-white border-red-600"
-                    : "border-gray-300 text-black hover:border-red-600"
+                    ? "bg-green-600 text-white border-green-600"
+                    : "border-gray-300 text-black hover:border-green-600"
                 }`}
               >
-                <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
+                <Heart size={20} className={isFavorite ? "text-white" : "text-current"} fill={isFavorite ? "currentColor" : "none"} />
               </button>
             </div>
           </div>
@@ -211,7 +235,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="font-bold text-black">{review.author}</p>
-                      <p className="text-sm text-black font-semibold">{review.date}</p>
+                      <p className="text-sm text-black font-semibold">
+                        {new Date(review.date).toLocaleString("id-ID", {
+                          year: "numeric",
+                          month: "short",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-1 mb-3">
@@ -225,9 +257,44 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                   <h4 className="font-bold text-black mb-2">{review.title}</h4>
                   <p className="text-black text-sm mb-4 font-semibold">{review.comment}</p>
-                  <button className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-bold text-sm">
+                  <button
+                    className={`flex items-center gap-2 font-bold text-sm ${review.liked ? "text-blue-800" : "text-blue-600 hover:text-blue-800"}`}
+                    onClick={async () => {
+                      try {
+                        if (!isSupabaseConfigured()) {
+                          setReviews((prev) =>
+                            prev.map((r) =>
+                              r.id === review.id
+                                ? {
+                                    ...r,
+                                    helpful: Math.max(0, (r.helpful || 0) + (r.liked ? -1 : 1)),
+                                    liked: !r.liked,
+                                  }
+                                : r
+                            )
+                          )
+                          return
+                        }
+                        const res = await supabase.rpc("toggle_review_helpful", { p_review_id: String(review.id) })
+                        if (res.error) {
+                          console.error("toggle helpful error:", res.error)
+                          return
+                        }
+                        const payload = Array.isArray(res.data) ? res.data[0] : res.data
+                        setReviews((prev) =>
+                          prev.map((r) =>
+                            r.id === review.id
+                              ? { ...r, helpful: Number(payload?.helpful_count ?? r.helpful), liked: Boolean(payload?.liked) }
+                              : r
+                          )
+                        )
+                      } catch (e) {
+                        console.error("helpful failed", e)
+                      }
+                    }}
+                  >
                     <ThumbsUp size={16} />
-                    Helpful ({review.helpful})
+                    {review.liked ? "Helpful (You)" : `Helpful (${review.helpful})`}
                   </button>
                 </div>
               ))}
