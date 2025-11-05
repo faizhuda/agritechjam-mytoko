@@ -271,9 +271,14 @@ export default function AdminDashboard() {
     if (newStockStr == null) return
     const stock = Number(newStockStr)
     try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData?.session?.access_token
       const res = await fetch(`/api/products/${p.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ stock }),
       })
       const j = await res.json().catch(() => ({}))
@@ -648,9 +653,14 @@ export default function AdminDashboard() {
               if (imageUrl) payload.image = imageUrl
 
               try {
+                const { data: sessionData } = await supabase.auth.getSession()
+                const token = sessionData?.session?.access_token
                 const res = await fetch(`/api/products/${editTarget.id}`, {
                   method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                  },
                   body: JSON.stringify({ ...payload, image: imageUrl ?? undefined }),
                 })
                 const j = await res.json().catch(() => ({}))

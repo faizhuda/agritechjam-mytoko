@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
+import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 
 // PATCH /api/products/[id]
@@ -8,24 +9,31 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+  // Prefer bearer token from client (avoids reliance on server cookies in dev/Turbopack)
+  const authHeader = req.headers.get("authorization") || req.headers.get("Authorization")
+  const bearer = authHeader && authHeader.startsWith("Bearer ") ? authHeader : null
+
+  const supabase = bearer
+    ? createClient(supabaseUrl, supabaseAnon, { global: { headers: { Authorization: bearer } } })
+    : createServerClient(supabaseUrl, supabaseAnon, {
+        cookies: {
+          async get(name) {
+            const store = await cookies()
+            return store.get(name)?.value
+          },
+          async set(name, value, options) {
+            const store = await cookies()
+            store.set({ name, value, ...options })
+          },
+          async remove(name, options) {
+            const store = await cookies()
+            store.set({ name, value: "", ...options, maxAge: 0 })
+          },
         },
-        set(name, value, options) {
-          cookieStore.set({ name, value, ...options })
-        },
-        remove(name, options) {
-          cookieStore.set({ name, value: "", ...options, maxAge: 0 })
-        },
-      },
-    }
-  )
+      })
 
   // Require auth
   const { data: auth } = await supabase.auth.getUser()
