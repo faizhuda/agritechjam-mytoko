@@ -169,9 +169,14 @@ export default function CheckoutPage() {
     }
     try {
       setPlacing(true)
+      const { data: sessionData } = isSupabaseConfigured() ? await supabaseBrowser.auth.getSession() : { data: null as any }
+      const token = sessionData?.session?.access_token
       const resp = await fetch("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           items: cartItems.map((i) => ({ productId: i.id, quantity: i.quantity })),
         }),
