@@ -8,7 +8,7 @@ export interface DBCartItem {
   quantity: number
 }
 
-async function getOrCreateCartId(userId: string): Promise<string | null> {
+export async function getOrCreateCartId(userId: string): Promise<string | null> {
   if (!isSupabaseConfigured()) return null
   // Try to find existing cart
   const { data: existing, error: selectErr } = await supabase

@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react"
-import { isSupabaseConfigured } from "@/lib/supabase/browser"
+import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
 import { fetchProductsByIds } from "@/lib/db/products"
 import { useAuth } from "@/hooks/use-auth"
 import {
@@ -10,6 +10,7 @@ import {
   removeFromCart as dbRemove,
   updateCartItem as dbUpdate,
   clearCart as dbClear,
+  getOrCreateCartId,
 } from "@/lib/db/cart"
 
 export interface CartItem {
@@ -53,6 +54,58 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
+
+  // Realtime: keep cart in sync when DB changes from other tabs/devices and when products change
+  useEffect(() => {
+    let mounted = true
+    let channels: Array<ReturnType<typeof supabase.channel>> = []
+    ;(async () => {
+      if (!user || !isSupabaseConfigured()) return
+      const cartId = await getOrCreateCartId(user.id)
+      if (!mounted || !cartId) return
+      const cartCh = supabase
+        .channel(`cart-items-${cartId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'cart_items', filter: `cart_id=eq.${cartId}` }, async () => {
+          try {
+            const rows = await dbList(user.id)
+            if (!mounted) return
+            setCartItems(rows.map((r) => ({ id: r.productId, name: r.name, price: r.price, quantity: r.quantity, image: r.image })))
+          } catch (e) {
+            console.error('realtime cart refresh failed', e)
+          }
+        })
+        .subscribe()
+
+      const prodCh = supabase
+        .channel(`products-for-cart-${cartId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, async (payload) => {
+          const changedId = Number((payload.new as any)?.id ?? (payload.old as any)?.id)
+          if (!changedId) return
+          setCartItems((prev) => {
+            if (!prev.some((i) => i.id === changedId)) return prev
+            // Re-fetch cart snapshot to get latest product name/price/image
+            ;(async () => {
+              try {
+                const rows = await dbList(user.id)
+                if (!mounted) return
+                setCartItems(rows.map((r) => ({ id: r.productId, name: r.name, price: r.price, quantity: r.quantity, image: r.image })))
+              } catch {}
+            })()
+            return prev
+          })
+        })
+        .subscribe()
+
+      channels.push(cartCh, prodCh)
+    })()
+
+    return () => {
+      mounted = false
+      for (const ch of channels) {
+        try { ch.unsubscribe() } catch {}
+      }
+    }
   }, [user?.id])
 
   // Rehydrate guest cart item details (name/price/image) from DB to avoid stale snapshots

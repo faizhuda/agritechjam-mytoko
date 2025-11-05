@@ -1,12 +1,14 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, startTransition } from "react"
 import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js"
 import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
+import { useRouter } from "next/navigation"
 
 export function useAuth() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
@@ -28,6 +30,10 @@ export function useAuth() {
       session: Session | null
     ) => {
       setUser(session?.user ?? null)
+      // Refresh the current route so Server Components re-fetch with new auth
+      try {
+        startTransition(() => router.refresh())
+      } catch {}
     })
 
     return () => {
