@@ -8,21 +8,56 @@ This project ships SQL scripts under `supabase/` for policies, RPCs, and helpers
 - Supabase Realtime enabled on the following tables (recommended): `products`, `cart_items`, `orders`, `reviews`
 - Supabase CLI installed: https://supabase.com/docs/guides/cli
 
-### Option A: Use the PowerShell helper (Windows)
+### Option A (recommended): Run via Dashboard SQL editor (no tooling needed)
 
-1) Link your local folder to your Supabase project if not already linked:
+1) Open your Supabase project → SQL Editor
+2) Open each file in this order and paste into the editor, then Run:
+	- `products_storage.sql`
+	- `products_public_read.sql`
+	- `products_admin_policies.sql`
+	- `profiles_extra_fields.sql`
+	- `profiles_shipping_fields.sql`
+	- `reviews_dedupe_then_unique.sql`
+	- `reviews_unique_per_user.sql`
+	- `reviews_public_read.sql`
+	- `reviews_insert_policies.sql`
+	- `reviews_helpful_rpc.sql`
+	- `orders_add_order_number.sql`
+	- `orders_create_rpc.sql`
+	- `orders_policies.sql`
+	- `orders_admin_read.sql`
+	- `wishlist_admin.sql`
+	- `idr_migration.sql`
+
+If a statement reports "already exists", it’s typically safe to continue.
+
+### Option B: Use the PowerShell helper against your cloud DB
+
+1) Get your Database URL (Project Settings → Database → Connection string → URI). It looks like:
+
+```
+postgresql://postgres:<PASSWORD>@db.<hash>.supabase.co:5432/postgres
+```
+
+2) Run the helper (requires `psql` in PATH):
 
 ```powershell
+./supabase/apply-migrations.ps1 -DbUrl "postgresql://postgres:<PASSWORD>@db.<hash>.supabase.co:5432/postgres"
+```
+
+The script stops on errors; benign "already exists" messages are okay.
+
+### Option C: Use Supabase CLI (advanced)
+
+You can also run via the Supabase CLI. Note that without remote DB configuration, it may target a local Docker DB.
+
+```powershell
+supabase login
 supabase link --project-ref <your-project-ref>
+./supabase/apply-migrations.ps1 -ProjectRef <your-project-ref>
 ```
 
-2) Run the helper script to execute the SQL files in order:
-
-```powershell
-./supabase/apply-migrations.ps1
-```
-
-The script will stop on errors. If a statement fails because it already exists, you can re-run after adjusting the failing file, or continue manually from the next file.
+Ensure your CLI is configured to execute against the remote DB if you choose this path.
 
 ### Option B: Run each SQL file manually
 
