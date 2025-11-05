@@ -14,6 +14,7 @@ export default function LoginPage() {
     email: "",
     password: "",
   })
+  const [remember, setRemember] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
   const { signInWithPassword, signInWithGoogle } = useAuth()
@@ -37,6 +38,31 @@ export default function LoginPage() {
     try {
   const redirectTo = getRedirect()
   await signInWithPassword(formData.email, formData.password)
+      // Persist preference for subsequent sessions
+      try {
+        const maxAge = 60 * 60 * 24 * 365 // 1 year
+        document.cookie = `remember_me=${remember ? "1" : "0"}; path=/; SameSite=Lax; ${remember ? `max-age=${maxAge}` : ""}`
+
+        // If user chose not to be remembered, constrain auth to the current tab session
+        if (!remember && typeof window !== 'undefined') {
+          const supaUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
+          let ref = ""
+          try { ref = new URL(supaUrl).hostname.split(".")[0] || "" } catch {}
+          const key = ref ? `sb-${ref}-auth-token` : ""
+          if (key && window.localStorage && window.sessionStorage) {
+            const val = window.localStorage.getItem(key)
+            if (val) {
+              // Move token to sessionStorage so it disappears when the tab closes
+              try { window.sessionStorage.setItem(key, val) } catch {}
+              try { window.localStorage.removeItem(key) } catch {}
+            }
+          }
+          // Also make sure we clear any persisted session when the tab/window closes
+          window.addEventListener('beforeunload', () => {
+            try { window.localStorage.removeItem('sb-last-refresh-token') } catch {}
+          })
+        }
+      } catch {}
       toast({ title: "Signed in", description: "Welcome back!" })
   router.push(redirectTo)
     } catch (err: any) {
@@ -88,9 +114,14 @@ export default function LoginPage() {
             </div>
 
             <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-2 border-gray-300 bg-white" />
-                <span className="font-bold text-black">Remember me</span>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e)=>setRemember(e.target.checked)}
+                  className="w-4 h-4 rounded border-2 border-gray-300 bg-white"
+                />
+                <span className="font-bold text-black">Remember Me</span>
               </label>
               <Link href="/forgot-password" className="text-blue-600 hover:text-blue-800 font-bold">
                 Forgot password?

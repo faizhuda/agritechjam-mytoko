@@ -466,9 +466,9 @@ export default function CheckoutPage() {
       <AlertDialog open={stockDialogOpen} onOpenChange={setStockDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Jumlah melebihi stok tersedia</AlertDialogTitle>
+            <AlertDialogTitle>Quantity Exceeds Available Stock</AlertDialogTitle>
             <AlertDialogDescription>
-              Beberapa item di keranjang melebihi stok. Sesuaikan kuantitas sebelum checkout:
+              Some items in your cart exceed available stock. Please adjust quantities before checkout:
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="mt-2 space-y-2 text-sm">
@@ -476,15 +476,15 @@ export default function CheckoutPage() {
               <div key={v.id} className="flex justify-between">
                 <span className="font-medium text-black">{v.name}</span>
                 <span className="text-black">
-                  minta {v.wanted} • stok {v.available}
+                  Requested {v.wanted} • Available {v.available}
                 </span>
               </div>
             ))}
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Oke</AlertDialogCancel>
+            <AlertDialogCancel>OK</AlertDialogCancel>
             <AlertDialogAction onClick={adjustQuantitiesToAvailable}>
-              Sesuaikan ke stok
+              Adjust To Stock
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
