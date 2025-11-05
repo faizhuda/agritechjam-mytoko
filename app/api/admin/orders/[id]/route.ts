@@ -1,29 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@supabase/ssr"
+import { createRouteClient } from "@/lib/supabase/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const res = new NextResponse()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) {
-          return req.cookies.get(name)?.value
-        },
-        set(name, value, options) {
-          res.cookies.set({ name, value, ...options })
-        },
-        remove(name, options) {
-          res.cookies.set({ name, value: "", ...options, maxAge: 0 })
-        },
-      },
-    }
-  )
+  const supabase = createRouteClient(req)
 
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -35,7 +18,7 @@ export async function GET(
     .maybeSingle()
   if (!profile?.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const { id } = await params
+  const { id } = params
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const client = serviceKey ? createServiceClient(url, serviceKey) : supabase

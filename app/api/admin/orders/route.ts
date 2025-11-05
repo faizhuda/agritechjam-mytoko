@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@supabase/ssr"
+import { createRouteClient } from "@/lib/supabase/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
 
 type OrderRow = {
@@ -11,26 +11,8 @@ type OrderRow = {
 }
 
 export async function GET(req: NextRequest) {
-  const res = new NextResponse()
-
-  // Authenticated user via cookies (for admin check)
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) {
-          return req.cookies.get(name)?.value
-        },
-        set(name, value, options) {
-          res.cookies.set({ name, value, ...options })
-        },
-        remove(name, options) {
-          res.cookies.set({ name, value: "", ...options, maxAge: 0 })
-        },
-      },
-    }
-  )
+  // Authenticated user via cookies or bearer token (for admin check)
+  const supabase = createRouteClient(req)
 
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

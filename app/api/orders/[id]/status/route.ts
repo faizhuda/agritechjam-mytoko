@@ -1,33 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@supabase/ssr"
+import { createRouteClient } from "@/lib/supabase/server"
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const res = new NextResponse()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) {
-          return req.cookies.get(name)?.value
-        },
-        set(name, value, options) {
-          res.cookies.set({ name, value, ...options })
-        },
-        remove(name, options) {
-          res.cookies.set({ name, value: "", ...options, maxAge: 0 })
-        },
-      },
-    }
-  )
+  const supabase = createRouteClient(req)
 
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { id } = await params
+  const { id } = params
 
   let body: any
   try {
