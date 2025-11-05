@@ -72,8 +72,19 @@ export async function addToCart(userId: string, productId: number, quantity: num
   if (fetchErr) {
     console.error("fetch cart_item error", fetchErr)
   }
+  // Fetch current stock to prevent exceeding available
+  let stock = 0
+  try {
+    const { data: p } = await supabase
+      .from("products")
+      .select("stock")
+      .eq("id", productId)
+      .maybeSingle()
+    stock = Number((p as any)?.stock ?? 0)
+  } catch {}
 
-  const newQty = Number((existing?.quantity ?? 0)) + quantity
+  const requested = Number((existing?.quantity ?? 0)) + quantity
+  const newQty = Math.max(0, stock > 0 ? Math.min(requested, stock) : requested)
   const { error: upsertErr } = await supabase
     .from("cart_items")
     .upsert(
@@ -92,9 +103,20 @@ export async function updateCartItem(userId: string, productId: number, quantity
     await removeFromCart(userId, productId)
     return
   }
+  // Clamp to available stock
+  let stock = Infinity
+  try {
+    const { data: p } = await supabase
+      .from("products")
+      .select("stock")
+      .eq("id", productId)
+      .maybeSingle()
+    stock = Number((p as any)?.stock ?? 0)
+  } catch {}
+  const nextQty = Number.isFinite(stock) ? Math.min(quantity, Math.max(0, stock)) : quantity
   const { error } = await supabase
     .from("cart_items")
-    .update({ quantity })
+    .update({ quantity: nextQty })
     .eq("cart_id", cartId)
     .eq("product_id", productId)
   if (error) console.error("updateCartItem error", error)

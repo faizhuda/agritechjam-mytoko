@@ -3,10 +3,25 @@
 import { Trash2, Plus, Minus } from "lucide-react"
 import Link from "next/link"
 import { useCart } from "@/lib/cart-context"
+import { useRef } from "react"
+import { fetchProductsByIds } from "@/lib/db/products"
 import { formatIDR } from "@/lib/utils"
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart } = useCart()
+  const stockCache = useRef<Map<number, number>>(new Map())
+
+  const ensureStock = async (id: number): Promise<number> => {
+    if (stockCache.current.has(id)) return stockCache.current.get(id)!
+    try {
+      const items = await fetchProductsByIds([id])
+      const stock = Number(items?.[0]?.stock ?? 0)
+      stockCache.current.set(id, stock)
+      return stock
+    } catch {
+      return Infinity
+    }
+  }
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const tax = subtotal * 0.1
@@ -42,7 +57,11 @@ export default function CartPage() {
                         </button>
                         <span className="w-8 text-center font-bold text-black">{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={async () => {
+                            const stock = await ensureStock(item.id)
+                            const next = Math.min(item.quantity + 1, Number.isFinite(stock) ? stock : item.quantity + 1)
+                            if (next !== item.quantity) updateQuantity(item.id, next)
+                          }}
                           className="p-1 border-2 border-gray-300 rounded hover:bg-gray-100 transition text-black font-bold"
                         >
                           <Plus size={16} />

@@ -13,7 +13,7 @@ import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabas
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [quantity, setQuantity] = useState(1)
   const [isFavorite, setIsFavorite] = useState(false)
-  const { addToCart } = useCart()
+  const { addToCart, cartItems } = useCart() as any
   const [addedToCart, setAddedToCart] = useState(false)
 
   const { id } = use(params)
@@ -84,18 +84,25 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     : 0
 
   const handleAddToCart = () => {
+    const already = (cartItems || []).find((i: any) => i.id === product.id)?.quantity || 0
+    const maxAvailable = Math.max(0, Number(product.stock ?? 0) - Number(already))
+    const qty = Math.max(0, Math.min(quantity, maxAvailable || quantity))
     addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
-      quantity,
+      quantity: qty,
       image: product.image,
     })
     setAddedToCart(true)
     setTimeout(() => setAddedToCart(false), 2000)
   }
 
-  const incrementQuantity = () => setQuantity(quantity + 1)
+  const incrementQuantity = () => {
+    const already = (cartItems || []).find((i: any) => i.id === product.id)?.quantity || 0
+    const maxAvailable = Math.max(1, Number(product.stock ?? 0) - Number(already))
+    setQuantity((q) => Math.min(q + 1, maxAvailable))
+  }
   const decrementQuantity = () => quantity > 1 && setQuantity(quantity - 1)
   // relatedProducts prepared from fetched list above
 
@@ -180,7 +187,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <button onClick={decrementQuantity} className="p-3 text-black hover:bg-gray-100 transition">
                   <Minus size={20} />
                 </button>
-                <span className="px-6 py-2 text-black font-bold text-lg">{quantity}</span>
+                <span className="px-6 py-2 text-black font-bold text-lg" aria-live="polite">{quantity}</span>
                 <button onClick={incrementQuantity} className="p-3 text-black hover:bg-gray-100 transition">
                   <Plus size={20} />
                 </button>
