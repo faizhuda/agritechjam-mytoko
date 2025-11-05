@@ -48,7 +48,7 @@ export async function PATCH(
   if (!profile?.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   const { id: idParam } = params
-  const id = Number(idParam)
+  const id = Number.parseInt(String(idParam ?? "").trim(), 10)
   if (!Number.isFinite(id) || id <= 0) return NextResponse.json({ error: "Invalid product id" }, { status: 400 })
 
   let body: any

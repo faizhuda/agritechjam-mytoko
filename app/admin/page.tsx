@@ -109,9 +109,10 @@ export default function AdminDashboard() {
         created_at: o.created_at,
       }))
 
-      // KPI
-      const totalRevenue = orderRows.reduce((s, o) => s + (o.total || 0), 0)
-      const totalOrders = orderRows.length
+  // KPI (exclude cancelled orders from revenue and count)
+  const nonCancelled = orderRows.filter((o) => String(o.status).toLowerCase() !== 'cancelled')
+  const totalRevenue = nonCancelled.reduce((s, o) => s + (o.total || 0), 0)
+  const totalOrders = nonCancelled.length
       const totalCustomers = new Set(orderRows.map((o) => o.user_id)).size
       const now = new Date()
       const start30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
@@ -133,7 +134,7 @@ export default function AdminDashboard() {
         const key = d.toLocaleString(undefined, { month: "short" })
         byMonth.set(key, { sales: 0, orders: 0 })
       }
-      for (const o of orderRows) {
+      for (const o of nonCancelled) {
         const d = new Date(o.created_at)
         const diffMonths = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth())
         if (diffMonths >= 0 && diffMonths < 6) {
@@ -291,12 +292,14 @@ export default function AdminDashboard() {
 
   const handleDeleteProduct = async (p: Product) => {
     if (!isSupabaseConfigured() || !isAdmin) return
-  if (!confirm(`Delete product "${p.name}"?`)) return
-    const { error } = await supabase.from("products").delete().eq("id", p.id)
+    if (!confirm(`Delete product "${p.name}"?`)) return
+    // Soft-delete to avoid FK violations on order_items
+    const { error } = await supabase.from("products").update({ archived: true }).eq("id", p.id)
     if (!error) {
       setProducts((prev) => prev.filter((x) => x.id !== p.id))
     } else {
-      alert(error.message)
+      // Fallback message for missing column or other issues
+      alert(error.message || 'Failed to delete product. Ensure products_soft_delete.sql is applied.')
     }
   }
 
