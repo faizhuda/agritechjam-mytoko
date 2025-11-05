@@ -78,8 +78,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         .subscribe()
 
       const prodCh = supabase
-        .channel(`products-for-cart-${cartId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, async (payload) => {
+  .channel(`products-for-cart-${cartId}`)
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, async (payload: any) => {
           const changedId = Number((payload.new as any)?.id ?? (payload.old as any)?.id)
           if (!changedId) return
           setCartItems((prev) => {
