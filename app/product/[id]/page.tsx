@@ -9,6 +9,7 @@ import { formatIDR } from "@/lib/utils"
 import type { Product, Review } from "@/lib/product-data"
 import { fetchProductById, fetchProducts, fetchReviewsByProductId } from "@/lib/db/products"
 import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
+import RealtimeRefresh from "@/components/realtime-refresh"
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [quantity, setQuantity] = useState(1)
@@ -107,7 +108,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   // relatedProducts prepared from fetched list above
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pb-24 sm:pb-0">
+      {/* Auto-refresh when products change */}
+      <RealtimeRefresh table="products" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link
           href="/catalog"
@@ -182,7 +185,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Quantity Selector and Add to Cart */}
-            <div className="flex items-center gap-4 pt-4">
+            <div className="hidden md:flex items-center gap-4 pt-4">
               <div className="flex items-center border-2 border-gray-300 rounded-lg">
                 <button onClick={decrementQuantity} className="p-3 text-black hover:bg-gray-100 transition">
                   <Minus size={20} />
@@ -350,6 +353,27 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             </div>
           </div>
         )}
+      </div>
+      {/* Mobile sticky add-to-cart bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t-2 border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center border-2 border-gray-300 rounded-lg">
+            <button onClick={decrementQuantity} className="p-2 text-black hover:bg-gray-100 transition">
+              <Minus size={18} />
+            </button>
+            <span className="px-4 py-1 text-black font-bold" aria-live="polite">{quantity}</span>
+            <button onClick={incrementQuantity} className="p-2 text-black hover:bg-gray-100 transition">
+              <Plus size={18} />
+            </button>
+          </div>
+          <button
+            onClick={handleAddToCart}
+            disabled={!product.inStock}
+            className="flex-1 text-center bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            Add To Cart
+          </button>
+        </div>
       </div>
     </div>
   )

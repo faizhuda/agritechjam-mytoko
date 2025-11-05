@@ -57,11 +57,13 @@ npm install
 
 2) Configure environment
 
-Create `.env.local`:
+Create `.env.local` (or copy from `env.example`):
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+# Server-only (optional if you use service role in admin APIs)
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
 3) Run the app
@@ -83,17 +85,25 @@ npm start
 
 - Put env vars in `.env.local`:
 
-```bash
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
+See `env.example` for all variables. Minimum required:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Optional (server-only):
+
+- `SUPABASE_SERVICE_ROLE_KEY` — used by privileged admin server routes only
 
 - Place favicon at `app/favicon.ico` (preferred) or `public/favicon.ico`.
 - Optional icons: `app/icon.png` (512×512), `app/apple-touch-icon.png` (180×180).
 
 ## Database setup (Supabase)
 
-Run these SQL scripts in Supabase SQL editor (or convert them to CLI migrations):
+Run these SQL scripts in Supabase SQL editor or with the Supabase CLI. See `supabase/MIGRATIONS_RUNBOOK.md` for a full guide, or run the Windows helper:
+
+```powershell
+./supabase/apply-migrations.ps1
+```
 
 - Storage (public bucket + policies): `supabase/products_storage.sql`
   - Creates public `products` bucket
@@ -104,6 +114,8 @@ Run these SQL scripts in Supabase SQL editor (or convert them to CLI migrations)
   - `orders_create_rpc.sql`, `orders_add_order_number.sql`, `orders_policies.sql`
 - Reviews helpful RPC: `reviews_helpful_rpc.sql`
 - Products public read: `products_public_read.sql`
+
+Tip: Enable Realtime for `products`, `cart_items`, `orders`, and `reviews` in your Supabase project to power auto-refresh in the UI.
 
 ## Admin APIs
 
