@@ -483,7 +483,10 @@ export default function CheckoutPage() {
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>OK</AlertDialogCancel>
-            <AlertDialogAction onClick={adjustQuantitiesToAvailable}>
+            <AlertDialogAction
+              onClick={adjustQuantitiesToAvailable}
+              className="bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600"
+            >
               Adjust To Stock
             </AlertDialogAction>
           </AlertDialogFooter>
