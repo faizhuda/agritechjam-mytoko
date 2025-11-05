@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 // @ts-ignore: side-effect CSS import has no type declarations in this project
 import "./globals.css"
 import Navbar from "@/components/navbar"
+import WhatsAppFloat from "@/components/whatsapp-float"
 import { CartProvider } from "@/lib/cart-context"
 import { WishlistProvider } from "@/lib/wishlist-context"
 import { Toaster } from "@/components/ui/toaster"
@@ -29,6 +30,7 @@ export default function RootLayout({
           <WishlistProvider>
             <Navbar />
             <main>{children}</main>
+            <WhatsAppFloat />
             <Toaster />
           </WishlistProvider>
         </CartProvider>

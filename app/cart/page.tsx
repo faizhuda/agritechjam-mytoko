@@ -14,7 +14,7 @@ export default function CartPage() {
   const total = subtotal + tax + shippingFee
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pb-24 sm:pb-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-4xl font-bold mb-8 text-black text-balance">Shopping Cart</h1>
 
@@ -66,7 +66,7 @@ export default function CartPage() {
               </Link>
             </div>
 
-            {/* Order Summary */}
+            {/* Order Summary (desktop) */}
             <div className="lg:col-span-1">
               <div className="bg-white border-2 border-gray-300 rounded-lg p-6 sticky top-20 shadow-lg">
                 <h2 className="text-xl font-bold mb-6 text-black">Order Summary</h2>
@@ -90,7 +90,7 @@ export default function CartPage() {
                 </div>
                 <Link
                   href="/checkout"
-                  className="w-full block text-center bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition"
+                  className="hidden lg:block w-full text-center bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition"
                 >
                   Proceed to Checkout
                 </Link>
@@ -109,6 +109,23 @@ export default function CartPage() {
           </div>
         )}
       </div>
+      {/* Mobile sticky checkout bar */}
+      {cartItems.length > 0 && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 border-t-2 border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs text-gray-600 font-semibold">Total</p>
+              <p className="text-lg font-bold text-blue-600">{formatIDR(total)}</p>
+            </div>
+            <Link
+              href="/checkout"
+              className="flex-1 text-center bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition"
+            >
+              Checkout
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

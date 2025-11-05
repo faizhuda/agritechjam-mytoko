@@ -179,7 +179,7 @@ export default function Navbar() {
               </Link>
             )}
             <a
-              href="https://wa.me/1234567890"
+              href="https://wa.me/6287787128257"
               target="_blank"
               rel="noopener noreferrer"
               className="block px-4 py-2 text-black hover:bg-gray-100 rounded-lg transition font-bold"

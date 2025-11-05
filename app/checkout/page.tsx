@@ -277,7 +277,7 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Form */}
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="bg-white border-2 border-gray-300 rounded-xl p-8 shadow-lg">
+            <form id="checkout-form" onSubmit={handleSubmit} className="bg-white border-2 border-gray-300 rounded-xl p-8 shadow-lg">
               {step === 1 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-6">
@@ -484,6 +484,23 @@ export default function CheckoutPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Mobile sticky action bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 border-t-2 border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs text-gray-600 font-semibold">Total</p>
+            <p className="text-lg font-bold text-blue-600">{formatIDR(cartTotal)}</p>
+          </div>
+          <button
+            form="checkout-form"
+            type="submit"
+            disabled={placing}
+            className="flex-1 text-center bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition"
+          >
+            {step === 3 ? (placing ? "Placing..." : "Place Order") : "Continue"}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
