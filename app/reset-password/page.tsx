@@ -16,7 +16,7 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     let attempts = 0
-    const maxAttempts = 8
+    const maxAttempts = 10
 
     const checkSession = async () => {
       if (!isSupabaseConfigured()) {
@@ -24,14 +24,33 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // Check for errors in URL
+      // Check for errors in BOTH URL search params AND hash
       if (typeof window !== "undefined") {
-        const params = new URLSearchParams(window.location.search)
-        const urlError = params.get("error") || params.get("error_description")
-        if (urlError) {
+        // Check search params (?error=...)
+        const searchParams = new URLSearchParams(window.location.search)
+        const searchError = searchParams.get("error") || searchParams.get("error_description")
+        
+        // Check hash params (#error=...)
+        const hash = window.location.hash.substring(1) // Remove #
+        const hashParams = new URLSearchParams(hash)
+        const hashError = hashParams.get("error") || hashParams.get("error_description")
+        const errorCode = hashParams.get("error_code")
+        
+        if (searchError || hashError || errorCode) {
+          console.error("❌ Reset link error:", { searchError, hashError, errorCode })
           setError("This reset link has expired or is invalid. Please request a new one.")
           setSessionReady(false)
           return
+        }
+
+        // Check if we have access_token in hash
+        const accessToken = hashParams.get("access_token")
+        const type = hashParams.get("type")
+        
+        if (accessToken && type === "recovery") {
+          console.log("✓ Found recovery token in hash, verifying...")
+          // Give Supabase time to process the hash token
+          await new Promise(resolve => setTimeout(resolve, 300))
         }
       }
 
@@ -46,8 +65,9 @@ export default function ResetPasswordPage() {
       attempts++
       if (attempts < maxAttempts) {
         console.log(`⏳ Waiting for session... (${attempts}/${maxAttempts})`)
-        setTimeout(checkSession, 600)
+        setTimeout(checkSession, 500)
       } else {
+        console.error("❌ Session not established after max attempts")
         setError("Unable to verify reset link. Please request a new password reset link.")
         setSessionReady(false)
       }

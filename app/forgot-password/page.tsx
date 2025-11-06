@@ -18,9 +18,9 @@ export default function ForgotPasswordPage() {
     
     try {
       const origin = typeof window !== "undefined" ? window.location.origin : ""
-      // Use simpler redirect without PKCE issues
+      // Use improved reset password flow
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${origin}/reset-password`,
+        redirectTo: `${origin}/reset-password-v2`,
       })
       
       if (error) {
