@@ -1,18 +1,22 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { User, Menu, X, Package, Heart, ShieldCheck } from "lucide-react"
+import { User, Package, Heart, ShieldCheck } from "lucide-react"
 import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
 import { formatIDR } from "@/lib/utils"
 import Link from "next/link"
 import RatingModal, { type RatingData } from "@/components/rating-modal"
 import { listWishlist as dbList } from "@/lib/db/wishlist"
+import { useToast } from "@/hooks/use-toast"
+import { useConfirm } from "@/hooks/use-confirm"
 
 type OrderItem = { productId: number; productName: string; quantity: number; price: number }
 type OrderRow = { id: string; orderNumber?: string; date: string; status: string; total: number; items: OrderItem[]; rating?: number; review?: string }
 
 export default function UserDashboard() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { toast } = useToast()
+  const { confirm, ConfirmDialog } = useConfirm()
+  
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<"overview" | "orders">("overview")
 
@@ -35,6 +39,57 @@ export default function UserDashboard() {
     pending: "bg-yellow-100 text-yellow-800",
     shipped: "bg-blue-100 text-blue-800",
     delivered: "bg-green-100 text-green-800",
+    paid: "bg-green-100 text-green-800",
+    cancelled: "bg-red-100 text-red-800",
+  }
+
+  // Function to reload reviews to write (simplified - per product not per order)
+  const reloadReviewsToWrite = async () => {
+    if (!isSupabaseConfigured()) return
+    const { data: auth } = await supabase.auth.getUser()
+    const u = auth.user
+    if (!u) return
+
+    const { data: ords } = await supabase
+      .from("orders")
+      .select(`id, status, order_items(product_id, products(name))`)
+      .order("created_at", { ascending: false })
+
+    const deliveredOrders = (ords || []).filter((o: any) => String(o.status ?? '').toLowerCase() === 'delivered')
+    
+    // Get unique products from delivered orders
+    const productMap = new Map<number, string>()
+    for (const o of deliveredOrders) {
+      for (const it of o.order_items || []) {
+        const productId = Number(it.product_id)
+        const productName = it.products?.name ?? `Product #${productId}`
+        if (!productMap.has(productId)) {
+          productMap.set(productId, productName)
+        }
+      }
+    }
+
+    if (productMap.size > 0) {
+      const { data: myReviews } = await supabase
+        .from('product_reviews')
+        .select('product_id')
+        .eq('user_id', u.id)
+
+      const reviewedProductIds = new Set((myReviews || []).map((r: any) => Number(r.product_id)))
+      
+      const toReview = Array.from(productMap.entries())
+        .filter(([productId]) => !reviewedProductIds.has(productId))
+        .slice(0, 3)
+        .map(([productId, productName]) => ({
+          orderId: '',
+          productId,
+          productName,
+        }))
+      
+      setReviewToWrite(toReview)
+    } else {
+      setReviewToWrite([])
+    }
   }
 
   useEffect(() => {
@@ -56,6 +111,15 @@ export default function UserDashboard() {
         .select(`id, order_number, created_at, status, total,
                  order_items(quantity, price, product_id, products(name, category))`)
         .order("created_at", { ascending: false })
+      
+      console.log('📥 Raw orders from DB:', ords?.slice(0, 3).map((o: any) => ({
+        id: o.id,
+        id_type: typeof o.id,
+        id_length: String(o.id).length,
+        order_number: o.order_number,
+        status: o.status
+      })))
+      
       if (!error) {
         const mapped: OrderRow[] = (ords || []).map((o: any) => {
           const items: OrderItem[] = (o.order_items || []).map((it: any) => ({
@@ -131,33 +195,59 @@ export default function UserDashboard() {
         setWishlistAlerts([])
       }
 
-      // Compute "reviews to write": delivered order items without a review from this user
+      // Compute "reviews to write": delivered products that haven't been reviewed yet
+      // Simple: One review per user per product (no order dependency)
       try {
         const deliveredOrders = (ords || []).filter((o: any) => String(o.status ?? '').toLowerCase() === 'delivered')
-        const sixtyDaysAgo = Date.now() - 1000 * 60 * 60 * 24 * 60
-        const items = deliveredOrders
-          .filter((o: any) => new Date(o.created_at).getTime() >= sixtyDaysAgo)
-          .flatMap((o: any) =>
-            (o.order_items || []).map((it: any) => ({
-              orderId: String(o.id),
-              productId: Number(it.product_id),
-              productName: it.products?.name ?? `Product #${it.product_id}`,
-            }))
-          )
-        const productIds = Array.from(new Set(items.map((x: any) => x.productId)))
-        if (productIds.length) {
+        
+        // Get unique products from delivered orders
+        const productMap = new Map<number, string>()
+        for (const o of deliveredOrders) {
+          for (const it of o.order_items || []) {
+            const productId = Number(it.product_id)
+            const productName = it.products?.name ?? `Product #${productId}`
+            if (!productMap.has(productId)) {
+              productMap.set(productId, productName)
+            }
+          }
+        }
+        
+        console.log('� Unique products from delivered orders:', Array.from(productMap.entries()))
+        
+        if (productMap.size > 0) {
+          // Fetch all reviews this user has written (just product_id)
           const { data: myReviews } = await supabase
-            .from('reviews')
+            .from('product_reviews')
             .select('product_id')
             .eq('user_id', u.id)
-            .in('product_id', productIds)
-          const reviewed = new Set((myReviews || []).map((r: any) => Number(r.product_id)))
-          const filtered = items.filter((it: any) => !reviewed.has(it.productId)).slice(0, 3)
-          setReviewToWrite(filtered)
+          
+          console.log('✅ User reviews:', myReviews?.length || 0, myReviews)
+          
+          // Create a Set of reviewed product IDs
+          const reviewedProductIds = new Set(
+            (myReviews || []).map((r: any) => Number(r.product_id))
+          )
+          
+          console.log('🔑 Reviewed products:', Array.from(reviewedProductIds))
+          
+          // Filter out products that have already been reviewed
+          const toReview = Array.from(productMap.entries())
+            .filter(([productId]) => !reviewedProductIds.has(productId))
+            .slice(0, 3)
+            .map(([productId, productName]) => ({
+              orderId: '', // Not needed anymore
+              productId,
+              productName,
+            }))
+          
+          console.log('⭐ Products to review:', toReview.length, toReview)
+          
+          setReviewToWrite(toReview)
         } else {
           setReviewToWrite([])
         }
-      } catch {
+      } catch (err) {
+        console.error('Error loading reviews to write:', err)
         setReviewToWrite([])
       }
     }
@@ -178,11 +268,8 @@ export default function UserDashboard() {
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-12">
+        <div className="mb-12">
           <h1 className="text-4xl font-bold text-black">Hello, {firstName}</h1>
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-black">
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
         </div>
 
         {/* Tabs */}
@@ -215,10 +302,10 @@ export default function UserDashboard() {
                   <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
                     <User size={36} className="text-white" />
                   </div>
-                  <h2 className="mt-3 font-bold text-lg text-black break-words">{profile?.full_name ?? authEmail}</h2>
+                  <h2 className="mt-3 font-bold text-lg text-black wrap-break-word">{profile?.full_name ?? authEmail}</h2>
                   <p className="text-sm text-black font-semibold break-all">{authEmail}</p>
+                  <p className="text-sm text-black font-semibold mt-2">Member since {memberSince}</p>
                 </div>
-                <p className="text-sm text-black font-semibold">Member since {memberSince}</p>
                 <Link
                   href="/profile"
                   className="mt-4 w-full py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition block text-center"
@@ -227,14 +314,14 @@ export default function UserDashboard() {
                 </Link>
                 <Link
                   href="/wishlist"
-                  className="mt-3 w-full py-2 border-2 border-pink-500 text-pink-600 rounded-lg font-bold hover:bg-pink-50 transition block text-center flex items-center justify-center gap-2"
+                  className="mt-3 w-full py-2 border-2 border-pink-500 text-pink-600 rounded-lg font-bold hover:bg-pink-50 transition flex items-center justify-center gap-2"
                 >
                   <Heart size={16} /> Wishlist
                 </Link>
                 {profile?.is_admin ? (
                   <Link
                     href="/admin"
-                    className="mt-3 w-full py-2 border-2 border-green-600 text-green-700 rounded-lg font-bold hover:bg-green-50 transition block text-center flex items-center justify-center gap-2"
+                    className="mt-3 w-full py-2 border-2 border-green-600 text-green-700 rounded-lg font-bold hover:bg-green-50 transition flex items-center justify-center gap-2"
                     title="Admin Panel"
                   >
                     <ShieldCheck size={16} /> Admin Panel
@@ -286,8 +373,38 @@ export default function UserDashboard() {
                         <div key={`${it.orderId}-${idx}`} className="flex items-center justify-between">
                           <span className="text-sm text-black font-semibold truncate mr-3">{it.productName}</span>
                           <button
-                            onClick={() => {
-                              setRatingTarget({ orderId: it.orderId, productId: it.productId, productName: it.productName })
+                            onClick={async () => {
+                              console.log('🎯 Clicked Rate now for:', {
+                                productId: it.productId,
+                                productName: it.productName
+                              })
+                              
+                              // Check if already reviewed (simple: just check product_id)
+                              const { data: auth } = await supabase.auth.getUser()
+                              if (!auth.user) return
+                              
+                              const { data: existing } = await supabase
+                                .from('product_reviews')
+                                .select('id')
+                                .eq('user_id', auth.user.id)
+                                .eq('product_id', it.productId)
+                                .maybeSingle()
+                              
+                              if (existing) {
+                                // Remove from UI immediately
+                                setReviewToWrite((prev) => 
+                                  prev.filter((x) => Number(x.productId) !== Number(it.productId))
+                                )
+                                
+                                toast({
+                                  title: 'Already Reviewed',
+                                  description: 'This product has been removed from your review list.',
+                                  variant: 'default'
+                                })
+                                return
+                              }
+                              
+                              setRatingTarget({ orderId: '', productId: it.productId, productName: it.productName })
                               setRatingOpen(true)
                             }}
                             className="px-3 py-1 border-2 border-yellow-600 text-yellow-700 rounded-lg text-sm font-bold hover:bg-yellow-50"
@@ -373,18 +490,40 @@ export default function UserDashboard() {
                   key={order.id}
                   className="border-2 border-gray-300 rounded-lg p-4 hover:shadow-md transition bg-white"
                 >
-                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
+                  {/* Mobile Layout */}
+                  <div className="md:hidden mb-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <h3 className="font-bold text-black text-base truncate">{order.orderNumber ?? order.id}</h3>
+                        <p className="text-xs text-black font-semibold">{new Date(order.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</p>
+                      </div>
+                      <span
+                        className={`px-3 py-1 rounded-full font-bold text-xs capitalize whitespace-nowrap shrink-0 ${
+                          statusColors[(order.status || "").toLowerCase()] || "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {order.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-black font-semibold">Total</p>
+                      <p className="font-bold text-black text-base">{formatIDR(order.total)}</p>
+                    </div>
+                  </div>
+
+                  {/* Desktop Layout */}
+                  <div className="hidden md:flex items-center justify-between mb-4 gap-4">
                     <div className="flex-1">
                       <h3 className="font-bold text-black text-lg">{order.orderNumber ?? order.id}</h3>
                       <p className="text-sm text-black font-semibold">{new Date(order.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="text-right">
+                      <div className="text-right w-[150px]">
                         <p className="text-sm text-black font-semibold">Total</p>
                         <p className="font-bold text-black text-lg">{formatIDR(order.total)}</p>
                       </div>
                       <span
-                        className={`px-4 py-2 rounded-full font-bold text-sm capitalize ${
+                        className={`px-4 py-2 rounded-full font-bold text-sm capitalize w-[100px] text-center ${
                           statusColors[(order.status || "").toLowerCase()] || "bg-gray-100 text-gray-800"
                         }`}
                       >
@@ -408,17 +547,25 @@ export default function UserDashboard() {
                             <span>
                               {item.productName} x{item.quantity}
                             </span>
-                            <div className="flex items-center gap-3">
-                              <button
-                                onClick={() => {
-                                  setRatingTarget({ orderId: order.id, productId: item.productId, productName: item.productName })
-                                  setRatingOpen(true)
-                                }}
-                                className="px-3 py-1 border-2 border-yellow-500 text-yellow-600 rounded-lg hover:bg-yellow-50 font-bold text-sm"
-                              >
-                                Rate
-                              </button>
-                              <span>{formatIDR(item.price * item.quantity)}</span>
+                            <div className="flex items-center gap-3 min-w-[200px] justify-end">
+                              {/* Only show Rate button for delivered orders */}
+                              {order.status.toLowerCase() === 'delivered' && (
+                                <button
+                                  onClick={() => {
+                                    console.log('🎯 Opening rating modal for:', {
+                                      productId: item.productId,
+                                      productName: item.productName,
+                                      status: order.status
+                                    })
+                                    setRatingTarget({ orderId: '', productId: item.productId, productName: item.productName })
+                                    setRatingOpen(true)
+                                  }}
+                                  className="px-3 py-1 border-2 border-yellow-500 text-yellow-600 rounded-lg hover:bg-yellow-50 font-bold text-sm w-[60px] text-center"
+                                >
+                                  Rate
+                                </button>
+                              )}
+                              <span className="w-[120px] text-right">{formatIDR(item.price * item.quantity)}</span>
                             </div>
                           </div>
                         ))}
@@ -442,21 +589,65 @@ export default function UserDashboard() {
                       <div className="flex gap-3">
                         <Link
                           href={`/invoice?orderId=${order.id}`}
-                          className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition text-center"
+                          className={`py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition text-center ${
+                            order.status.toLowerCase() === 'pending' ? 'flex-1' : 'w-full'
+                          }`}
                         >
                           View Invoice
                         </Link>
-                        <button
-                          onClick={() => {
-                            const first = order.items[0]
-                            if (!first) return
-                            setRatingTarget({ orderId: order.id, productId: first.productId, productName: first.productName })
-                            setRatingOpen(true)
-                          }}
-                          className="flex-1 py-2 border-2 border-yellow-600 text-yellow-700 rounded-lg font-bold hover:bg-yellow-50 transition"
-                        >
-                          Rate Product
-                        </button>
+                        
+                        {/* Only allow cancellation for pending orders (not paid) */}
+                        {order.status.toLowerCase() === 'pending' && (
+                          <button
+                            onClick={async () => {
+                              const confirmed = await confirm({
+                                title: 'Cancel Order',
+                                description: `Are you sure you want to cancel order ${order.orderNumber || order.id}? Stock will be returned to inventory.`,
+                                confirmText: 'Yes, Cancel Order',
+                                cancelText: 'No, Keep Order',
+                                variant: 'destructive'
+                              })
+                              
+                              if (!confirmed) return
+                              
+                              try {
+                                const { data: sessionData } = await supabase.auth.getSession()
+                                const token = sessionData?.session?.access_token
+                                const resp = await fetch(`/api/orders/${order.id}/cancel`, {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                                  },
+                                })
+                                if (!resp.ok) throw new Error('Failed to cancel order')
+                                
+                                toast({ 
+                                  title: 'Order Cancelled', 
+                                  description: 'Your order has been cancelled and stock has been returned.' 
+                                })
+                                
+                                // Update order status locally tanpa reload
+                                setOrders(prevOrders => 
+                                  prevOrders.map(o => 
+                                    o.id === order.id ? { ...o, status: 'cancelled' } : o
+                                  )
+                                )
+                              } catch (err: any) {
+                                toast({ 
+                                  title: 'Error', 
+                                  description: err.message || 'Failed to cancel order', 
+                                  variant: 'destructive' 
+                                })
+                              }
+                            }}
+                            className="flex-1 py-2 border-2 border-red-600 text-red-700 rounded-lg font-bold hover:bg-red-50 transition"
+                          >
+                            Cancel Order
+                          </button>
+                        )}
+                        
+                        {/* Shipped/Delivered status: use individual Rate buttons per product */}
                       </div>
                     </div>
                   )}
@@ -474,52 +665,108 @@ export default function UserDashboard() {
         orderNumber={ratingTarget ? ratingTarget.productName : undefined}
         onSubmit={async (r: RatingData) => {
           try {
-            if (!ratingTarget) return
-            if (!isSupabaseConfigured()) return setRatingOpen(false)
-            const { data: auth } = await supabase.auth.getUser()
+            if (!ratingTarget) {
+              toast({
+                title: "Error",
+                description: "No product selected for review.",
+                variant: "destructive",
+              })
+              return
+            }
+            
+            if (!isSupabaseConfigured()) {
+              toast({
+                title: "Error",
+                description: "Database not configured.",
+                variant: "destructive",
+              })
+              setRatingOpen(false)
+              return
+            }
+            
+            const { data: auth, error: authError } = await supabase.auth.getUser()
             const uid = auth.user?.id
-            if (!uid) return setRatingOpen(false)
-            // Load profile for author name
-            const { data: prof } = await supabase
-              .from("profiles")
-              .select("first_name, last_name, full_name")
-              .eq("id", uid)
-              .maybeSingle()
-            const first = (prof as any)?.first_name || ((prof as any)?.full_name ? String((prof as any).full_name).split(" ")[0] : "")
-            const last = (prof as any)?.last_name || ((prof as any)?.full_name ? String((prof as any).full_name).split(" ").slice(1).join(" ") : "")
-            const author = `${first} ${last}`.trim() || "Customer"
+            
+            console.log('🔐 Auth check:', { 
+              user: auth.user, 
+              uid, 
+              authError,
+              hasSession: !!auth.user 
+            })
+            
+            if (!uid) {
+              toast({
+                title: "Authentication Required",
+                description: "Please log in to submit a review.",
+                variant: "destructive",
+              })
+              setRatingOpen(false)
+              return
+            }
+
+            // Insert into product_reviews table (one review per user per product)
+            const payload = {
+              user_id: uid,
+              product_id: Number(ratingTarget.productId),
+              rating: Number(r.productRating),
+              comment: r.comment || null,
+            }
+
+            console.log('📝 Submitting review:', payload)
 
             const { error } = await supabase
-              .from("reviews")
-              .insert({
-                user_id: uid,
-                product_id: ratingTarget.productId,
-                author,
-                rating: r.productRating,
-                title: null,
-                comment: r.comment || null,
-              })
+              .from("product_reviews")
+              .insert(payload)
+            
             if (error) {
+              console.error('Review submission error:', error)
               const msg = String(error.message || "Failed to submit review")
+              
               // Unique violation (one review per user per product)
               if ((error as any).code === "23505" || /unique/i.test(msg)) {
-                alert("You have already reviewed this product.")
+                toast({
+                  title: "Already Reviewed",
+                  description: "You have already reviewed this product.",
+                  variant: "destructive",
+                })
               } else if (/violates row-level security|RLS/i.test(msg) || /not authorized/i.test(msg)) {
-                alert("You can only review products you've purchased.")
+                toast({
+                  title: "Not Authorized",
+                  description: "You need to be logged in to submit a review.",
+                  variant: "destructive",
+                })
               } else {
-                alert(msg)
+                toast({
+                  title: "Submission Failed",
+                  description: msg,
+                  variant: "destructive",
+                })
               }
-              return setRatingOpen(false)
+              setRatingOpen(false)
+              return
             }
-            // Optimistically remove from pending reviews
-            setReviewToWrite((prev) => prev.filter((x) => x.productId !== ratingTarget.productId))
+            
+            // Success!
+            toast({
+              title: "Review Submitted!",
+              description: `Thank you for reviewing ${ratingTarget.productName}`,
+            })
             setRatingOpen(false)
+            
+            // Reload reviews to write list to update UI
+            await reloadReviewsToWrite()
           } catch (e) {
             console.error("submit review failed", e)
+            toast({
+              title: "Unexpected Error",
+              description: e instanceof Error ? e.message : "Failed to submit review",
+              variant: "destructive",
+            })
             setRatingOpen(false)
           }
         }}
       />
+      {ConfirmDialog}
     </div>
   )
 }

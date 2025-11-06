@@ -6,16 +6,13 @@ import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabas
 import { useRouter } from "next/navigation"
 
 export function useAuth() {
-  const [loading, setLoading] = useState(true)
+  const initiallyConfigured = isSupabaseConfigured()
+  const [loading, setLoading] = useState(initiallyConfigured)
   const [user, setUser] = useState<User | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      setLoading(false)
-      setUser(null)
-      return
-    }
+    if (!isSupabaseConfigured()) return
 
     let mounted = true
 
@@ -40,7 +37,7 @@ export function useAuth() {
       mounted = false
       sub.subscription.unsubscribe()
     }
-  }, [])
+  }, [router])
 
   const signInWithPassword = useCallback(async (email: string, password: string) => {
     if (!isSupabaseConfigured()) throw new Error("Supabase env not configured")

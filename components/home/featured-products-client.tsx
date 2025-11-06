@@ -9,8 +9,9 @@ import type { Product } from "@/lib/product-data"
 import { fetchReviewStatsForProductIds } from "@/lib/db/products"
 
 export default function FeaturedProductsClient({ products }: { products: Product[] }) {
-  const { addToCart } = useCart()
+  const { addToCart, cartItems } = useCart()
   const [addedItem, setAddedItem] = useState<number | null>(null)
+  const [maxStockItem, setMaxStockItem] = useState<number | null>(null)
   const [stats, setStats] = useState<Record<number, { count: number; average: number }>>({})
 
   useEffect(() => {
@@ -19,6 +20,15 @@ export default function FeaturedProductsClient({ products }: { products: Product
   }, [products])
 
   const handleAddToCart = (product: Product) => {
+    const inCart = cartItems.find((i) => i.id === product.id)?.quantity ?? 0
+    const maxStock = Number(product.stock ?? 0)
+    
+    if (inCart >= maxStock) {
+      setMaxStockItem(product.id)
+      setTimeout(() => setMaxStockItem(null), 2000)
+      return
+    }
+
     addToCart({
       id: product.id,
       name: product.name,
@@ -67,15 +77,36 @@ export default function FeaturedProductsClient({ products }: { products: Product
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xl font-bold text-blue-600">{formatIDR(product.price)}</span>
-                <button
-                  onClick={() => handleAddToCart(product)}
-                  className={`p-2 rounded-lg font-semibold transition flex items-center gap-1 ${
-                    addedItem === product.id ? "bg-green-600 text-white" : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
-                >
-                  <ShoppingCart size={20} />
-                  {addedItem === product.id ? "Added!" : ""}
-                </button>
+                {(() => {
+                  const outOfStock = !product.inStock || Number(product.stock ?? 0) <= 0
+                  if (outOfStock) {
+                    return (
+                      <button
+                        disabled
+                        className="px-2 py-1 text-xs rounded-md font-semibold inline-flex items-center gap-1 border border-red-600 text-red-600 bg-white cursor-not-allowed"
+                        title="Out of stock"
+                      >
+                        <ShoppingCart size={14} />
+                        Out of stock
+                      </button>
+                    )
+                  }
+                  return (
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      className={`p-2 rounded-lg font-semibold transition inline-flex items-center gap-1 ${
+                        maxStockItem === product.id
+                          ? "bg-orange-600 text-white"
+                          : addedItem === product.id
+                            ? "bg-green-600 text-white"
+                            : "bg-blue-600 text-white hover:bg-blue-700"
+                      }`}
+                    >
+                      <ShoppingCart size={18} />
+                      {maxStockItem === product.id ? "Max stock!" : addedItem === product.id ? "Added!" : ""}
+                    </button>
+                  )
+                })()}
               </div>
             </div>
           </div>

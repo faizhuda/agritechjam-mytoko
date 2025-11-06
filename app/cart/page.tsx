@@ -130,7 +130,7 @@ export default function CartPage() {
       </div>
       {/* Mobile sticky checkout bar */}
       {cartItems.length > 0 && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 border-t-2 border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+  <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 border-t-2 border-gray-200 bg-white/95 backdrop-blur supports-backdrop-filter:bg-white/80">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
             <div>
               <p className="text-xs text-gray-600 font-semibold">Total</p>

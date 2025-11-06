@@ -18,6 +18,8 @@ import { Users, ShoppingCart, DollarSign, TrendingUp, Edit2, Trash2, Plus, Star 
 import { formatIDR } from "@/lib/utils"
 import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
 import type { Product } from "@/lib/product-data"
+import { useConfirm } from "@/hooks/use-confirm"
+import { useToast } from "@/hooks/use-toast"
 
 type OrderRow = {
   id: string
@@ -55,6 +57,20 @@ export default function AdminDashboard() {
   const [recent, setRecent] = useState<TxnRow[]>([])
   const [products, setProducts] = useState<Product[]>([])
 
+  const [showAllOrders, setShowAllOrders] = useState(false)
+  const [showAllProducts, setShowAllProducts] = useState(false)
+  
+  // Filters and sorting for orders
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all')
+  const [orderSortBy, setOrderSortBy] = useState<'date' | 'amount'>('date')
+  const [orderSortOrder, setOrderSortOrder] = useState<'asc' | 'desc'>('desc')
+  
+  // Filters and sorting for products
+  const [productCategoryFilter, setProductCategoryFilter] = useState<string>('all')
+  const [productStockFilter, setProductStockFilter] = useState<'all' | 'in-stock' | 'low-stock' | 'out-of-stock'>('all')
+  const [productSortBy, setProductSortBy] = useState<'name' | 'price' | 'stock' | 'rating'>('name')
+  const [productSortOrder, setProductSortOrder] = useState<'asc' | 'desc'>('asc')
+  
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [newProduct, setNewProduct] = useState({
     name: "",
@@ -69,6 +85,9 @@ export default function AdminDashboard() {
   const [editTarget, setEditTarget] = useState<Product | null>(null)
   const [editForm, setEditForm] = useState<{ name: string; description: string; features: string; category: string; stock: string }>({ name: "", description: "", features: "", category: "electronics", stock: "" })
   const [editImage, setEditImage] = useState<File | null>(null)
+
+  const { confirm, ConfirmDialog } = useConfirm()
+  const { toast } = useToast()
 
   // Gate: only admins allowed
   useEffect(() => {
@@ -149,9 +168,8 @@ export default function AdminDashboard() {
       const monthly = Array.from(byMonth.entries()).map(([month, v]) => ({ month, ...v }))
       setSalesData(monthly)
 
-      // Recent transactions; customer names provided by API
-      const recentOrders = (apiOrders as any[]).slice(0, 8)
-      const txns: TxnRow[] = recentOrders.map((o: any) => ({
+      // All transactions; customer names provided by API
+      const txns: TxnRow[] = (apiOrders as any[]).map((o: any) => ({
         id: String(o.id),
         customer: String(o.customer || "Customer"),
         amount: o.total || 0,
@@ -202,6 +220,67 @@ export default function AdminDashboard() {
     }
     run()
   }, [products])
+
+  // Filtered and sorted orders
+  const filteredOrders = useMemo(() => {
+    let filtered = [...recent]
+    
+    // Filter by status
+    if (orderStatusFilter !== 'all') {
+      filtered = filtered.filter(o => o.status.toLowerCase() === orderStatusFilter)
+    }
+    
+    // Sort
+    filtered.sort((a, b) => {
+      if (orderSortBy === 'date') {
+        const comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
+        return orderSortOrder === 'asc' ? comparison : -comparison
+      } else {
+        const comparison = a.amount - b.amount
+        return orderSortOrder === 'asc' ? comparison : -comparison
+      }
+    })
+    
+    return filtered
+  }, [recent, orderStatusFilter, orderSortBy, orderSortOrder])
+
+  // Filtered and sorted products
+  const filteredProducts = useMemo(() => {
+    let filtered = [...products]
+    
+    // Filter by category
+    if (productCategoryFilter !== 'all') {
+      filtered = filtered.filter(p => p.category === productCategoryFilter)
+    }
+    
+    // Filter by stock status
+    if (productStockFilter === 'in-stock') {
+      filtered = filtered.filter(p => p.stock > 10)
+    } else if (productStockFilter === 'low-stock') {
+      filtered = filtered.filter(p => p.stock > 0 && p.stock <= 10)
+    } else if (productStockFilter === 'out-of-stock') {
+      filtered = filtered.filter(p => p.stock === 0)
+    }
+    
+    // Sort
+    filtered.sort((a, b) => {
+      let comparison = 0
+      if (productSortBy === 'name') {
+        comparison = a.name.localeCompare(b.name)
+      } else if (productSortBy === 'price') {
+        comparison = a.price - b.price
+      } else if (productSortBy === 'stock') {
+        comparison = a.stock - b.stock
+      } else if (productSortBy === 'rating') {
+        const ratingA = reviewStats[a.id]?.average ?? a.rating
+        const ratingB = reviewStats[b.id]?.average ?? b.rating
+        comparison = ratingA - ratingB
+      }
+      return productSortOrder === 'asc' ? comparison : -comparison
+    })
+    
+    return filtered
+  }, [products, productCategoryFilter, productStockFilter, productSortBy, productSortOrder, reviewStats])
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -259,8 +338,9 @@ export default function AdminDashboard() {
           inStock: Number(data.stock ?? 0) > 0,
         },
       ])
+      toast({ title: "Product added", description: `${data.name} has been added.` })
     } else if (error) {
-      alert(error.message)
+      toast({ title: "Add product failed", description: error.message, variant: "destructive" })
       return
     }
     setShowAddProduct(false)
@@ -268,60 +348,81 @@ export default function AdminDashboard() {
     setNewProduct({ name: "", price: "", category: "electronics", stock: "", description: "", features: "" })
   }
 
-  const handleEditProduct = async (p: Product) => {
-    if (!isSupabaseConfigured() || !isAdmin) return
-    const newStockStr = prompt(`New stock for ${p.name}`, String(p.stock))
-    if (newStockStr == null) return
-    const stock = Number(newStockStr)
-    try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const token = sessionData?.session?.access_token
-      const res = await fetch(`/api/products/${p.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ stock }),
-      })
-      const j = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(j?.error || `Failed: ${res.status}`)
-      setProducts((prev) => prev.map((x) => (x.id === p.id ? { ...x, stock, inStock: stock > 0 } : x)))
-    } catch (e: any) {
-      alert(e?.message || String(e))
-    }
-  }
+  // Deprecated: stock editing handled by modal below
+  // const handleEditProduct = async (p: Product) => { /* removed */ }
 
   const handleDeleteProduct = async (p: Product) => {
     if (!isSupabaseConfigured() || !isAdmin) return
-    if (!confirm(`Delete product "${p.name}"?`)) return
+    const ok = await confirm({
+      title: `Archive "${p.name}"?`,
+      description: "This will hide the product from the store (soft delete). You can restore it later in the database.",
+      confirmText: "Archive",
+      cancelText: "Cancel",
+      variant: "destructive",
+    })
+    if (!ok) return
     // Soft-delete to avoid FK violations on order_items
     const { error } = await supabase.from("products").update({ archived: true }).eq("id", p.id)
     if (!error) {
       setProducts((prev) => prev.filter((x) => x.id !== p.id))
+      toast({ title: "Product archived", description: `${p.name} has been archived.` })
     } else {
       // Fallback message for missing column or other issues
-      alert(error.message || 'Failed to delete product. Ensure products_soft_delete.sql is applied.')
+      toast({ title: "Archive failed", description: (error as any)?.message || 'Failed to archive product. Ensure products_soft_delete.sql is applied.', variant: "destructive" })
     }
   }
 
   const handleChangeStatus = async (orderId: string, next: string) => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const token = sessionData?.session?.access_token
-      const res = await fetch(`/api/orders/${orderId}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ id: orderId, status: next.toLowerCase() }),
-      })
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}))
-        throw new Error(j?.error || `Failed to set status: ${res.status}`)
+      // If changing to cancelled, use the RPC to restore stock
+      if (next.toLowerCase() === 'cancelled') {
+        if (!isSupabaseConfigured()) {
+          toast({ title: "Configuration error", description: "Supabase is not configured", variant: "destructive" })
+          return
+        }
+        
+        const { error } = await supabase.rpc('cancel_order_and_restore_stock', {
+          p_order_id: orderId,
+        })
+        
+        if (error) {
+          const msg = error.message || 'Failed to cancel order'
+          // User-friendly error messages
+          if (msg.includes('pending or paid')) {
+            toast({ 
+              title: 'Cannot cancel', 
+              description: 'Only pending or paid orders can be cancelled. Shipped/delivered orders should use return flow.', 
+              variant: 'destructive' 
+            })
+          } else if (msg.includes('already cancelled')) {
+            toast({ title: 'Already cancelled', description: 'This order is already cancelled.', variant: 'destructive' })
+          } else {
+            toast({ title: 'Cancel failed', description: msg, variant: 'destructive' })
+          }
+          return
+        }
+        
+        setRecent((prev) => prev.map((t) => (t.id === orderId ? { ...t, status: 'Cancelled' } : t)))
+        toast({ title: 'Order cancelled', description: 'Stock has been restored.' })
+      } else {
+        // For other status changes, use the regular API
+        const { data: sessionData } = await supabase.auth.getSession()
+        const token = sessionData?.session?.access_token
+        const res = await fetch(`/api/orders/${orderId}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ id: orderId, status: next.toLowerCase() }),
+        })
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}))
+          throw new Error(j?.error || `Failed to set status: ${res.status}`)
+        }
+        setRecent((prev) => prev.map((t) => (t.id === orderId ? { ...t, status: next } : t)))
+        toast({ title: 'Status updated', description: `Order status changed to ${next}.` })
       }
-      setRecent((prev) => prev.map((t) => (t.id === orderId ? { ...t, status: next } : t)))
 
       // Refresh KPIs and charts after status changes (e.g., cancelled should reduce totals)
       try {
@@ -368,7 +469,7 @@ export default function AdminDashboard() {
         setSalesData(monthly)
       } catch {}
     } catch (e: any) {
-      alert(e?.message || String(e))
+      toast({ title: "Status update failed", description: e?.message || String(e), variant: "destructive" })
     }
   }
 
@@ -481,7 +582,81 @@ export default function AdminDashboard() {
 
         {/* Customer Orders */}
         <div className="bg-white border-2 border-gray-300 rounded-lg p-6 mb-8 shadow-md">
-          <h2 className="text-xl font-bold text-black mb-6">Customer Orders</h2>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-black">Customer Orders</h2>
+              {filteredOrders.length < recent.length && (
+                <p className="text-sm text-gray-600 font-semibold mt-1">
+                  Showing {filteredOrders.length} of {recent.length} orders
+                </p>
+              )}
+            </div>
+            {recent.length > 10 && (
+              <button
+                onClick={() => setShowAllOrders(!showAllOrders)}
+                className="px-4 py-2 text-sm font-bold text-blue-600 border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition"
+              >
+                {showAllOrders ? 'Show Less' : `View All (${filteredOrders.length})`}
+              </button>
+            )}
+          </div>
+          
+          {/* Filters and Sorting */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-bold text-black mb-2">Filter by Status</label>
+              <select
+                value={orderStatusFilter}
+                onChange={(e) => setOrderStatusFilter(e.target.value)}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-black mb-2">Sort By</label>
+              <select
+                value={orderSortBy}
+                onChange={(e) => setOrderSortBy(e.target.value as 'date' | 'amount')}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="date">Date</option>
+                <option value="amount">Amount</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-black mb-2">Order</label>
+              <select
+                value={orderSortOrder}
+                onChange={(e) => setOrderSortOrder(e.target.value as 'asc' | 'desc')}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
+            </div>
+            
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setOrderStatusFilter('all')
+                  setOrderSortBy('date')
+                  setOrderSortOrder('desc')
+                }}
+                className="w-full px-4 py-2 border-2 border-gray-300 text-black rounded-lg font-bold hover:bg-gray-100 transition"
+              >
+                Reset Filters
+              </button>
+            </div>
+          </div>
+          
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -494,23 +669,40 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {recent.map((transaction) => (
+                {(showAllOrders ? filteredOrders : filteredOrders.slice(0, 10)).map((transaction) => (
                   <tr key={transaction.id} className="border-b border-gray-300 hover:bg-gray-50 transition">
                     <td className="py-3 px-4 text-black font-bold">{transaction.customer}</td>
                     <td className="py-3 px-4 text-black font-bold">{formatIDR(transaction.amount)}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${statusClass(transaction.status)} text-center`}>
+                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${statusClass(transaction.status)} min-w-[100px] text-center`}>
                           {capitalize(transaction.status)}
                         </span>
                         <select
-                          className="border-2 border-gray-300 rounded-lg text-sm font-bold text-black text-center px-2 py-1"
+                          className="border-2 border-gray-300 rounded-lg text-sm font-bold text-black px-2 py-1 disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px]"
                           value={transaction.status.toLowerCase()}
                           onChange={(e) => handleChangeStatus(transaction.id, e.target.value.replace(/^./, (c) => c.toUpperCase()))}
+                          disabled={['delivered', 'cancelled'].includes(transaction.status.toLowerCase())}
                         >
-                          {['pending','paid','shipped','delivered','cancelled'].map((s) => (
-                            <option key={s} value={s}>{capitalize(s)}</option>
-                          ))}
+                          {/* Current status always shown */}
+                          <option value={transaction.status.toLowerCase()}>{capitalize(transaction.status)}</option>
+                          
+                          {/* Allowed transitions based on current status */}
+                          {transaction.status.toLowerCase() === 'pending' && (
+                            <>
+                              <option value="paid">Paid</option>
+                              <option value="cancelled">Cancelled</option>
+                            </>
+                          )}
+                          {transaction.status.toLowerCase() === 'paid' && (
+                            <>
+                              <option value="shipped">Shipped</option>
+                              <option value="cancelled">Cancelled</option>
+                            </>
+                          )}
+                          {transaction.status.toLowerCase() === 'shipped' && (
+                            <option value="delivered">Delivered</option>
+                          )}
                         </select>
                       </div>
                     </td>
@@ -528,7 +720,14 @@ export default function AdminDashboard() {
         {/* Product Management */}
         <div className="bg-white border-2 border-gray-300 rounded-lg p-6 shadow-md">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-black">Product Management</h2>
+            <div>
+              <h2 className="text-xl font-bold text-black">Product Management</h2>
+              {filteredProducts.length < products.length && (
+                <p className="text-sm text-gray-600 font-semibold mt-1">
+                  Showing {filteredProducts.length} of {products.length} products
+                </p>
+              )}
+            </div>
             <button
               onClick={() => setShowAddProduct(!showAddProduct)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition"
@@ -618,6 +817,87 @@ export default function AdminDashboard() {
             </form>
           )}
 
+          {/* Filters and Sorting */}
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-bold text-black mb-2">Category</label>
+              <select
+                value={productCategoryFilter}
+                onChange={(e) => setProductCategoryFilter(e.target.value)}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="all">All Categories</option>
+                <option value="electronics">Electronics</option>
+                <option value="accessories">Accessories</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-black mb-2">Stock Status</label>
+              <select
+                value={productStockFilter}
+                onChange={(e) => setProductStockFilter(e.target.value as any)}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="all">All Stock</option>
+                <option value="in-stock">In Stock (&gt;10)</option>
+                <option value="low-stock">Low Stock (1-10)</option>
+                <option value="out-of-stock">Out of Stock</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-black mb-2">Sort By</label>
+              <select
+                value={productSortBy}
+                onChange={(e) => setProductSortBy(e.target.value as any)}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="name">Name</option>
+                <option value="price">Price</option>
+                <option value="stock">Stock</option>
+                <option value="rating">Rating</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-black mb-2">Order</label>
+              <select
+                value={productSortOrder}
+                onChange={(e) => setProductSortOrder(e.target.value as 'asc' | 'desc')}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
+            </div>
+            
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setProductCategoryFilter('all')
+                  setProductStockFilter('all')
+                  setProductSortBy('name')
+                  setProductSortOrder('asc')
+                }}
+                className="w-full px-4 py-2 border-2 border-gray-300 text-black rounded-lg font-bold hover:bg-gray-100 transition"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          {filteredProducts.length > 10 && (
+            <div className="mb-4 flex justify-end">
+              <button
+                onClick={() => setShowAllProducts(!showAllProducts)}
+                className="px-4 py-2 text-sm font-bold text-blue-600 border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition"
+              >
+                {showAllProducts ? 'Show Less' : `View All Products (${filteredProducts.length})`}
+              </button>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -630,7 +910,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {products.map((product) => (
+                {(showAllProducts ? filteredProducts : filteredProducts.slice(0, 10)).map((product) => (
                   <tr key={product.id} className="border-b border-gray-300 hover:bg-gray-50 transition">
                     <td className="py-3 px-4 text-black font-bold">{product.name}</td>
                     <td className="py-3 px-4 text-black font-bold">{formatIDR(product.price)}</td>
@@ -738,7 +1018,7 @@ export default function AdminDashboard() {
                 setEditOpen(false)
                 setEditTarget(null)
               } catch (e: any) {
-                alert(e?.message || String(e))
+                toast({ title: "Save failed", description: e?.message || String(e), variant: "destructive" })
               }
             }}
             className="space-y-4"
@@ -784,6 +1064,7 @@ export default function AdminDashboard() {
           </form>
         </Backdrop>
       )}
+      {ConfirmDialog}
     </div>
   )
 }

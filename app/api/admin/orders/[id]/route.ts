@@ -4,7 +4,7 @@ import { createClient as createServiceClient } from "@supabase/supabase-js"
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = createRouteClient(req)
 
@@ -18,7 +18,7 @@ export async function GET(
     .maybeSingle()
   if (!profile?.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const { id } = params
+  const { id } = await params
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const client = serviceKey ? createServiceClient(url, serviceKey) : supabase
@@ -26,7 +26,7 @@ export async function GET(
   // Fetch order
   const { data: order, error: orderErr } = await client
     .from("orders")
-    .select("id, order_number, user_id, total, status, created_at")
+    .select("id, order_number, user_id, total, status, created_at, payment_proof_url")
     .eq("id", id)
     .maybeSingle()
   if (orderErr) return NextResponse.json({ error: orderErr.message }, { status: 400 })

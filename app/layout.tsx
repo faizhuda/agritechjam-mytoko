@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 // @ts-ignore: side-effect CSS import has no type declarations in this project
 import "./globals.css"
 import Navbar from "@/components/navbar"
+import Footer from "@/components/footer"
 import WhatsAppFloat from "@/components/whatsapp-float"
 import { CartProvider } from "@/lib/cart-context"
 import { WishlistProvider } from "@/lib/wishlist-context"
@@ -25,11 +26,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.className} bg-background text-foreground`}>
+      <body className={`${geistSans.className} bg-background text-foreground flex flex-col min-h-screen`}>
         <CartProvider>
           <WishlistProvider>
             <Navbar />
-            <main>{children}</main>
+            <main className="flex-1">{children}</main>
+            <Footer />
             <WhatsAppFloat />
             <Toaster />
           </WishlistProvider>

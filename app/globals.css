@@ -1,7 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/* Tailwind v4 custom variant for class-based dark mode */
+@custom-variant dark (&:where(.dark &));
 
 :root {
   --background: oklch(1 0 0);
@@ -131,10 +132,33 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    /* outline-ring/50 is not a valid Tailwind utility; remove to avoid build error */
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Always show hand cursor for clickable elements (except disabled) */
+  a[href] {
+    @apply cursor-pointer;
+  }
+  button:not(:disabled):not([aria-disabled="true"]),
+  [role="button"]:not([aria-disabled="true"]),
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  label[for],
+  summary,
+  select:not(:disabled) {
+    @apply cursor-pointer;
+  }
+  button:disabled,
+  [aria-disabled="true"],
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    @apply cursor-not-allowed;
   }
 
   /* Global interactive states for all buttons */

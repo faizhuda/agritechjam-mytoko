@@ -12,16 +12,12 @@ interface RatingModalProps {
 
 export interface RatingData {
   productRating: number
-  serviceRating: number
-  deliveryRating: number
   comment: string
 }
 
 export default function RatingModal({ isOpen, onClose, onSubmit, orderNumber }: RatingModalProps) {
   const [ratings, setRatings] = useState<RatingData>({
     productRating: 0,
-    serviceRating: 0,
-    deliveryRating: 0,
     comment: "",
   })
 
@@ -31,14 +27,12 @@ export default function RatingModal({ isOpen, onClose, onSubmit, orderNumber }: 
     onSubmit(ratings)
     setRatings({
       productRating: 0,
-      serviceRating: 0,
-      deliveryRating: 0,
       comment: "",
     })
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 border-2 border-gray-200">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-black">Rate Your Experience</h2>
@@ -63,46 +57,6 @@ export default function RatingModal({ isOpen, onClose, onSubmit, orderNumber }: 
                   <Star
                     size={32}
                     className={`${star <= ratings.productRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Service Rating */}
-          <div>
-            <label className="block text-sm font-semibold text-black mb-3">How was our service?</label>
-            <div className="flex gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => setRatings((prev) => ({ ...prev, serviceRating: star }))}
-                  className="transition-transform hover:scale-110"
-                >
-                  <Star
-                    size={32}
-                    className={`${star <= ratings.serviceRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Delivery Rating */}
-          <div>
-            <label className="block text-sm font-semibold text-black mb-3">How was the delivery?</label>
-            <div className="flex gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => setRatings((prev) => ({ ...prev, deliveryRating: star }))}
-                  className="transition-transform hover:scale-110"
-                >
-                  <Star
-                    size={32}
-                    className={`${
-                      star <= ratings.deliveryRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                    }`}
                   />
                 </button>
               ))}

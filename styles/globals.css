@@ -117,7 +117,8 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    /* outline-ring/50 is not a valid Tailwind utility; remove to avoid lint/build errors */
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;

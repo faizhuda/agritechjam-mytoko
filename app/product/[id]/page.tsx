@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, use } from "react"
+import { useEffect, useMemo, useState, use } from "react"
 import Link from "next/link"
 import { Star, ShoppingCart, ArrowLeft, Minus, Plus, Heart, ThumbsUp } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
@@ -13,9 +13,9 @@ import RealtimeRefresh from "@/components/realtime-refresh"
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [quantity, setQuantity] = useState(1)
-  const [isFavorite, setIsFavorite] = useState(false)
   const { addToCart, cartItems } = useCart() as any
   const [addedToCart, setAddedToCart] = useState(false)
+  const [maxStock, setMaxStock] = useState(false)
 
   const { id } = use(params)
   const productId = Number.parseInt(id)
@@ -25,31 +25,75 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [loading, setLoading] = useState(true)
   const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlist()
 
+  const loadData = async () => {
+    const [p, all, rs] = await Promise.all([
+      fetchProductById(productId),
+      fetchProducts(),
+      fetchReviewsByProductId(productId),
+    ])
+    console.log('🔍 Product Page - Reviews loaded:', rs)
+    console.log('🔍 Product Page - Reviews count:', rs.length)
+    setProduct(p)
+    setReviews(rs)
+    if (p) {
+      setRelatedProducts(all.filter((x) => x.category === p.category && x.id !== p.id).slice(0, 4))
+    }
+    setLoading(false)
+  }
+
   useEffect(() => {
     let mounted = true
-    ;(async () => {
-      const [p, all, rs] = await Promise.all([
-        fetchProductById(productId),
-        fetchProducts(),
-        fetchReviewsByProductId(productId),
-      ])
-      if (!mounted) return
-      setProduct(p)
-      setReviews(rs)
-      if (p) {
-        setRelatedProducts(all.filter((x) => x.category === p.category && x.id !== p.id).slice(0, 4))
-      }
-      setLoading(false)
-    })()
+    loadData()
     return () => {
       mounted = false
     }
   }, [productId])
 
-  // keep heart state in sync with wishlist context
+  // Auto-refresh reviews and product when product_reviews table changes
   useEffect(() => {
-    if (!product) return
-    setIsFavorite(wishlistItems.some((w) => w.id === product.id))
+    if (!isSupabaseConfigured()) return
+    
+    const channel = supabase
+      .channel(`product-${productId}-reviews`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'product_reviews',
+          filter: `product_id=eq.${productId}`
+        },
+        () => {
+          // Reload reviews when someone adds/updates/deletes a review for this product
+          fetchReviewsByProductId(productId).then(setReviews)
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'products',
+          filter: `id=eq.${productId}`
+        },
+        () => {
+          // Reload product data when rating/reviews are updated by trigger
+          fetchProductById(productId).then((p) => {
+            if (p) setProduct(p)
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [productId])
+
+  // derive favorite from wishlist context to avoid local state sync issues
+  const isFavorite = useMemo(() => {
+    if (!product) return false
+    return wishlistItems.some((w) => w.id === product.id)
   }, [wishlistItems, product])
 
   if (!loading && !product) {
@@ -79,15 +123,22 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     )
   }
 
-  // Use 0 stars when there are no reviews
-  const averageRating = reviews.length > 0
-    ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
-    : 0
+  // Use synced rating from products table (updated by trigger)
+  const averageRating = product.rating ?? 0
+  const reviewCount = product.reviews ?? 0
 
   const handleAddToCart = () => {
     const already = (cartItems || []).find((i: any) => i.id === product.id)?.quantity || 0
-    const maxAvailable = Math.max(0, Number(product.stock ?? 0) - Number(already))
-    const qty = Math.max(0, Math.min(quantity, maxAvailable || quantity))
+    const totalStock = Number(product.stock ?? 0)
+    const maxAvailable = Math.max(0, totalStock - Number(already))
+    
+    if (maxAvailable <= 0) {
+      setMaxStock(true)
+      setTimeout(() => setMaxStock(false), 2000)
+      return
+    }
+    
+    const qty = Math.min(quantity, maxAvailable)
     addToCart({
       id: product.id,
       name: product.name,
@@ -144,7 +195,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     />
                   ))}
                 </div>
-                <span className="text-black font-bold">{averageRating.toFixed(1)} ({reviews.length} reviews)</span>
+                <span className="text-black font-bold">{averageRating.toFixed(1)} ({reviewCount} reviews)</span>
               </div>
             </div>
 
@@ -199,13 +250,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 onClick={handleAddToCart}
                 disabled={!product.inStock}
                 className={`flex-1 flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-bold transition ${
-                  addedToCart
-                    ? "bg-green-600 text-white"
-                    : "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  maxStock
+                    ? "bg-orange-600 text-white"
+                    : addedToCart
+                      ? "bg-green-600 text-white"
+                      : "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 }`}
               >
                 <ShoppingCart size={20} />
-                {addedToCart ? "Added to Cart!" : "Add to Cart"}
+                {maxStock ? "Max Stock Reached!" : addedToCart ? "Added to Cart!" : "Add to Cart"}
               </button>
               <button
                 onClick={() => {
@@ -222,7 +275,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                       reviews: product.reviews,
                     })
                   }
-                  setIsFavorite((v) => !v)
                 }}
                 className={`p-3 rounded-lg border-2 transition ${
                   isFavorite
@@ -287,7 +339,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                         }
                         const res = await supabase.rpc("toggle_review_helpful", { p_review_id: String(review.id) })
                         if (res.error) {
-                          console.error("toggle helpful error:", res.error)
+                          console.warn("⚠️ toggle_review_helpful RPC not available:", res.error.message)
+                          // Fallback: update locally without backend sync
+                          setReviews((prev) =>
+                            prev.map((r) =>
+                              r.id === review.id
+                                ? {
+                                    ...r,
+                                    helpful: Math.max(0, (r.helpful || 0) + (r.liked ? -1 : 1)),
+                                    liked: !r.liked,
+                                  }
+                                : r
+                            )
+                          )
                           return
                         }
                         const payload = Array.isArray(res.data) ? res.data[0] : res.data
@@ -355,7 +419,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         )}
       </div>
       {/* Mobile sticky add-to-cart bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t-2 border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+  <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t-2 border-gray-200 bg-white/95 backdrop-blur supports-backdrop-filter:bg-white/80">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center border-2 border-gray-300 rounded-lg">
             <button onClick={decrementQuantity} className="p-2 text-black hover:bg-gray-100 transition">
@@ -369,9 +433,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           <button
             onClick={handleAddToCart}
             disabled={!product.inStock}
-            className="flex-1 text-center bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className={`flex-1 text-center py-3 rounded-lg font-bold transition ${
+              maxStock
+                ? "bg-orange-600 text-white"
+                : addedToCart
+                  ? "bg-green-600 text-white"
+                  : "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            }`}
           >
-            Add To Cart
+            {maxStock ? "Max Stock!" : addedToCart ? "Added!" : "Add To Cart"}
           </button>
         </div>
       </div>

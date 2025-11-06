@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation"
 type Props = { initialProducts: Product[]; initialSearch?: string }
 
 export default function CatalogClient({ initialProducts, initialSearch }: Props) {
-  const { addToCart } = useCart()
+  const { addToCart, cartItems } = useCart()
   const [products] = useState<Product[]>(initialProducts)
   const [loading] = useState(false)
   const [searchTerm, setSearchTerm] = useState(initialSearch ?? "")
@@ -23,6 +23,7 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
   const maxPrice = prices.length ? Math.ceil(Math.max(...prices)) : 0
   const [priceRange, setPriceRange] = useState<[number, number]>([minPrice, maxPrice])
   const [addedItem, setAddedItem] = useState<number | null>(null)
+  const [maxStockItem, setMaxStockItem] = useState<number | null>(null)
   const [stats, setStats] = useState<Record<number, { count: number; average: number }>>({})
 
   // Keep the URL's `search` param in sync with what's typed here
@@ -68,6 +69,15 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
   }, [products])
 
   const handleAddToCart = (product: Product) => {
+    const inCart = cartItems.find((i) => i.id === product.id)?.quantity ?? 0
+    const maxStock = Number(product.stock ?? 0)
+    
+    if (inCart >= maxStock) {
+      setMaxStockItem(product.id)
+      setTimeout(() => setMaxStockItem(null), 2000)
+      return
+    }
+
     addToCart({ id: product.id, name: product.name, price: product.price, quantity: 1, image: product.image })
     setAddedItem(product.id)
     setTimeout(() => setAddedItem(null), 2000)
@@ -203,15 +213,36 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xl font-bold text-blue-600">{formatIDR(product.price)}</span>
-                    <button
-                      onClick={() => handleAddToCart(product)}
-                      className={`p-2 rounded-lg font-semibold transition flex items-center gap-1 ${
-                        addedItem === product.id ? "bg-green-600 text-white" : "bg-blue-600 text-white hover:bg-blue-700"
-                      }`}
-                    >
-                      <ShoppingCart size={20} />
-                      {addedItem === product.id ? "Added!" : ""}
-                    </button>
+                    {(() => {
+                      const outOfStock = !product.inStock || Number(product.stock ?? 0) <= 0
+                      if (outOfStock) {
+                        return (
+                          <button
+                            disabled
+                            className="px-2 py-1 text-xs rounded-md font-semibold inline-flex items-center gap-1 border border-red-600 text-red-600 bg-white cursor-not-allowed"
+                            title="Out of stock"
+                          >
+                            <ShoppingCart size={14} />
+                            Out of stock
+                          </button>
+                        )
+                      }
+                      return (
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          className={`p-2 rounded-lg font-semibold transition inline-flex items-center gap-1 ${
+                            maxStockItem === product.id
+                              ? "bg-orange-600 text-white"
+                              : addedItem === product.id
+                                ? "bg-green-600 text-white"
+                                : "bg-blue-600 text-white hover:bg-blue-700"
+                          }`}
+                        >
+                          <ShoppingCart size={18} />
+                          {maxStockItem === product.id ? "Max stock!" : addedItem === product.id ? "Added!" : ""}
+                        </button>
+                      )
+                    })()}
                   </div>
                 </div>
               </div>

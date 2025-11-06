@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { useAuth } from "@/hooks/use-auth"
 import { isSupabaseConfigured } from "@/lib/supabase/browser"
 import { addToWishlist as dbAdd, clearWishlist as dbClear, listWishlist as dbList, removeFromWishlist as dbRemove } from "@/lib/db/wishlist"
@@ -25,7 +25,7 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
-  const storageKey = useMemo(() => (user ? `wishlist:${user.id}` : `wishlist:guest`), [user?.id])
+  const storageKey = user ? `wishlist:${user.id}` : `wishlist:guest`
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       }
     }
     load()
-  }, [storageKey])
+  }, [storageKey, user])
 
   useEffect(() => {
     try {

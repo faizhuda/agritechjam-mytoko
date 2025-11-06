@@ -1,7 +1,7 @@
 // Flat ESLint config for ESLint v9+
 import next from 'eslint-config-next';
 
-export default [
+const config = [
   // Apply Next.js core-web-vitals rules for JS/TS/React
   ...next,
   // Project-specific tweaks and ignore patterns
@@ -27,3 +27,5 @@ export default [
     },
   },
 ];
+
+export default config;

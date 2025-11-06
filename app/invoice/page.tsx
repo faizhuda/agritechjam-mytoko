@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react"
 import { Download, Printer, ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, pdf, Image } from '@react-pdf/renderer'
 import { supabaseBrowser, isSupabaseConfigured } from "@/lib/supabase/browser"
+import { useToast } from "@/hooks/use-toast"
 import { formatIDR } from "@/lib/utils"
 
 export default function InvoicePage() {
@@ -14,6 +15,7 @@ export default function InvoicePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [invoiceData, setInvoiceData] = useState<any | null>(null)
+  const { toast } = useToast()
 
   useEffect(() => {
     // Avoid useSearchParams to prevent Suspense requirement in App Router
@@ -104,6 +106,7 @@ export default function InvoicePage() {
               total: subtotal + preferredTax + preferredShipping,
               paymentMethod: 'QRIS',
               transactionId: String(ord.id),
+              paymentProofUrl: ord.payment_proof_url ?? null,
             }
             setInvoiceData(inv)
             setLoading(false)
@@ -113,7 +116,7 @@ export default function InvoicePage() {
 
         const { data: order, error: orderErr } = await supabaseBrowser
           .from("orders")
-          .select("id, order_number, total, created_at, status, user_id")
+          .select("id, order_number, total, created_at, status, user_id, payment_proof_url")
           .eq("id", orderId)
           .maybeSingle()
 
@@ -219,6 +222,7 @@ export default function InvoicePage() {
           total: subtotal + tax + shipping,
           paymentMethod: "QRIS",
           transactionId: String(order.id),
+          paymentProofUrl: (order as any).payment_proof_url ?? null,
         }
 
         setInvoiceData(inv)
@@ -239,8 +243,26 @@ export default function InvoicePage() {
   const handleDownload = async () => {
     try {
       if (!invoiceData) return
-      const blob = await pdf(<InvoicePDF data={invoiceData} />).toBlob()
-      const url = URL.createObjectURL(blob)
+      
+      // Convert payment proof to base64 if exists
+      let paymentProofBase64 = null
+      if (invoiceData.paymentProofUrl) {
+        try {
+          const response = await fetch(invoiceData.paymentProofUrl)
+          const blob = await response.blob()
+          paymentProofBase64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve(reader.result as string)
+            reader.readAsDataURL(blob)
+          })
+        } catch (err) {
+          console.warn('Failed to load payment proof for PDF:', err)
+        }
+      }
+      
+      const dataWithBase64 = { ...invoiceData, paymentProofBase64 }
+      const pdfBlob = await pdf(<InvoicePDF data={dataWithBase64} />).toBlob()
+      const url = URL.createObjectURL(pdfBlob)
       const link = document.createElement('a')
       link.href = url
       link.download = `Invoice-${invoiceData.orderNumber}.pdf`
@@ -248,9 +270,9 @@ export default function InvoicePage() {
       link.click()
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating PDF:', error)
-      alert('Failed to generate PDF. Please try again.')
+      toast({ title: 'Download failed', description: error?.message || 'Failed to generate PDF. Please try again.', variant: 'destructive' })
     }
   }
 
@@ -285,9 +307,47 @@ export default function InvoicePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <style>{`
+        @media print {
+          @page {
+            size: A4;
+            margin: 10mm;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+          }
+          .no-print {
+            display: none !important;
+          }
+          .max-w-4xl {
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          .p-8 {
+            padding: 1rem !important;
+          }
+          .py-8 {
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+          }
+          .mb-8 {
+            margin-bottom: 0.75rem !important;
+          }
+          .shadow-lg,
+          .shadow-md {
+            box-shadow: none !important;
+          }
+          img[alt="Payment Proof"] {
+            max-height: 150px !important;
+            object-fit: contain !important;
+          }
+        }
+      `}</style>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 no-print">
           <Link href="/dashboard" className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-bold">
             <ArrowLeft size={20} />
             Back to Dashboard
@@ -332,12 +392,12 @@ export default function InvoicePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div>
               <p className="text-sm text-black font-bold mb-2">BILL TO</p>
-              <div className="space-y-1 break-words">
-                <p className="font-bold text-black break-words">{data.customer.name}</p>
-                <p className="text-sm text-black font-bold break-words">{data.customer.email}</p>
-                <p className="text-sm text-black font-bold break-words">{data.customer.phone}</p>
-                <p className="text-sm text-black font-bold break-words">{data.customer.address}</p>
-                <p className="text-sm text-black font-bold break-words">{data.customer.city} {data.customer.zipCode}</p>
+              <div className="space-y-1 wrap-break-word">
+                <p className="font-bold text-black wrap-break-word">{data.customer.name}</p>
+                <p className="text-sm text-black font-bold wrap-break-word">{data.customer.email}</p>
+                <p className="text-sm text-black font-bold wrap-break-word">{data.customer.phone}</p>
+                <p className="text-sm text-black font-bold wrap-break-word">{data.customer.address}</p>
+                <p className="text-sm text-black font-bold wrap-break-word">{data.customer.city} {data.customer.zipCode}</p>
               </div>
             </div>
             <div className="text-right">
@@ -372,7 +432,7 @@ export default function InvoicePage() {
               <tbody>
                 {data.items.map((item: any) => (
                   <tr key={item.id} className="border-b border-gray-300">
-                    <td className="py-3 px-4 text-black font-bold break-words">{item.name}</td>
+                    <td className="py-3 px-4 text-black font-bold wrap-break-word">{item.name}</td>
                     <td className="text-right py-3 px-4 text-black font-bold">{item.quantity}</td>
                     <td className="text-right py-3 px-4 text-black font-bold">{formatIDR(item.unitPrice)}</td>
                     <td className="text-right py-3 px-4 text-black font-bold">{formatIDR(item.total)}</td>
@@ -425,6 +485,23 @@ export default function InvoicePage() {
             </div>
           </div>
 
+          {/* Payment Proof */}
+          {data.paymentProofUrl && (
+            <div className="bg-white p-6 rounded-lg mb-8 border-2 border-gray-300">
+              <p className="text-sm text-black font-bold mb-4">PAYMENT PROOF</p>
+              <div className="flex justify-center">
+                <img 
+                  src={data.paymentProofUrl} 
+                  alt="Payment Proof" 
+                  className="max-w-md w-full h-auto rounded-lg border-2 border-gray-300 shadow-md"
+                />
+              </div>
+              <p className="text-xs text-center text-gray-600 mt-2 font-bold">
+                Payment proof uploaded on {data.invoiceDate}
+              </p>
+            </div>
+          )}
+
           {/* Footer */}
           <div className="border-t-2 border-gray-300 pt-6 text-center text-sm text-black">
             <p className="font-bold">Thank you for your business!</p>
@@ -435,24 +512,6 @@ export default function InvoicePage() {
           </div>
         </div>
       </div>
-
-      {/* Print Styles */}
-      <style>{`
-        @media print {
-          body {
-            background: white;
-          }
-          .print\\:border-0 {
-            border: none;
-          }
-          .print\\:shadow-none {
-            box-shadow: none;
-          }
-          button {
-            display: none;
-          }
-        }
-      `}</style>
     </div>
   )
 }
@@ -620,6 +679,17 @@ interface InvoicePDFProps {
 }
 
 function InvoicePDF({ data }: { data: any }) {
+  const getStatusStyle = (status: string) => {
+    const s = String(status || "").toLowerCase()
+    if (s === "pending") return { backgroundColor: '#fef3c7', color: '#92400e' }
+    if (s === "paid" || s === "shipped") return { backgroundColor: '#dbeafe', color: '#1e40af' }
+    if (s === "delivered" || s === "completed") return { backgroundColor: '#d1fae5', color: '#065f46' }
+    if (s === "cancelled") return { backgroundColor: '#fee2e2', color: '#991b1b' }
+    return { backgroundColor: '#f3f4f6', color: '#1f2937' }
+  }
+
+  const statusStyle = getStatusStyle(data.status)
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -632,7 +702,7 @@ function InvoicePDF({ data }: { data: any }) {
           <View>
             <Text style={styles.invoiceNumber}>Invoice Number</Text>
             <Text style={styles.invoiceNumberValue}>{data.orderNumber}</Text>
-            <Text style={styles.status}>{data.status}</Text>
+            <Text style={[styles.status, statusStyle]}>{data.status}</Text>
           </View>
         </View>
 
@@ -702,6 +772,15 @@ function InvoicePDF({ data }: { data: any }) {
           <Text style={styles.text}>Transaction ID: {data.transactionId}</Text>
           <Text style={styles.text}>Payment Method: {data.paymentMethod}</Text>
           <Text style={styles.text}>Payment Status: {data.status}</Text>
+          {data.paymentProofBase64 && (
+            <View style={{ marginTop: 10 }}>
+              <Text style={styles.sectionTitle}>PAYMENT PROOF</Text>
+              <Image 
+                src={data.paymentProofBase64} 
+                style={{ width: '100%', maxHeight: 200, objectFit: 'contain', marginTop: 8 }} 
+              />
+            </View>
+          )}
         </View>
 
         {/* Footer */}

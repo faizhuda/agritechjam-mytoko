@@ -3,7 +3,7 @@ import { createRouteClient } from "@/lib/supabase/server"
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = createRouteClient(req)
 
@@ -23,7 +23,8 @@ export async function PATCH(
   }
 
   // Determine order id from path or body
-  let orderId = String((params?.id ?? "")).trim()
+  const { id: idFromPath } = await params
+  let orderId = String((idFromPath ?? "")).trim()
   if (!orderId || orderId.length < 10) {
     const bodyId = String(body?.id ?? "").trim()
     if (bodyId) orderId = bodyId

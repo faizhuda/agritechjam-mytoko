@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
+import Link from "next/link"
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -14,18 +15,45 @@ export default function ResetPasswordPage() {
   const [sessionReady, setSessionReady] = useState(false)
 
   useEffect(() => {
-    // When user arrives from the reset link, Supabase should set a temporary session
-    const ensureSession = async () => {
-      if (!isSupabaseConfigured()) return setSessionReady(true)
-      const { data } = await supabase.auth.getSession()
-      // If no session yet, wait a bit (Supabase parses the hash and sets session)
-      if (!data.session) {
-        setTimeout(ensureSession, 400)
-      } else {
+    let attempts = 0
+    const maxAttempts = 8
+
+    const checkSession = async () => {
+      if (!isSupabaseConfigured()) {
         setSessionReady(true)
+        return
+      }
+
+      // Check for errors in URL
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search)
+        const urlError = params.get("error") || params.get("error_description")
+        if (urlError) {
+          setError("This reset link has expired or is invalid. Please request a new one.")
+          setSessionReady(false)
+          return
+        }
+      }
+
+      const { data, error: sessionError } = await supabase.auth.getSession()
+      
+      if (data?.session) {
+        console.log("✅ Session established")
+        setSessionReady(true)
+        return
+      }
+
+      attempts++
+      if (attempts < maxAttempts) {
+        console.log(`⏳ Waiting for session... (${attempts}/${maxAttempts})`)
+        setTimeout(checkSession, 600)
+      } else {
+        setError("Unable to verify reset link. Please request a new password reset link.")
+        setSessionReady(false)
       }
     }
-    ensureSession()
+
+    checkSession()
   }, [])
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -49,45 +77,70 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="container max-w-md mx-auto py-16">
-      <h1 className="text-2xl font-bold mb-6">Reset password</h1>
-      {!sessionReady ? (
-        <p>Preparing…</p>
-      ) : (
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="password" className="block text-sm font-medium">New password</label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border rounded-md px-3 py-2"
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="confirm" className="block text-sm font-medium">Confirm password</label>
-            <input
-              id="confirm"
-              type="password"
-              required
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              className="w-full border rounded-md px-3 py-2"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-black text-white px-4 py-2 rounded-md disabled:opacity-50"
-          >
-            {loading ? "Updating…" : "Update password"}
-          </button>
-        </form>
-      )}
-      {message && <p className="mt-4 text-green-600">{message}</p>}
-      {error && <p className="mt-4 text-red-600">{error}</p>}
+    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white border-2 border-gray-300 rounded-xl p-8 shadow-lg">
+          <h1 className="text-3xl font-bold text-center mb-6 text-black">Reset Password</h1>
+          
+          {!sessionReady && !error ? (
+            <div className="space-y-4 py-8 text-center">
+              <div className="flex justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+              <p className="text-black font-bold">Verifying reset link...</p>
+            </div>
+          ) : error ? (
+            <div className="space-y-4 py-6">
+              <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+                <h3 className="font-bold text-red-800 mb-2">⚠️ Unable to Reset Password</h3>
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+              <Link 
+                href="/forgot-password" 
+                className="block w-full text-center px-4 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition"
+              >
+                Request New Reset Link
+              </Link>
+            </div>
+          ) : (
+            <form onSubmit={onSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="password" className="block text-sm font-bold text-black mb-2">New Password</label>
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  minLength={6}
+                />
+              </div>
+              <div>
+                <label htmlFor="confirm" className="block text-sm font-bold text-black mb-2">Confirm Password</label>
+                <input
+                  id="confirm"
+                  type="password"
+                  required
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  minLength={6}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {loading ? "Updating..." : "Update Password"}
+              </button>
+              {message && <p className="text-center text-green-600 font-bold">{message}</p>}
+              {error && <p className="text-center text-red-600 font-bold">{error}</p>}
+            </form>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

@@ -7,7 +7,7 @@ import { cookies } from "next/headers"
 // Allows admins to update limited product fields safely.
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -56,7 +56,7 @@ export async function PATCH(
   }
 
   // Determine product id from path or body
-  const { id: idParam } = params
+  const { id: idParam } = await params
   let id = Number.parseInt(String(idParam ?? "").trim(), 10)
   if (!Number.isFinite(id) || id <= 0) {
     const bodyId = Number.parseInt(String(body?.id ?? "").trim(), 10)

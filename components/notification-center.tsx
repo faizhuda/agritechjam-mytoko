@@ -98,7 +98,7 @@ export default function NotificationCenter() {
                       <p className="text-xs text-gray-700 mt-1 font-medium">{notification.message}</p>
                       <span className="text-xs text-gray-600 mt-2 block font-medium">{notification.timestamp}</span>
                     </div>
-                    {!notification.read && <div className="w-2 h-2 bg-blue-600 rounded-full ml-2 mt-1 flex-shrink-0" />}
+                    {!notification.read && <div className="w-2 h-2 bg-blue-600 rounded-full ml-2 mt-1 shrink-0" />}
                   </div>
                 </div>
               ))

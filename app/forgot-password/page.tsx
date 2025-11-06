@@ -15,17 +15,36 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    const origin = typeof window !== "undefined" ? window.location.origin : ""
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/reset-password`,
-    })
-    setLoading(false)
-
-    if (error) {
-      toast({ title: "Reset failed", description: error.message })
-    } else {
-      toast({ title: "Email sent!", description: "Check your inbox for the password reset link." })
-      router.push("/login")
+    
+    try {
+      const origin = typeof window !== "undefined" ? window.location.origin : ""
+      // Use simpler redirect without PKCE issues
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${origin}/reset-password`,
+      })
+      
+      if (error) {
+        toast({ 
+          title: "Reset failed", 
+          description: error.message,
+          variant: "destructive"
+        })
+      } else {
+        toast({ 
+          title: "✅ Email sent!", 
+          description: "Check your inbox and click the reset link. IMPORTANT: Open the link in THIS browser.",
+        })
+        // Don't redirect immediately, let user read the message
+        setTimeout(() => router.push("/login"), 3000)
+      }
+    } catch (err: any) {
+      toast({ 
+        title: "Error", 
+        description: err.message || "Failed to send reset email",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -34,7 +53,15 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md">
         <div className="bg-white border-2 border-gray-300 rounded-xl p-8 shadow-lg">
           <h1 className="text-3xl font-bold text-center mb-2 text-black">Forgot Password</h1>
-          <p className="text-center text-black mb-8 font-bold">Enter your email to reset your password</p>
+          <p className="text-center text-black mb-6 font-bold">Enter your email to reset your password</p>
+
+          {/* Important Notice */}
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-800 font-semibold">
+              <strong>📱 Important:</strong> The reset link must be opened in <strong>this browser</strong>. 
+              Don't switch browsers or devices after requesting the reset.
+            </p>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -52,7 +79,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition mt-6"
+              className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Sending..." : "Send Reset Link"}
             </button>

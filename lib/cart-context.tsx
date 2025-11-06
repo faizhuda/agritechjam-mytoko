@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react"
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react"
 import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
 import { fetchProductsByIds } from "@/lib/db/products"
 import { useAuth } from "@/hooks/use-auth"
@@ -36,25 +36,73 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const syncedOnLogin = useRef(false)
 
-  // Load from DB when user logs in
+  // Helper: fetch current stock for product ids. Returns map of id -> maxStock (0 if out-of-stock)
+  const fetchStockMap = useCallback(async (ids: number[]): Promise<Map<number, number>> => {
+    try {
+      const prods = await fetchProductsByIds(ids)
+      const map = new Map<number, number>()
+      for (const p of prods) {
+        const max = !p?.inStock ? 0 : Math.max(0, Number(p?.stock ?? 0))
+        map.set(p.id, max)
+      }
+      // For any id not returned, assume 0
+      for (const id of ids) if (!map.has(id)) map.set(id, 0)
+      return map
+    } catch {
+      // On failure, assume no additional stock to avoid exceeding
+      return new Map(ids.map((id) => [id, 0]))
+    }
+  }, [])
+
+  // Helper: clamp a set of items to current stock; optionally persist fixes for logged-in users
+  const clampItemsToStock = useCallback(async (items: CartItem[]): Promise<CartItem[]> => {
+    const ids = Array.from(new Set(items.map((i) => i.id)))
+    if (ids.length === 0) return items
+    const stockMap = await fetchStockMap(ids)
+    const adjusted: CartItem[] = []
+    for (const it of items) {
+      const max = stockMap.get(it.id) ?? 0
+      const qty = Math.min(it.quantity, max)
+      if (qty > 0) {
+        if (qty !== it.quantity && user && isSupabaseConfigured()) {
+          // Persist corrected quantity
+          dbUpdate(user.id, it.id, qty).catch(() => {})
+        }
+        adjusted.push({ ...it, quantity: qty })
+      } else {
+        if (user && isSupabaseConfigured()) {
+          dbRemove(user.id, it.id).catch(() => {})
+        }
+      }
+    }
+    return adjusted
+  }, [fetchStockMap, user])
+
+  // Push guest cart to DB once upon login
+  useEffect(() => {
+    const syncGuestToDb = async () => {
+      if (!user || !isSupabaseConfigured()) return
+      if (syncedOnLogin.current) return
+      if (cartItems.length === 0) return
+      for (const item of cartItems) {
+        await dbAdd(user.id, item.id, item.quantity)
+      }
+      syncedOnLogin.current = true
+    }
+    syncGuestToDb()
+  }, [user, cartItems])
+
+  // Load from DB when user logs in or changes
   useEffect(() => {
     const load = async () => {
       if (!user || !isSupabaseConfigured()) return
-      // If there are local items (from guest session), try to push them to DB once
-      if (!syncedOnLogin.current && cartItems.length > 0) {
-        for (const item of cartItems) {
-          await dbAdd(user.id, item.id, item.quantity)
-        }
-        syncedOnLogin.current = true
-      }
       const rows = await dbList(user.id)
-      setCartItems(
-        rows.map((r) => ({ id: r.productId, name: r.name, price: r.price, quantity: r.quantity, image: r.image }))
-      )
+      const raw = rows.map((r) => ({ id: r.productId, name: r.name, price: r.price, quantity: r.quantity, image: r.image }))
+      const clamped = await clampItemsToStock(raw)
+      setCartItems(clamped)
     }
     load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id])
+  }, [user, clampItemsToStock])
 
   // Realtime: keep cart in sync when DB changes from other tabs/devices and when products change
   useEffect(() => {
@@ -70,7 +118,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
           try {
             const rows = await dbList(user.id)
             if (!mounted) return
-            setCartItems(rows.map((r) => ({ id: r.productId, name: r.name, price: r.price, quantity: r.quantity, image: r.image })))
+            const raw = rows.map((r) => ({ id: r.productId, name: r.name, price: r.price, quantity: r.quantity, image: r.image }))
+            const clamped = await clampItemsToStock(raw)
+            if (!mounted) return
+            setCartItems(clamped)
           } catch (e) {
             console.error('realtime cart refresh failed', e)
           }
@@ -84,12 +135,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
           if (!changedId) return
           setCartItems((prev) => {
             if (!prev.some((i) => i.id === changedId)) return prev
-            // Re-fetch cart snapshot to get latest product name/price/image
             ;(async () => {
               try {
                 const rows = await dbList(user.id)
                 if (!mounted) return
-                setCartItems(rows.map((r) => ({ id: r.productId, name: r.name, price: r.price, quantity: r.quantity, image: r.image })))
+                const raw = rows.map((r) => ({ id: r.productId, name: r.name, price: r.price, quantity: r.quantity, image: r.image }))
+                const clamped = await clampItemsToStock(raw)
+                if (!mounted) return
+                setCartItems(clamped)
               } catch {}
             })()
             return prev
@@ -106,9 +159,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         try { ch.unsubscribe() } catch {}
       }
     }
-  }, [user?.id])
+  }, [user, clampItemsToStock])
 
-  // Rehydrate guest cart item details (name/price/image) from DB to avoid stale snapshots
+  // Rehydrate guest cart item details (name/price/image) from DB and clamp to stock
   useEffect(() => {
     const rehydrate = async () => {
       if (user) return // user-synced path already handled above
@@ -119,37 +172,49 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const fresh = await fetchProductsByIds(ids)
         if (!fresh || fresh.length === 0) return
         const byId = new Map(fresh.map((p) => [p.id, p]))
-        setCartItems((prev) =>
-          prev.map((i) => {
-            const p = byId.get(i.id)
-            if (!p) return i
-            // Only update if values changed to avoid unnecessary re-renders
-            if (i.name === p.name && i.price === p.price && i.image === p.image) return i
-            return { ...i, name: p.name, price: p.price, image: p.image }
-          })
-        )
+        const updated = cartItems.map((i) => {
+          const p = byId.get(i.id)
+          if (!p) return i
+          const max = !p.inStock ? 0 : Math.max(0, Number(p.stock ?? 0))
+          const qty = Math.min(i.quantity, max)
+          return qty > 0 ? { ...i, name: p.name, price: p.price, image: p.image, quantity: qty } : null
+        }).filter(Boolean) as CartItem[]
+        setCartItems(updated)
       } catch (e) {
         console.error("cart rehydrate failed", e)
       }
     }
     // Fire-and-forget; doesn't need to block UI
     rehydrate()
-    // Only re-run when ids set changes to limit calls
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, cartItems.map((i) => i.id).join(",")])
+  }, [user, cartItems])
 
   const addToCart = (item: CartItem) => {
-    setCartItems((prevItems) => {
-      const existingItem = prevItems.find((i) => i.id === item.id)
-      if (existingItem) {
-        return prevItems.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i))
-      }
-      return [...prevItems, item]
-    })
-    // Persist to DB if logged in
-    if (user && isSupabaseConfigured()) {
-      dbAdd(user.id, item.id, item.quantity).catch((e) => console.error("dbAdd error", e))
-    }
+    ;(async () => {
+      const stockMap = await fetchStockMap([item.id])
+      const max = stockMap.get(item.id) ?? 0
+      setCartItems((prevItems) => {
+        const existingItem = prevItems.find((i) => i.id === item.id)
+        const existingQty = existingItem?.quantity ?? 0
+        const desired = existingQty + item.quantity
+        const finalQty = Math.min(desired, max)
+        if (finalQty <= 0) {
+          return prevItems
+        }
+        let next: CartItem[]
+        if (existingItem) {
+          if (finalQty === existingQty) return prevItems
+          next = prevItems.map((i) => (i.id === item.id ? { ...i, quantity: finalQty } : i))
+        } else {
+          next = [...prevItems, { ...item, quantity: finalQty }]
+        }
+        // Persist delta to DB if logged in
+        if (user && isSupabaseConfigured()) {
+          const delta = finalQty - existingQty
+          if (delta > 0) dbAdd(user.id, item.id, delta).catch((e) => console.error("dbAdd error", e))
+        }
+        return next
+      })
+    })()
   }
 
   const removeFromCart = (id: number) => {
@@ -160,14 +225,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const updateQuantity = (id: number, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(id)
-      return
-    }
-    setCartItems((prevItems) => prevItems.map((i) => (i.id === id ? { ...i, quantity } : i)))
-    if (user && isSupabaseConfigured()) {
-      dbUpdate(user.id, id, quantity).catch((e) => console.error("dbUpdate error", e))
-    }
+    ;(async () => {
+      const stockMap = await fetchStockMap([id])
+      const max = stockMap.get(id) ?? 0
+      const finalQty = Math.min(Math.max(0, quantity), max)
+      if (finalQty <= 0) {
+        setCartItems((prevItems) => prevItems.filter((i) => i.id !== id))
+        if (user && isSupabaseConfigured()) {
+          dbRemove(user.id, id).catch((e) => console.error("dbRemove error", e))
+        }
+        return
+      }
+      setCartItems((prevItems) => prevItems.map((i) => (i.id === id ? { ...i, quantity: finalQty } : i)))
+      if (user && isSupabaseConfigured()) {
+        dbUpdate(user.id, id, finalQty).catch((e) => console.error("dbUpdate error", e))
+      }
+    })()
   }
 
   const clearCart = () => {

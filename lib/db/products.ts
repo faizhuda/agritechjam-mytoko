@@ -84,25 +84,75 @@ export async function fetchProductById(id: number): Promise<Product | null> {
 
 export async function fetchReviewsByProductId(productId: number): Promise<Review[]> {
   if (!isSupabaseConfigured()) {
-    return sampleReviews.filter((r) => r.productId === productId)
+    console.log('⚠️ Supabase not configured, returning empty reviews')
+    // Return empty array instead of sample data when using real database
+    return []
   }
+  
+  console.log('🔍 Fetching reviews for product:', productId)
+  
+  // Fetch from product_reviews table (one review per user per product)
+  // Note: We fetch reviews first, then separately fetch user names to avoid FK issues
   const { data, error } = await supabase
-    .from("reviews")
-    .select("id, product_id, author, rating, title, comment, created_at, helpful")
+    .from("product_reviews")
+    .select(`
+      id,
+      product_id,
+      user_id,
+      rating,
+      comment,
+      created_at,
+      helpful
+    `)
     .eq("product_id", productId)
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("Supabase fetchReviewsByProductId error:", error)
-    return sampleReviews.filter((r) => r.productId === productId)
+    console.error("❌ Supabase fetchReviewsByProductId error:")
+    console.error("Full error object:", JSON.stringify(error, null, 2))
+    console.error("Error details:", {
+      productId,
+      errorCode: error?.code,
+      errorMessage: error?.message,
+      errorDetails: error?.details,
+      errorHint: error?.hint,
+      errorStatus: (error as any)?.status,
+      errorStatusText: (error as any)?.statusText
+    })
+    // Return empty array on error instead of sample data
+    return []
+  }
+
+  console.log('✅ Reviews data fetched:', data)
+  console.log('✅ Number of reviews:', data?.length || 0)
+
+  // Fetch user names separately to avoid FK relationship issues
+  const userIds = [...new Set((data || []).map((r: any) => r.user_id).filter(Boolean))]
+  let userNameMap: Record<string, string> = {}
+  
+  if (userIds.length > 0) {
+    try {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds)
+      
+      if (profiles) {
+        userNameMap = Object.fromEntries(
+          profiles.map((p: any) => [p.id, p.full_name || "Anonymous"])
+        )
+      }
+    } catch (e) {
+      console.warn("Could not fetch user profiles, using Anonymous for all")
+    }
   }
 
   const mapped = (data || []).map((r: any) => ({
     id: String(r.id),
     productId: Number(r.product_id),
-    author: r.author ?? "Anonymous",
+    author: userNameMap[r.user_id] || "Anonymous",
     rating: Number(r.rating ?? 0),
-    title: r.title ?? "",
+    title: "", // product_reviews doesn't have title
     comment: r.comment ?? "",
     date: r.created_at ?? new Date().toISOString(),
     helpful: Number(r.helpful ?? 0),
@@ -190,25 +240,15 @@ export async function fetchReviewStatsForProductIds(
   if (!productIds || productIds.length === 0) return result
 
   if (!isSupabaseConfigured()) {
-    const filtered = sampleReviews.filter((r) => productIds.includes(r.productId))
-    const sums: Record<number, { sum: number; count: number }> = {}
-    for (const r of filtered) {
-      const key = r.productId
-      if (!sums[key]) sums[key] = { sum: 0, count: 0 }
-      sums[key].sum += r.rating
-      sums[key].count += 1
-    }
+    // Return empty stats when using real database
     for (const id of productIds) {
-      const s = sums[id]
-      const count = s?.count ?? 0
-      const average = count > 0 ? s!.sum / count : 0
-      result[id] = { count, average }
+      result[id] = { count: 0, average: 0 }
     }
     return result
   }
 
   const { data, error } = await supabase
-    .from("reviews")
+    .from("product_reviews")
     .select("product_id, rating")
     .in("product_id", productIds)
 

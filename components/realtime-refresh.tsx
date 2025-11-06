@@ -28,7 +28,7 @@ export default function RealtimeRefresh({ table = "products" }: { table?: string
       if (timer.current) clearTimeout(timer.current)
       try { ch.unsubscribe() } catch {}
     }
-  }, [table])
+  }, [table, router])
 
   return null
 }

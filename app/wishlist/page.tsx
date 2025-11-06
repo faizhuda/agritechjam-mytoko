@@ -6,15 +6,26 @@ import { Heart, ShoppingCart, ArrowLeft } from "lucide-react"
 import { useWishlist } from "@/lib/wishlist-context"
 import { useCart } from "@/lib/cart-context"
 import { formatIDR } from "@/lib/utils"
-import { fetchReviewStatsForProductIds } from "@/lib/db/products"
+import { fetchProductsByIds, fetchReviewStatsForProductIds } from "@/lib/db/products"
 
 export default function WishlistPage() {
   const { wishlistItems, removeFromWishlist } = useWishlist()
-  const { addToCart } = useCart()
+  const { addToCart, cartItems } = useCart()
   const [addedToCart, setAddedToCart] = useState<number | null>(null)
+  const [maxStockItem, setMaxStockItem] = useState<number | null>(null)
   const [stats, setStats] = useState<Record<number, { count: number; average: number }>>({})
+  const [availability, setAvailability] = useState<Record<number, { inStock: boolean; stock: number }>>({})
 
   const handleAddToCart = (item: any) => {
+    const inCart = cartItems.find((i) => i.id === item.id)?.quantity ?? 0
+    const maxStock = availability[item.id]?.stock ?? 0
+    
+    if (inCart >= maxStock) {
+      setMaxStockItem(item.id)
+      setTimeout(() => setMaxStockItem(null), 2000)
+      return
+    }
+
     addToCart({ id: item.id, name: item.name, price: item.price, quantity: 1, image: item.image })
     setAddedToCart(item.id)
     setTimeout(() => setAddedToCart(null), 2000)
@@ -23,11 +34,18 @@ export default function WishlistPage() {
   // Fetch live review stats for wishlist items from Supabase (or sample fallback inside function)
   useEffect(() => {
     const ids = wishlistItems.map((w) => w.id)
-    if (ids.length === 0) {
-      setStats({})
-      return
-    }
+    if (ids.length === 0) return
     fetchReviewStatsForProductIds(ids).then(setStats).catch(() => setStats({}))
+    // Also fetch availability (stock/inStock) to decide button/label states
+    fetchProductsByIds(ids)
+      .then((prods) => {
+        const map: Record<number, { inStock: boolean; stock: number }> = {}
+        for (const p of prods) {
+          map[p.id] = { inStock: Boolean(p.inStock), stock: Number(p.stock ?? 0) }
+        }
+        setAvailability(map)
+      })
+      .catch(() => setAvailability({}))
   }, [wishlistItems])
 
   return (
@@ -90,15 +108,37 @@ export default function WishlistPage() {
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => handleAddToCart(item)}
-                      className={`flex-1 py-2 rounded-lg font-bold transition flex items-center justify-center gap-2 ${
-                        addedToCart === item.id ? "bg-green-600 text-white" : "bg-blue-600 text-white hover:bg-blue-700"
-                      }`}
-                    >
-                      <ShoppingCart size={18} />
-                      {addedToCart === item.id ? "Added!" : "Add to Cart"}
-                    </button>
+                    {(() => {
+                      const avail = availability[item.id]
+                      const outOfStock = avail ? (!avail.inStock || Number(avail.stock ?? 0) <= 0) : false
+                      if (outOfStock) {
+                        return (
+                          <button
+                            disabled
+                            className="flex-1 px-2 py-1 text-xs rounded-md font-bold inline-flex items-center justify-center gap-1 border border-red-600 text-red-600 bg-white cursor-not-allowed"
+                            title="Out of stock"
+                          >
+                            <ShoppingCart size={14} />
+                            Out of stock
+                          </button>
+                        )
+                      }
+                      return (
+                        <button
+                          onClick={() => handleAddToCart(item)}
+                          className={`flex-1 py-2 rounded-lg font-bold transition inline-flex items-center justify-center gap-2 ${
+                            maxStockItem === item.id
+                              ? "bg-orange-600 text-white"
+                              : addedToCart === item.id
+                                ? "bg-green-600 text-white"
+                                : "bg-blue-600 text-white hover:bg-blue-700"
+                          }`}
+                        >
+                          <ShoppingCart size={16} />
+                          {maxStockItem === item.id ? "Max stock!" : addedToCart === item.id ? "Added!" : "Add to Cart"}
+                        </button>
+                      )
+                    })()}
                     <Link href={`/product/${item.id}`} className="flex-1 py-2 border-2 border-blue-600 text-blue-600 rounded-lg font-bold hover:bg-blue-50 transition text-center">
                       View Details
                     </Link>

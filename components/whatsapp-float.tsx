@@ -1,17 +1,18 @@
 "use client"
 
 import { MessageCircle } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 
 // Floating WhatsApp button for mobile users
 // Appears on small screens only; links to owner's WhatsApp with prefilled message including current URL
 export default function WhatsAppFloat() {
-  const [href, setHref] = useState<string>("https://wa.me/6287787128257")
+  const [href, setHref] = useState("https://wa.me/6287787128257")
 
   useEffect(() => {
     if (typeof window === "undefined") return
     const url = encodeURIComponent(window.location.href)
     const text = encodeURIComponent("Halo Admin, saya mau tanya tentang produk ini. (MyToko)")
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHref(`https://wa.me/6287787128257?text=${text}%20%7C%20URL%3A%20${url}`)
   }, [])
 
