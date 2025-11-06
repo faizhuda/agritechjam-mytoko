@@ -166,6 +166,7 @@ export default function AdminDashboard() {
         .select(
           "id, name, price, original_price, category, rating, reviews, image, description, long_description, features, stock, in_stock"
         )
+        .eq('archived', false)
         .order("id", { ascending: true })
       const mapped: Product[] = (prod || []).map((p: any) => ({
         id: Number(p.id),
