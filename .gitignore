@@ -1,1 +1,145 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+
+
+# dependencies# dependencies
+
+/node_modules/node_modules
+
+/.pnp
+
+.pnp.js# next.js
+
+/.next/
+
+# testing/out/
+
+/coverage
+
+# dist/build output
+
+# next.jsdist/
+
+/.next/# production
+
+/out/
+
+/build
+
+.next# environment files
+
+.env
+
+# production.env.local
+
+/dist.env.development.local
+
+.env.test.local
+
+# environment files.env.production.local
+
+.env
+
+.env.local# vercel
+
+.env.development.local# production
+
+.env.test.local
+
+.env.production.local# supabase
+
+.env*.localsupabase/.temp/
+
+supabase/.env
+
+# vercel
+
+.vercel# logs
+
+/build
+
+# typescript
+
+*.tsbuildinfo# debug
+
+next-env.d.tsnpm-debug.log*
+
+
+
+# debug# OS files
+
+npm-debug.log*.DS_Store
+
+yarn-debug.log*Thumbs.db
+
+yarn-error.log*
+
+.pnpm-debug.log*# VS Code
+
+.vscode/
+
+# supabase
+
+supabase/.temp/# coverage
+
+supabase/.envcoverage/
+
+.supabase/
+
+# Misc
+
+# OS files*.log
+
+.DS_Store*.sqlite
+
+Thumbs.db*.bak
+
+*.swp*.tmp
+
+*.swo
+
+*~# Ignore public uploads
+
+public/uploads/
+
+# IDEyarn-debug.log*
+
+.vscode/yarn-error.log*
+
+.idea/
+
+*.sublime-project
+
+*.sublime-workspace# env files
+
+.env*
+
+# Misc
+
+*.log# vercel
+
+*.sqlite.vercel
+
+*.bak
+
+*.tmp# typescript
+
+*.temp*.tsbuildinfo
+
+next-env.d.ts
+# Public uploads (user uploaded files)
+public/uploads/
+public/temp/
+
+# Documentation drafts (optional)
+*.draft.md
+*_DRAFT.md
+*_OLD.md
+*.backup.*
+
+# Lock files (choose one)
+# Uncomment the one you DON'T use:
+# package-lock.json
+# yarn.lock
 node_modules
+supabase
