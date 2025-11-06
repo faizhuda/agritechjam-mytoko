@@ -1,116 +1,68 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
 import Link from "next/link"
 
 export default function ResetPasswordV2Page() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [sessionReady, setSessionReady] = useState(false)
-  const [debugInfo, setDebugInfo] = useState<string>("")
 
   useEffect(() => {
-    let attempts = 0
-    const maxAttempts = 12
-
-    const checkSession = async () => {
+    const checkAndSetupSession = async () => {
       if (!isSupabaseConfigured()) {
-        setError("Supabase is not configured properly")
+        setError("Configuration error")
         return
       }
 
       try {
-        if (typeof window === "undefined") return
-
-        // Parse URL for debugging
-        const url = new URL(window.location.href)
-        const hash = window.location.hash
-        const hashParams = new URLSearchParams(hash.substring(1))
-        const searchParams = new URLSearchParams(window.location.search)
-
-        // Debug info
-        const debug = {
-          hasHash: !!hash,
-          hasAccessToken: !!hashParams.get("access_token"),
-          hasRefreshToken: !!hashParams.get("refresh_token"),
-          type: hashParams.get("type"),
-          searchError: searchParams.get("error"),
-          hashError: hashParams.get("error"),
-          errorCode: hashParams.get("error_code"),
-        }
-        setDebugInfo(JSON.stringify(debug, null, 2))
-        console.log("🔍 Debug info:", debug)
-
-        // Check for errors
-        if (debug.searchError || debug.hashError || debug.errorCode) {
-          setError("This reset link has expired, is invalid, or has already been used. Please request a new one.")
-          setSessionReady(false)
+        // Check for error in URL first
+        const urlError = searchParams.get("error") || searchParams.get("error_description")
+        if (urlError) {
+          setError("This reset link is invalid or has expired. Please request a new one.")
           return
         }
 
-        // If we have access token in hash, process it
-        if (debug.hasAccessToken && debug.type === "recovery") {
-          console.log("✓ Found recovery token, attempting to establish session...")
-          
-          // Try to refresh session to make sure Supabase processes the hash
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
-          if (refreshError) {
-            console.warn("⚠️ Refresh error:", refreshError.message)
-          } else if (refreshData?.session) {
-            console.log("✅ Session established via refresh!")
-            setSessionReady(true)
-            return
-          }
-        }
+        // Get access_token from URL (query param)
+        const accessToken = searchParams.get("access_token")
+        const type = searchParams.get("type")
 
-        // Check current session
-        const { data, error: sessionError } = await supabase.auth.getSession()
-        
-        if (sessionError) {
-          console.error("❌ Session error:", sessionError)
-          attempts++
-          if (attempts >= maxAttempts) {
-            setError("Unable to verify reset link after multiple attempts. Please request a new password reset link.")
-            setSessionReady(false)
-            return
-          }
-          console.log(`⏳ Retrying... (${attempts}/${maxAttempts})`)
-          setTimeout(checkSession, 400)
+        if (!accessToken || type !== "recovery") {
+          setError("Invalid reset link. Please request a new password reset.")
           return
         }
 
-        if (data?.session) {
-          console.log("✅ Session ready!", data.session.user.email)
-          setSessionReady(true)
+        console.log("✓ Found recovery token, setting up session...")
+
+        // Set the session using the token
+        const { data, error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: searchParams.get("refresh_token") || "",
+        })
+
+        if (sessionError || !data.session) {
+          console.error("❌ Failed to set session:", sessionError)
+          setError("Unable to verify reset link. Please request a new one.")
           return
         }
 
-        // No session yet, keep trying
-        attempts++
-        if (attempts < maxAttempts) {
-          console.log(`⏳ Waiting for session... (${attempts}/${maxAttempts})`)
-          setTimeout(checkSession, 400)
-        } else {
-          console.error("❌ Max attempts reached, no session found")
-          setError("Unable to verify reset link. This could happen if:\n• The link was opened in a different browser\n• The link has expired\n• The link has already been used\n\nPlease request a new password reset link.")
-          setSessionReady(false)
-        }
+        console.log("✅ Session ready!")
+        setSessionReady(true)
       } catch (e: any) {
-        console.error("❌ Error in checkSession:", e)
-        setError(e.message || "An unexpected error occurred")
-        setSessionReady(false)
+        console.error("❌ Error:", e)
+        setError("An error occurred. Please try again.")
       }
     }
 
-    // Start checking
-    checkSession()
-  }, [])
+    checkAndSetupSession()
+  }, [searchParams])
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -175,13 +127,6 @@ export default function ResetPasswordV2Page() {
                 <p className="text-gray-900 font-semibold text-lg mb-2">Verifying reset link...</p>
                 <p className="text-gray-500 text-sm">This may take a few moments</p>
               </div>
-              {/* Debug info for development */}
-              {process.env.NODE_ENV === 'development' && debugInfo && (
-                <details className="text-left text-xs bg-gray-100 p-3 rounded">
-                  <summary className="cursor-pointer font-mono">Debug Info</summary>
-                  <pre className="mt-2 overflow-auto">{debugInfo}</pre>
-                </details>
-              )}
             </div>
           )}
 
