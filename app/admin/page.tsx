@@ -320,6 +320,50 @@ export default function AdminDashboard() {
         throw new Error(j?.error || `Failed to set status: ${res.status}`)
       }
       setRecent((prev) => prev.map((t) => (t.id === orderId ? { ...t, status: next } : t)))
+
+      // Refresh KPIs and charts after status changes (e.g., cancelled should reduce totals)
+      try {
+        const resp = await fetch('/api/admin/orders', { cache: 'no-store' })
+        const j = await resp.json().catch(() => ({}))
+        const apiOrders = Array.isArray(j?.orders) ? j.orders : []
+        const orderRows: OrderRow[] = (apiOrders || []).map((o: any) => ({
+          id: String(o.id),
+          user_id: String(o.user_id),
+          total: Number(o.total ?? 0),
+          status: String(o.status ?? 'pending'),
+          created_at: o.created_at,
+        }))
+        const nonCancelled = orderRows.filter((o) => String(o.status).toLowerCase() !== 'cancelled')
+        const totalRevenue = nonCancelled.reduce((s, o) => s + (o.total || 0), 0)
+        const totalOrders = nonCancelled.length
+        const totalCustomers = new Set(nonCancelled.map((o) => o.user_id)).size
+        setKpi((prev) => ({ ...prev, totalRevenue, totalOrders, totalCustomers }))
+
+        // Update charts
+        const now = new Date()
+        const byMonth = new Map<string, { sales: number; orders: number }>()
+        const months = [...Array(6)].map((_, i) => {
+          const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
+          return d
+        })
+        for (const d of months) {
+          const key = d.toLocaleString(undefined, { month: 'short' })
+          byMonth.set(key, { sales: 0, orders: 0 })
+        }
+        for (const o of nonCancelled) {
+          const d = new Date(o.created_at)
+          const diffMonths = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth())
+          if (diffMonths >= 0 && diffMonths < 6) {
+            const key = d.toLocaleString(undefined, { month: 'short' })
+            const cur = byMonth.get(key) || { sales: 0, orders: 0 }
+            cur.sales += o.total || 0
+            cur.orders += 1
+            byMonth.set(key, cur)
+          }
+        }
+        const monthly = Array.from(byMonth.entries()).map(([month, v]) => ({ month, ...v }))
+        setSalesData(monthly)
+      } catch {}
     } catch (e: any) {
       alert(e?.message || String(e))
     }
