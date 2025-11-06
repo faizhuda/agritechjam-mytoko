@@ -14,6 +14,7 @@ export async function fetchProducts(): Promise<Product[]> {
     .select(
       "id, name, price, original_price, category, rating, reviews, image, description, long_description, features, stock, in_stock"
     )
+    .eq('archived', false)
     .order("id", { ascending: true })
 
   if (error) {
@@ -50,6 +51,7 @@ export async function fetchProductById(id: number): Promise<Product | null> {
     .select(
       "id, name, price, original_price, category, rating, reviews, image, description, long_description, features, stock, in_stock"
     )
+    .eq('archived', false)
     .eq("id", id)
     .maybeSingle()
 
@@ -149,6 +151,7 @@ export async function fetchProductsByIds(ids: number[]): Promise<Product[]> {
     .select(
       "id, name, price, original_price, category, rating, reviews, image, description, long_description, features, stock, in_stock"
     )
+    .eq('archived', false)
     .in("id", uniqueIds)
 
   if (error) {
