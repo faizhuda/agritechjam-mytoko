@@ -109,16 +109,17 @@ export default function AdminDashboard() {
         created_at: o.created_at,
       }))
 
-  // KPI (exclude cancelled orders from revenue and count)
-  const nonCancelled = orderRows.filter((o) => String(o.status).toLowerCase() !== 'cancelled')
-  const totalRevenue = nonCancelled.reduce((s, o) => s + (o.total || 0), 0)
-  const totalOrders = nonCancelled.length
-      const totalCustomers = new Set(orderRows.map((o) => o.user_id)).size
+  // KPI: include only paid/shipped/delivered
+  const includedStatuses = new Set(['paid','shipped','delivered'])
+  const included = orderRows.filter((o) => includedStatuses.has(String(o.status).toLowerCase()))
+  const totalRevenue = included.reduce((s, o) => s + (o.total || 0), 0)
+  const totalOrders = included.length
+  const totalCustomers = new Set(included.map((o) => o.user_id)).size
       const now = new Date()
       const start30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
       const prevStart30 = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
-      const last30 = orderRows.filter((o) => new Date(o.created_at) >= start30)
-      const prev30 = orderRows.filter((o) => new Date(o.created_at) < start30 && new Date(o.created_at) >= prevStart30)
+  const last30 = included.filter((o) => new Date(o.created_at) >= start30)
+  const prev30 = included.filter((o) => new Date(o.created_at) < start30 && new Date(o.created_at) >= prevStart30)
       const lastSum = last30.reduce((s, x) => s + x.total, 0)
       const prevSum = prev30.reduce((s, x) => s + x.total, 0)
       const growthRate = prevSum > 0 ? ((lastSum - prevSum) / prevSum) * 100 : (lastSum > 0 ? 100 : 0)
@@ -134,7 +135,7 @@ export default function AdminDashboard() {
         const key = d.toLocaleString(undefined, { month: "short" })
         byMonth.set(key, { sales: 0, orders: 0 })
       }
-      for (const o of nonCancelled) {
+      for (const o of included) {
         const d = new Date(o.created_at)
         const diffMonths = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth())
         if (diffMonths >= 0 && diffMonths < 6) {
@@ -313,7 +314,7 @@ export default function AdminDashboard() {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ status: next.toLowerCase() }),
+        body: JSON.stringify({ id: orderId, status: next.toLowerCase() }),
       })
       if (!res.ok) {
         const j = await res.json().catch(() => ({}))
@@ -333,10 +334,11 @@ export default function AdminDashboard() {
           status: String(o.status ?? 'pending'),
           created_at: o.created_at,
         }))
-        const nonCancelled = orderRows.filter((o) => String(o.status).toLowerCase() !== 'cancelled')
-        const totalRevenue = nonCancelled.reduce((s, o) => s + (o.total || 0), 0)
-        const totalOrders = nonCancelled.length
-        const totalCustomers = new Set(nonCancelled.map((o) => o.user_id)).size
+        const includedStatuses = new Set(['paid','shipped','delivered'])
+        const included = orderRows.filter((o) => includedStatuses.has(String(o.status).toLowerCase()))
+        const totalRevenue = included.reduce((s, o) => s + (o.total || 0), 0)
+        const totalOrders = included.length
+        const totalCustomers = new Set(included.map((o) => o.user_id)).size
         setKpi((prev) => ({ ...prev, totalRevenue, totalOrders, totalCustomers }))
 
         // Update charts
@@ -350,7 +352,7 @@ export default function AdminDashboard() {
           const key = d.toLocaleString(undefined, { month: 'short' })
           byMonth.set(key, { sales: 0, orders: 0 })
         }
-        for (const o of nonCancelled) {
+        for (const o of included) {
           const d = new Date(o.created_at)
           const diffMonths = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth())
           if (diffMonths >= 0 && diffMonths < 6) {
