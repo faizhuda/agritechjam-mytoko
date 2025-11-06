@@ -693,6 +693,7 @@ export default function AdminDashboard() {
               } catch {}
 
               const payload: any = {
+                id: editTarget.id,
                 name: editForm.name,
                 long_description: editForm.description,
                 features: (editForm.features || "")

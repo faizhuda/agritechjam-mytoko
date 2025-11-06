@@ -47,15 +47,24 @@ export async function PATCH(
     .maybeSingle()
   if (!profile?.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const { id: idParam } = params
-  const id = Number.parseInt(String(idParam ?? "").trim(), 10)
-  if (!Number.isFinite(id) || id <= 0) return NextResponse.json({ error: "Invalid product id" }, { status: 400 })
-
+  // Read body first (so we can also accept id in body as fallback)
   let body: any
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+    body = {}
+  }
+
+  // Determine product id from path or body
+  const { id: idParam } = params
+  let id = Number.parseInt(String(idParam ?? "").trim(), 10)
+  if (!Number.isFinite(id) || id <= 0) {
+    const bodyId = Number.parseInt(String(body?.id ?? "").trim(), 10)
+    if (Number.isFinite(bodyId) && bodyId > 0) {
+      id = bodyId
+    } else {
+      return NextResponse.json({ error: "Invalid product id" }, { status: 400 })
+    }
   }
 
   // Whitelist and validate fields
