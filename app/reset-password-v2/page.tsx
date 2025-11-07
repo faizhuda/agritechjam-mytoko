@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { supabaseBrowser as supabase, isSupabaseConfigured } from "@/lib/supabase/browser"
 import Link from "next/link"
 
-export default function ResetPasswordV2Page() {
+function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [password, setPassword] = useState("")
@@ -225,5 +225,17 @@ export default function ResetPasswordV2Page() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ResetPasswordV2Page() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600"></div>
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   )
 }
