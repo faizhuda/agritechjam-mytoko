@@ -68,32 +68,38 @@ function ResetPasswordForm() {
           return
         }
 
-        console.log("✓ Found recovery token, verifying...")
+        console.log("✓ Found recovery token, waiting for auto-detection...")
 
-        // Use verifyOtp for recovery tokens (doesn't need refresh_token)
-        const { data, error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash: accessToken,
-          type: 'recovery',
-        })
-
-        if (verifyError) {
-          console.error("❌ verifyOtp error:", verifyError)
-          setError("Unable to verify reset link: " + verifyError.message)
-          return
-        }
-
-        if (!data.session) {
-          console.error("❌ No session returned from verifyOtp")
-          setError("Unable to establish session. Please try requesting a new reset link.")
-          return
-        }
-
-        console.log("✅ Session established successfully!", {
-          userId: data.session.user.id,
-          email: data.session.user.email
-        })
+        // Supabase should auto-detect and process the token from URL
+        // Just wait for session to be established
+        let attempts = 0
+        const maxAttempts = 10
         
-        setSessionReady(true)
+        const checkSession = async (): Promise<boolean> => {
+          const { data: { session } } = await supabase.auth.getSession()
+          
+          if (session) {
+            console.log("✅ Session established!", {
+              userId: session.user.id,
+              email: session.user.email
+            })
+            setSessionReady(true)
+            return true
+          }
+          
+          attempts++
+          if (attempts < maxAttempts) {
+            console.log(`⏳ Waiting for session... (${attempts}/${maxAttempts})`)
+            await new Promise(resolve => setTimeout(resolve, 500))
+            return checkSession()
+          }
+          
+          console.error("❌ Session not established after max attempts")
+          setError("Unable to establish session. The reset link may have expired. Please request a new one.")
+          return false
+        }
+        
+        await checkSession()
       } catch (e: any) {
         console.error("❌ Unexpected error:", e)
         setError("An error occurred: " + (e.message || "Unknown error"))
