@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@supabase/supabase-js"
 import Link from "next/link"
 
 function ResetPasswordForm() {
@@ -12,76 +11,74 @@ function ResetPasswordForm() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [sessionReady, setSessionReady] = useState(false)
+  const [token, setToken] = useState<string | null>(null)
 
   useEffect(() => {
-    console.log("🚀 Starting reset password flow...")
+    console.log("🚀 Reset password - checking URL for token...")
     
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (typeof window === "undefined") return
 
-    if (!supabaseUrl || !supabaseKey) {
-      console.error("❌ Supabase not configured")
-      setError("Configuration error")
+    // Get token from hash
+    const hash = window.location.hash.substring(1)
+    const params = new URLSearchParams(hash)
+    const accessToken = params.get("access_token")
+    const type = params.get("type")
+
+    console.log("🔍 Found in hash:", { hasToken: !!accessToken, type })
+
+    if (!accessToken || type !== "recovery") {
+      console.error("❌ No valid recovery token in URL")
+      setError("Invalid or expired reset link. Please request a new one.")
       return
     }
 
-    // Create client with detectSessionInUrl enabled
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        detectSessionInUrl: true,
-        flowType: 'pkce'
-      }
-    })
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
-      console.log("🔔 Auth state change:", event, session?.user?.email)
-      
-      if (event === 'PASSWORD_RECOVERY') {
-        console.log("✅ Password recovery event!")
-        setSessionReady(true)
-      } else if (event === 'SIGNED_IN' && session) {
-        console.log("✅ User signed in!")
-        setSessionReady(true)
-      } else if (session) {
-        console.log("✅ Session detected!")
-        setSessionReady(true)
-      }
-    })
-
-    // Set timeout
-    const timeout = setTimeout(() => {
-      if (!sessionReady) {
-        console.error("❌ Timeout: No session established")
-        setError("Unable to verify reset link. The link may have expired or is invalid. Please request a new one.")
-      }
-    }, 8000)
-
-    return () => {
-      subscription.unsubscribe()
-      clearTimeout(timeout)
-    }
-  }, [sessionReady])
+    console.log("✅ Valid recovery token found!")
+    setToken(accessToken)
+  }, [])
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setMessage(null)
+    
+    if (!token) {
+      setError("No reset token found")
+      return
+    }
+    
     if (password.length < 6) return setError("Password must be at least 6 characters")
     if (password !== confirm) return setError("Passwords do not match")
+    
     setLoading(true)
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
       if (!supabaseUrl || !supabaseKey) throw new Error("Supabase not configured")
       
-      const supabase = createClient(supabaseUrl, supabaseKey)
-      const { error } = await supabase.auth.updateUser({ password })
-      if (error) throw error
-      setMessage("Password updated. Redirecting to login…")
-      setTimeout(() => router.replace("/login"), 800)
+      console.log("🔄 Updating password with token...")
+      
+      // Call Supabase API directly with the token
+      const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ password })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error_description || data.message || 'Failed to update password')
+      }
+
+      console.log("✅ Password updated successfully!")
+      setMessage("Password updated successfully! Redirecting to login...")
+      setTimeout(() => router.replace("/login"), 1500)
     } catch (err: any) {
+      console.error("❌ Update password error:", err)
       setError(err.message ?? "Failed to update password")
     } finally {
       setLoading(false)
@@ -94,7 +91,7 @@ function ResetPasswordForm() {
         <div className="bg-white border-2 border-gray-300 rounded-xl p-8 shadow-lg">
           <h1 className="text-3xl font-bold text-center mb-6 text-black">Reset Password</h1>
           
-          {!sessionReady && !error ? (
+          {!token && !error ? (
             <div className="space-y-4 py-8 text-center">
               <div className="flex justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
