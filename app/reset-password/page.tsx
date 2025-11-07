@@ -16,98 +16,56 @@ function ResetPasswordForm() {
   const [sessionReady, setSessionReady] = useState(false)
 
   useEffect(() => {
-    const setupSession = async () => {
-      console.log("🚀 Starting reset password flow...")
+    console.log("🚀 Starting reset password flow...")
+    
+    if (!isSupabaseConfigured()) {
+      console.error("❌ Supabase not configured")
+      setError("Configuration error")
+      return
+    }
+
+    // Listen for auth state changes (Supabase processes hash automatically)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
+      console.log("🔔 Auth state change:", event, session?.user?.email)
       
-      if (!isSupabaseConfigured()) {
-        console.error("❌ Supabase not configured")
-        setError("Configuration error")
-        return
+      if (event === 'PASSWORD_RECOVERY') {
+        console.log("✅ Password recovery session detected!")
+        setSessionReady(true)
+      } else if (event === 'SIGNED_IN' && session) {
+        console.log("✅ User signed in!")
+        setSessionReady(true)
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        console.log("✅ Token refreshed!")
+        setSessionReady(true)
       }
+    })
 
-      try {
-        // Check for error in URL
-        const urlError = searchParams.get("error") || searchParams.get("error_description")
-        if (urlError) {
-          console.error("❌ URL Error:", urlError)
-          setError("This reset link is invalid or has expired. Please request a new one.")
-          return
-        }
-
-        // Try to get token from query params FIRST
-        let accessToken = searchParams.get("access_token")
-        let refreshToken = searchParams.get("refresh_token")
-        let type = searchParams.get("type")
-
-        console.log("🔍 Query params:", { 
-          hasAccessToken: !!accessToken, 
-          hasRefreshToken: !!refreshToken,
-          type 
-        })
-
-        // If not in query params, check hash
-        if (!accessToken && typeof window !== "undefined") {
-          const hash = window.location.hash.substring(1)
-          const hashParams = new URLSearchParams(hash)
-          accessToken = hashParams.get("access_token")
-          refreshToken = hashParams.get("refresh_token")
-          type = hashParams.get("type")
-          
-          console.log("🔍 Hash params:", { hasAccessToken: !!accessToken, type })
-        }
-
-        if (!accessToken) {
-          console.error("❌ No access token found in URL")
-          setError("Invalid reset link. Missing access token.")
-          return
-        }
-
-        if (type !== "recovery") {
-          console.error("❌ Wrong token type:", type)
-          setError("Invalid reset link type. Expected 'recovery', got: " + type)
-          return
-        }
-
-        console.log("✓ Found recovery token, waiting for auto-detection...")
-
-        // Supabase should auto-detect and process the token from URL
-        // Just wait for session to be established
-        let attempts = 0
-        const maxAttempts = 10
-        
-        const checkSession = async (): Promise<boolean> => {
-          const { data: { session } } = await supabase.auth.getSession()
-          
-          if (session) {
-            console.log("✅ Session established!", {
-              userId: session.user.id,
-              email: session.user.email
-            })
-            setSessionReady(true)
-            return true
-          }
-          
-          attempts++
-          if (attempts < maxAttempts) {
-            console.log(`⏳ Waiting for session... (${attempts}/${maxAttempts})`)
-            await new Promise(resolve => setTimeout(resolve, 500))
-            return checkSession()
-          }
-          
-          console.error("❌ Session not established after max attempts")
-          setError("Unable to establish session. The reset link may have expired. Please request a new one.")
-          return false
-        }
-        
-        await checkSession()
-      } catch (e: any) {
-        console.error("❌ Unexpected error:", e)
-        setError("An error occurred: " + (e.message || "Unknown error"))
+    // Also check if session already exists
+    const checkExistingSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        console.log("✅ Existing session found!")
+        setSessionReady(true)
+      } else {
+        console.log("⏳ No existing session, waiting for auth state change...")
       }
     }
 
-    setupSession()
-  }, [searchParams])
+    checkExistingSession()
+
+    // Set timeout to show error if nothing happens
+    const timeout = setTimeout(() => {
+      if (!sessionReady) {
+        console.error("❌ Timeout: No session established")
+        setError("Unable to verify reset link. The link may have expired or is invalid. Please request a new one.")
+      }
+    }, 8000) // 8 seconds timeout
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
+  }, [sessionReady])
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
