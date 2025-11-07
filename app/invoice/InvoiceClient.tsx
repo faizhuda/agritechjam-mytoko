@@ -275,7 +275,7 @@ export default function InvoiceClient() {
   // UI states
   if (loading) {
     return (
-      <div className="min-h-screen bg-white grid place-items-center">
+      <div className="min-h-full bg-white grid place-items-center">
         <p className="text-black font-bold">Loading invoice...</p>
       </div>
     )
@@ -283,7 +283,7 @@ export default function InvoiceClient() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white grid place-items-center p-6">
+      <div className="min-h-full bg-white grid place-items-center p-6">
         <div className="max-w-xl text-center">
           <p className="text-black font-bold mb-4">{error}</p>
           <Link href="/dashboard" className="text-blue-600 font-bold">
@@ -305,7 +305,7 @@ export default function InvoiceClient() {
   })()
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-full bg-white">
       <style>{`
         @media print {
           @page {
