@@ -9,12 +9,14 @@ import { useCart } from "@/lib/cart-context"
 import { useWishlist } from "@/lib/wishlist-context"
 import { normalizeSearch, formatIDR } from "@/lib/utils"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/hooks/use-auth"
 
 type Props = { initialProducts: Product[]; initialSearch?: string }
 
 export default function CatalogClient({ initialProducts, initialSearch }: Props) {
   const { addToWishlist, removeFromWishlist, wishlistItems } = useWishlist()
   const { addToCart, cartItems } = useCart()
+  const { user } = useAuth()
   const [products] = useState<Product[]>(initialProducts)
   const [loading] = useState(false)
   const [searchTerm, setSearchTerm] = useState(initialSearch ?? "")
@@ -71,15 +73,17 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
   }, [products])
 
   const handleAddToCart = (product: Product) => {
+    if (!user) {
+      router.push("/login")
+      return
+    }
     const inCart = cartItems.find((i) => i.id === product.id)?.quantity ?? 0
     const maxStock = Number(product.stock ?? 0)
-    
     if (inCart >= maxStock) {
       setMaxStockItem(product.id)
       setTimeout(() => setMaxStockItem(null), 2000)
       return
     }
-
     addToCart({ id: product.id, name: product.name, price: product.price, quantity: 1, image: product.image })
     setAddedItem(product.id)
     setTimeout(() => setAddedItem(null), 2000)
@@ -202,6 +206,10 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
                       <button
                         aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
                         onClick={() => {
+                          if (!user) {
+                            router.push("/login")
+                            return
+                          }
                           if (isWishlisted) removeFromWishlist(product.id)
                           else addToWishlist({
                             id: product.id,
@@ -226,9 +234,18 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
                       const avg = stats[product.id]?.average ?? 0
                       return (
                         <>
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} size={16} className={`${i < Math.floor(avg) ? "fill-red-600 text-red-600" : "text-gray-300"}`} />
-                          ))}
+                          {[...Array(5)].map((_, i) => {
+                            const full = i < Math.floor(avg)
+                            const half = !full && i === Math.floor(avg) && avg % 1 >= 0.25
+                            return (
+                              <Star
+                                key={i}
+                                size={16}
+                                className={full ? "fill-red-600 text-red-600" : half ? "fill-red-400 text-red-400" : "text-gray-300"}
+                                style={half ? { clipPath: "inset(0 50% 0 0)" } : {}}
+                              />
+                            )
+                          })}
                           <span className="text-xs text-black font-bold ml-1">{avg.toFixed(1)} · {stats[product.id]?.count ?? 0}</span>
                         </>
                       )

@@ -5,6 +5,8 @@ import Link from "next/link"
 import { Star, ShoppingCart, ArrowLeft, Minus, Plus, Heart, ThumbsUp } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
 import { useWishlist } from "@/lib/wishlist-context"
+import { useAuth } from "@/hooks/use-auth"
+import { useRouter } from "next/navigation"
 import { formatIDR } from "@/lib/utils"
 import type { Product, Review } from "@/lib/product-data"
 import { fetchProductById, fetchProducts, fetchReviewsByProductId } from "@/lib/db/products"
@@ -14,6 +16,8 @@ import RealtimeRefresh from "@/components/realtime-refresh"
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [quantity, setQuantity] = useState(1)
   const { addToCart, cartItems } = useCart() as any
+  const { user } = useAuth()
+  const router = useRouter()
   const [addedToCart, setAddedToCart] = useState(false)
   const [maxStock, setMaxStock] = useState(false)
 
@@ -128,16 +132,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const reviewCount = product.reviews ?? 0
 
   const handleAddToCart = () => {
+    if (!user) {
+      router.push("/login")
+      return
+    }
     const already = (cartItems || []).find((i: any) => i.id === product.id)?.quantity || 0
     const totalStock = Number(product.stock ?? 0)
     const maxAvailable = Math.max(0, totalStock - Number(already))
-    
     if (maxAvailable <= 0) {
       setMaxStock(true)
       setTimeout(() => setMaxStock(false), 2000)
       return
     }
-    
     const qty = Math.min(quantity, maxAvailable)
     addToCart({
       id: product.id,
@@ -187,13 +193,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <h1 className="text-4xl font-bold text-black mb-4">{product.name}</h1>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      size={20}
-                      className={i < Math.floor(averageRating) ? "fill-red-600 text-red-600" : "text-gray-300"}
-                    />
-                  ))}
+                  {[...Array(5)].map((_, i) => {
+                    const full = i < Math.floor(averageRating)
+                    const half = !full && i === Math.floor(averageRating) && averageRating % 1 >= 0.25
+                    return (
+                      <Star
+                        key={i}
+                        size={20}
+                        className={full ? "fill-red-600 text-red-600" : half ? "fill-red-400 text-red-400" : "text-gray-300"}
+                        style={half ? { clipPath: "inset(0 50% 0 0)" } : {}}
+                      />
+                    )
+                  })}
                 </div>
                 <span className="text-black font-bold">{averageRating.toFixed(1)} ({reviewCount} reviews)</span>
               </div>
@@ -262,6 +273,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </button>
               <button
                 onClick={() => {
+                  if (!user) {
+                    router.push("/login")
+                    return
+                  }
                   if (!product) return
                   if (isFavorite) {
                     removeFromWishlist(product.id)

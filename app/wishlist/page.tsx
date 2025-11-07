@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Heart, ShoppingCart, ArrowLeft } from "lucide-react"
+import { Heart, ShoppingCart, ArrowLeft, Star } from "lucide-react"
 import { useWishlist } from "@/lib/wishlist-context"
 import { useCart } from "@/lib/cart-context"
 import { formatIDR } from "@/lib/utils"
@@ -78,7 +78,9 @@ export default function WishlistPage() {
               <div key={item.id} className="bg-white border-2 border-gray-300 rounded-xl shadow-md hover:shadow-lg transition overflow-hidden">
                 {/* Product Image */}
                 <div className="relative h-48 bg-gray-100 overflow-hidden">
-                  <img src={item.image || "/placeholder.svg"} alt={item.name} className="w-full h-full object-cover hover:scale-105 transition duration-300" />
+                  <Link href={`/product/${item.id}`}>
+                    <img src={item.image || "/placeholder.svg"} alt={item.name} className="w-full h-full object-cover hover:scale-105 transition duration-300 cursor-pointer" />
+                  </Link>
                   <button onClick={() => removeFromWishlist(item.id)} className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg hover:bg-green-50 transition" title="Remove from wishlist">
                     <Heart size={20} className="fill-green-600 text-green-600" />
                   </button>
@@ -95,9 +97,18 @@ export default function WishlistPage() {
                     <div className="flex gap-1">
                       {(() => {
                         const avg = stats[item.id]?.average ?? 0
-                        return [1, 2, 3, 4, 5].map((star) => (
-                          <span key={star} className={`text-sm ${star <= Math.round(avg) ? "text-yellow-400" : "text-gray-300"}`}>★</span>
-                        ))
+                        return [...Array(5)].map((_, i) => {
+                          const full = i < Math.floor(avg)
+                          const half = !full && i === Math.floor(avg) && avg % 1 >= 0.25
+                          return (
+                            <Star
+                              key={i}
+                              size={16}
+                              className={full ? "fill-red-600 text-red-600" : half ? "fill-red-400 text-red-400" : "text-gray-300"}
+                              style={half ? { clipPath: "inset(0 50% 0 0)" } : {}}
+                            />
+                          )
+                        })
                       })()}
                     </div>
                     <span className="text-sm text-black font-semibold">{(stats[item.id]?.average ?? 0).toFixed(1)} ({stats[item.id]?.count ?? 0})</span>

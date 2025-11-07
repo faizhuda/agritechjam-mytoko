@@ -79,12 +79,21 @@ export default function Navbar() {
             <Link href="/catalog" className="text-black hover:text-blue-600 transition font-bold">
               Catalog
             </Link>
-            <Link href="/wishlist" className="flex items-center gap-2 text-black hover:text-pink-600 transition font-bold">
-            <Heart size={20} className="text-pink-500" />
-            </Link>
-            <Link
-              href="/cart"
+            <button
+              className="flex items-center gap-2 text-black hover:text-pink-600 transition font-bold"
+              onClick={() => {
+                if (!user) router.push('/login')
+                else router.push('/wishlist')
+              }}
+            >
+              <Heart size={20} className="text-pink-500" />
+            </button>
+            <button
               className="flex items-center gap-2 text-black hover:text-blue-600 transition font-bold relative"
+              onClick={() => {
+                if (!user) router.push('/login')
+                else router.push('/cart')
+              }}
             >
               <ShoppingCart size={20} />
               {cartCount > 0 && (
@@ -92,7 +101,7 @@ export default function Navbar() {
                   {cartCount}
                 </span>
               )}
-            </Link>
+            </button>
             <Suspense fallback={null}>
               <form
                 className="relative"
@@ -172,15 +181,24 @@ export default function Navbar() {
             >
               Catalog
             </Link>
-            <Link
-              href="/wishlist"
-              className="block px-4 py-2 text-black hover:bg-gray-100 rounded-lg transition font-bold"
+            <button
+              className="block px-4 py-2 text-black hover:bg-gray-100 rounded-lg transition font-bold w-full text-left"
+              onClick={() => {
+                if (!user) router.push('/login')
+                else router.push('/wishlist')
+              }}
             >
               Wishlist
-            </Link>
-            <Link href="/cart" className="block px-4 py-2 text-black hover:bg-gray-100 rounded-lg transition font-bold">
+            </button>
+            <button
+              className="block px-4 py-2 text-black hover:bg-gray-100 rounded-lg transition font-bold w-full text-left"
+              onClick={() => {
+                if (!user) router.push('/login')
+                else router.push('/cart')
+              }}
+            >
               Cart ({cartCount})
-            </Link>
+            </button>
             {isAdmin && (
               <Link
                 href="/admin"

@@ -917,13 +917,19 @@ export default function AdminDashboard() {
                     <td className="py-3 px-4 text-black font-bold">{product.stock}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={16}
-                            className={`${i < Math.floor((reviewStats[product.id]?.average ?? product.rating)) ? "fill-red-600 text-red-600" : "text-gray-300"}`}
-                          />
-                        ))}
+                        {[...Array(5)].map((_, i) => {
+                          const rating = reviewStats[product.id]?.average ?? product.rating
+                          const full = i < Math.floor(rating)
+                          const half = !full && i === Math.floor(rating) && rating % 1 >= 0.25
+                          return (
+                            <Star
+                              key={i}
+                              size={16}
+                              className={full ? "fill-red-600 text-red-600" : half ? "fill-red-400 text-red-400" : "text-gray-300"}
+                              style={half ? { clipPath: "inset(0 50% 0 0)" } : {}}
+                            />
+                          )
+                        })}
                         <span className="text-sm font-bold text-black ml-1">({(reviewStats[product.id]?.average ?? product.rating).toFixed(1)})</span>
                       </div>
                     </td>
