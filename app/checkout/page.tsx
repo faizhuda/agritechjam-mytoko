@@ -444,7 +444,7 @@ export default function CheckoutPage() {
                         placeholder="First Name"
                         value={formData.firstName}
                         onChange={handleInputChange}
-                        className={`px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.firstName ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.firstName ? 'border-red-500' : 'border-gray-300'}`}
                         required
                       />
                       {fieldErrors.firstName && <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.firstName}</p>}
@@ -456,7 +456,7 @@ export default function CheckoutPage() {
                         placeholder="Last Name"
                         value={formData.lastName}
                         onChange={handleInputChange}
-                        className={`px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.lastName ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.lastName ? 'border-red-500' : 'border-gray-300'}`}
                         required
                       />
                       {fieldErrors.lastName && <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.lastName}</p>}
@@ -490,7 +490,7 @@ export default function CheckoutPage() {
                         placeholder="City"
                         value={formData.city}
                         onChange={handleInputChange}
-                        className={`px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.city ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.city ? 'border-red-500' : 'border-gray-300'}`}
                         required
                       />
                       {fieldErrors.city && <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.city}</p>}
@@ -502,7 +502,7 @@ export default function CheckoutPage() {
                         placeholder="ZIP Code"
                         value={formData.zipCode}
                         onChange={handleInputChange}
-                        className={`px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.zipCode ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.zipCode ? 'border-red-500' : 'border-gray-300'}`}
                         required
                       />
                       {fieldErrors.zipCode && <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.zipCode}</p>}

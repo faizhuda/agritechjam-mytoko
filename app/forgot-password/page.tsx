@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
         })
       } else {
         toast({ 
-          title: "✅ Email sent!", 
+          title: "Email sent!", 
           description: "Check your inbox and click the reset link. IMPORTANT: Open the link in THIS browser.",
         })
         // Don't redirect immediately, let user read the message
@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
           {/* Important Notice */}
           <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
             <p className="text-sm text-blue-800 font-semibold">
-              <strong>📱 Important:</strong> The reset link must be opened in <strong>this browser</strong>. 
+              <strong>Important:</strong> The reset link must be opened in <strong>this browser</strong>. 
               Don't switch browsers or devices after requesting the reset.
             </p>
           </div>

@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast"
 import { formatIDR } from "@/lib/utils"
 
 type InvoiceItem = {
-  id: number
+  id: string
   name: string
   quantity: number
   unitPrice: number
@@ -95,7 +95,7 @@ export default function InvoiceClient() {
           return
         }
 
-        // ambil profile
+        // Determine customer based on the order's owner first (so invoice shows purchaser info)
         let customer: InvoiceCustomer = {
           name: "Customer",
           email: "",
@@ -106,53 +106,71 @@ export default function InvoiceClient() {
         }
 
         try {
-          const { data: authData } = await supabase.auth.getUser()
-          const authedEmail = authData.user?.email ?? ""
+          // Try to load profile for the user who created the order
+          const { data: ownerProfile } = await supabase
+            .from("profiles")
+            .select("first_name, last_name, full_name, phone, address, city, zip_code")
+            .eq("id", order.user_id)
+            .maybeSingle()
 
-          if (authData.user) {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("id", authData.user.id)
-              .maybeSingle()
+          if (ownerProfile) {
+            const first = ownerProfile.first_name || (ownerProfile.full_name ? String(ownerProfile.full_name).split(" ")[0] : "")
+            const last = ownerProfile.last_name || (ownerProfile.full_name ? String(ownerProfile.full_name).split(" ").slice(1).join(" ") : "")
+            customer = {
+              name: `${first} ${last}`.trim() || ownerProfile.full_name || "Customer",
+              email: "",
+              phone: ownerProfile.phone ?? "",
+              address: ownerProfile.address ?? "",
+              city: ownerProfile.city ?? "",
+              zipCode: ownerProfile.zip_code ?? "",
+            }
+          } else {
+            // Fallback: if we are the authenticated user (viewer), use our profile/email
+            try {
+              const { data: authData } = await supabase.auth.getUser()
+              const authedEmail = authData.user?.email ?? ""
+              if (authData.user) {
+                const { data: profile } = await supabase
+                  .from("profiles")
+                  .select("first_name, last_name, full_name, phone, address, city, zip_code")
+                  .eq("id", authData.user.id)
+                  .maybeSingle()
 
-            if (profile) {
-              const first =
-                profile.first_name ||
-                (profile.full_name ? String(profile.full_name).split(" ")[0] : "")
-              const last =
-                profile.last_name ||
-                (profile.full_name ? String(profile.full_name).split(" ").slice(1).join(" ") : "")
-
-              customer = {
-                name: `${first} ${last}`.trim() || profile.full_name || "Customer",
-                email: authedEmail,
-                phone: profile.phone ?? "",
-                address: profile.address ?? "",
-                city: profile.city ?? "",
-                zipCode: profile.zip_code ?? "",
+                if (profile) {
+                  const first = profile.first_name || (profile.full_name ? String(profile.full_name).split(" ")[0] : "")
+                  const last = profile.last_name || (profile.full_name ? String(profile.full_name).split(" ").slice(1).join(" ") : "")
+                  customer = {
+                    name: `${first} ${last}`.trim() || profile.full_name || "Customer",
+                    email: authedEmail,
+                    phone: profile.phone ?? "",
+                    address: profile.address ?? "",
+                    city: profile.city ?? "",
+                    zipCode: profile.zip_code ?? "",
+                  }
+                } else {
+                  customer = { ...customer, email: authedEmail }
+                }
               }
-            } else {
-              customer = {
-                ...customer,
-                email: authedEmail,
-              }
+            } catch {
+              // ignore and leave default
             }
           }
-        } catch {
-          // biarin ke default
+        } catch (err) {
+          // If fetching owner profile fails, leave default customer; we still continue to build invoice
+          console.warn("Failed to load owner profile for invoice", err)
         }
 
         // ambil items
         const { data: items, error: itemsErr } = await supabase
           .from("order_items")
-          .select("product_id, quantity, price, products:product_id(name)")
+          .select("id, product_id, quantity, price, products:product_id(name)")
           .eq("order_id", orderId)
 
         if (itemsErr) throw itemsErr
 
-        const mapped = (items ?? []).map((it: any) => ({
-          id: Number(it.product_id),
+        const mapped = (items ?? []).map((it: any, idx: number) => ({
+          // prefer the order_items row id (string/uuid) to ensure uniqueness even when the same product appears multiple times
+          id: String(it.id ?? `idx-${idx}`),
           name: it.products?.name ?? `Product #${it.product_id}`,
           quantity: Number(it.quantity),
           unitPrice: Number(it.price),
@@ -315,11 +333,21 @@ export default function InvoiceClient() {
           body { margin: 0; padding: 0; }
           .no-print { display: none !important; }
           .max-w-4xl { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+          /* Hide global layout chrome when printing the invoice */
+          nav, footer, header, .navbar { display: none !important; }
+          /* Target the floating WhatsApp anchor specifically */
+          a[aria-label="Chat via WhatsApp"], a[aria-label="Chat via WhatsApp"] * { display: none !important; }
+          /* Reduce invoice card padding on print to save vertical space */
+          .invoice-card { padding: 8px !important; border-width: 0 !important; box-shadow: none !important; }
+          /* Limit payment proof height on print */
+          .payment-proof-img { max-height: 220px !important; object-fit: contain !important; }
         }
+        /* Limit payment proof height on screen as well */
+        .payment-proof-img { max-height: 260px; object-fit: contain; }
       `}</style>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8 no-print">
+  <div className="flex items-center justify-between mb-6 no-print">
           <Link
             href={backTo}
             className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-bold"
@@ -346,11 +374,11 @@ export default function InvoiceClient() {
         </div>
 
         {/* Invoice box */}
-        <div className="bg-white border-2 border-gray-300 rounded-lg p-8 print:border-0 print:shadow-none shadow-lg">
+  <div className="bg-white border-2 border-gray-300 rounded-lg p-6 print:border-0 print:shadow-none shadow-lg invoice-card">
           {/* Header */}
-          <div className="flex justify-between items-start mb-8 pb-8 border-b-2 border-gray-300">
+          <div className="flex justify-between items-start mb-6 pb-6 border-b-2 border-gray-300">
             <div>
-              <h1 className="text-4xl font-bold text-blue-600">MyToko</h1>
+              <h1 className="text-3xl font-bold text-blue-600">MyToko</h1>
               <p className="text-black text-sm mt-2 font-bold">E-Commerce Platform</p>
             </div>
             <div className="text-right">
@@ -364,7 +392,7 @@ export default function InvoiceClient() {
           </div>
 
           {/* Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <p className="text-sm text-black font-bold mb-2">BILL TO</p>
               <div className="space-y-1 wrap-break-word">
@@ -394,7 +422,7 @@ export default function InvoiceClient() {
           </div>
 
           {/* Items */}
-          <div className="mb-8 overflow-x-auto">
+          <div className="mb-6 overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b-2 border-gray-300">
@@ -420,7 +448,7 @@ export default function InvoiceClient() {
           </div>
 
           {/* Totals */}
-          <div className="flex justify-end mb-8">
+          <div className="flex justify-end mb-6">
             <div className="w-full sm:w-80">
               <div className="space-y-2 mb-4 pb-4 border-b-2 border-gray-300">
                 <div className="flex justify-between text-sm">
@@ -444,7 +472,7 @@ export default function InvoiceClient() {
           </div>
 
           {/* Payment Info */}
-          <div className="bg-gray-100 p-6 rounded-lg mb-8 border-2 border-gray-300">
+          <div className="bg-gray-100 p-5 rounded-lg mb-6 border-2 border-gray-300">
             <p className="text-sm text-black font-bold mb-2">PAYMENT INFORMATION</p>
             <div className="space-y-1">
               <p className="text-sm text-black">
@@ -466,13 +494,13 @@ export default function InvoiceClient() {
 
           {/* Payment Proof */}
           {data.paymentProofUrl && (
-            <div className="bg-white p-6 rounded-lg mb-8 border-2 border-gray-300">
-              <p className="text-sm text-black font-bold mb-4">PAYMENT PROOF</p>
+            <div className="bg-white p-5 rounded-lg mb-6 border-2 border-gray-300">
+              <p className="text-sm text-black font-bold mb-3">PAYMENT PROOF</p>
               <div className="flex justify-center">
                 <img
                   src={data.paymentProofUrl}
                   alt="Payment Proof"
-                  className="max-w-md w-full h-auto rounded-lg border-2 border-gray-300 shadow-md"
+                  className="max-w-md w-full h-auto rounded-lg border-2 border-gray-300 shadow-md max-h-64 object-contain payment-proof-img"
                 />
               </div>
               <p className="text-xs text-center text-gray-600 mt-2 font-bold">
@@ -501,14 +529,14 @@ export default function InvoiceClient() {
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 24,
     backgroundColor: "#ffffff",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 30,
-    paddingBottom: 20,
+    marginBottom: 20,
+    paddingBottom: 12,
     borderBottom: 2,
     borderBottomColor: "#e5e7eb",
   },
@@ -561,7 +589,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 12,
   },
   column: {
     flex: 1,
@@ -580,7 +608,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderBottom: 1,
     borderBottomColor: "#e5e7eb",
-    paddingVertical: 8,
+    paddingVertical: 6,
   },
   tableCol1: {
     flex: 2,
@@ -598,7 +626,7 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   totals: {
-    marginTop: 20,
+    marginTop: 12,
     marginLeft: "auto",
     width: "50%",
   },
@@ -786,10 +814,10 @@ function InvoicePDF({ data }: { data: InvoiceData }) {
           {data.paymentProofBase64 ? (
             <View style={{ marginTop: 10 }}>
               <Text style={styles.sectionTitle}>PAYMENT PROOF</Text>
-              <Image
-                src={data.paymentProofBase64}
-                style={{ width: "100%", maxHeight: 200, objectFit: "contain", marginTop: 8 }}
-              />
+                  <Image
+                    src={data.paymentProofBase64}
+                    style={{ width: "100%", maxHeight: 140, objectFit: "contain", marginTop: 8 }}
+                  />
             </View>
           ) : null}
         </View>
