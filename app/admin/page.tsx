@@ -708,7 +708,7 @@ export default function AdminDashboard() {
                     </td>
                     <td className="py-3 px-4 text-black font-bold">{transaction.date}</td>
                     <td className="py-3 px-4">
-                      <a href={`/invoice?orderId=${transaction.id}`} className="text-blue-600 font-bold hover:underline">View</a>
+                      <a href={`/invoice?orderId=${transaction.id}&from=admin`} className="text-blue-600 font-bold hover:underline">View</a>
                     </td>
                   </tr>
                 ))}

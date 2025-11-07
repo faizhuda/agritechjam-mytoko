@@ -18,7 +18,6 @@ export async function fetchProducts(): Promise<Product[]> {
     .order("id", { ascending: true })
 
   if (error) {
-    console.error("Supabase fetchProducts error:", error)
     return productDatabase
   }
 
@@ -56,7 +55,6 @@ export async function fetchProductById(id: number): Promise<Product | null> {
     .maybeSingle()
 
   if (error) {
-    console.error("Supabase fetchProductById error:", error)
     return productDatabase.find((p) => p.id === id) ?? null
   }
 
@@ -84,12 +82,9 @@ export async function fetchProductById(id: number): Promise<Product | null> {
 
 export async function fetchReviewsByProductId(productId: number): Promise<Review[]> {
   if (!isSupabaseConfigured()) {
-    console.log('⚠️ Supabase not configured, returning empty reviews')
     // Return empty array instead of sample data when using real database
     return []
   }
-  
-  console.log('🔍 Fetching reviews for product:', productId)
   
   // Fetch from product_reviews table (one review per user per product)
   // Note: We fetch reviews first, then separately fetch user names to avoid FK issues
@@ -108,23 +103,11 @@ export async function fetchReviewsByProductId(productId: number): Promise<Review
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("❌ Supabase fetchReviewsByProductId error:")
-    console.error("Full error object:", JSON.stringify(error, null, 2))
-    console.error("Error details:", {
-      productId,
-      errorCode: error?.code,
-      errorMessage: error?.message,
-      errorDetails: error?.details,
-      errorHint: error?.hint,
-      errorStatus: (error as any)?.status,
-      errorStatusText: (error as any)?.statusText
-    })
     // Return empty array on error instead of sample data
     return []
   }
 
-  console.log('✅ Reviews data fetched:', data)
-  console.log('✅ Number of reviews:', data?.length || 0)
+  // ...existing code...
 
   // Fetch user names separately to avoid FK relationship issues
   const userIds = [...new Set((data || []).map((r: any) => r.user_id).filter(Boolean))]
@@ -205,7 +188,6 @@ export async function fetchProductsByIds(ids: number[]): Promise<Product[]> {
     .in("id", uniqueIds)
 
   if (error) {
-    console.error("Supabase fetchProductsByIds error:", error)
     return []
   }
 
@@ -253,7 +235,6 @@ export async function fetchReviewStatsForProductIds(
     .in("product_id", productIds)
 
   if (error) {
-    console.error("Supabase fetchReviewStatsForProductIds error:", error)
     return result
   }
 

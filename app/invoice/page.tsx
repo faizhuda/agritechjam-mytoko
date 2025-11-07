@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { Download, Printer, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { Document, Page, Text, View, StyleSheet, pdf, Image } from '@react-pdf/renderer'
@@ -9,31 +10,20 @@ import { useToast } from "@/hooks/use-toast"
 import { formatIDR } from "@/lib/utils"
 
 export default function InvoicePage() {
-  const [orderId, setOrderId] = useState<string | null>(null)
-  const [parsed, setParsed] = useState(false)
+  const searchParams = useSearchParams()
+  const orderId = searchParams.get("orderId")
+  const from = searchParams.get("from")
+  const backTo = from === "admin" ? "/admin" : "/dashboard"
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [invoiceData, setInvoiceData] = useState<any | null>(null)
   const { toast } = useToast()
 
-  useEffect(() => {
-    // Avoid useSearchParams to prevent Suspense requirement in App Router
-    try {
-      const url = new URL(window.location.href)
-      const id = url.searchParams.get("orderId")
-      setOrderId(id)
-      setParsed(true)
-    } catch (_) {
-      setOrderId(null)
-      setParsed(true)
-    }
-  }, [])
+  // useSearchParams handles query parsing, so no need for manual effect
 
   useEffect(() => {
     const load = async () => {
-      // Wait until URL query parsing is completed to avoid a race
-      if (!parsed) return
       // reset state for a fresh attempt when orderId changes
       setError(null)
       setLoading(true)
@@ -56,7 +46,7 @@ export default function InvoicePage() {
             setLoading(false)
             return
           }
-          setOrderId(recent.id as string)
+          // orderId is now derived from query param
           return
         } catch (_e) {
           setError("Order ID not found. Open the invoice from Checkout or your Order History.")
@@ -134,7 +124,7 @@ export default function InvoicePage() {
               .limit(1)
               .maybeSingle()
             if (recent) {
-              setOrderId(recent.id as string)
+              // orderId is now derived from query param
               return
             }
           }
@@ -234,7 +224,7 @@ export default function InvoicePage() {
       }
     }
     load()
-  }, [orderId, parsed])
+  }, [orderId])
 
   const handlePrint = () => {
     window.print()
@@ -348,9 +338,9 @@ export default function InvoicePage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 no-print">
-          <Link href="/dashboard" className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-bold">
+          <Link href={backTo} className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-bold">
             <ArrowLeft size={20} />
-            Back to Dashboard
+            {backTo === "/admin" ? "Back to Admin Panel" : "Back to Dashboard"}
           </Link>
           <div className="flex gap-4">
             <button

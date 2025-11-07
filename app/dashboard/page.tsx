@@ -20,7 +20,7 @@ export default function UserDashboard() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<"overview" | "orders">("overview")
 
-  const [profile, setProfile] = useState<{ full_name: string; phone?: string; address?: string; is_admin?: boolean } | null>(null)
+  const [profile, setProfile] = useState<{ full_name: string; first_name?: string; last_name?: string; phone?: string; address?: string; is_admin?: boolean } | null>(null)
   const [authEmail, setAuthEmail] = useState<string>("")
   const [memberSince, setMemberSince] = useState<string>("")
   const [orders, setOrders] = useState<OrderRow[]>([])
@@ -30,7 +30,10 @@ export default function UserDashboard() {
   const [ratingTarget, setRatingTarget] = useState<{ orderId: string; productId: number; productName: string } | null>(null)
   const [reviewToWrite, setReviewToWrite] = useState<Array<{ orderId: string; productId: number; productName: string }>>([])
 
-  const firstName = ((profile as any)?.first_name as string) || (profile?.full_name || "").trim().split(" ")[0] || (authEmail?.split("@")[0] ?? "User")
+  // Untuk header: hanya tampilkan first name
+  const firstNameOnly = profile?.first_name && profile?.first_name.trim().length > 0
+    ? profile.first_name
+    : (profile?.full_name?.split(" ")[0] || authEmail?.split("@")[0] || "User")
 
   // Profile editing moved to /profile page
 
@@ -53,6 +56,7 @@ export default function UserDashboard() {
     const { data: ords } = await supabase
       .from("orders")
       .select(`id, status, order_items(product_id, products(name))`)
+      .eq('user_id', u.id)
       .order("created_at", { ascending: false })
 
     const deliveredOrders = (ords || []).filter((o: any) => String(o.status ?? '').toLowerCase() === 'delivered')
@@ -110,6 +114,7 @@ export default function UserDashboard() {
         .from("orders")
         .select(`id, order_number, created_at, status, total,
                  order_items(quantity, price, product_id, products(name, category))`)
+        .eq('user_id', u.id)
         .order("created_at", { ascending: false })
       
       console.log('📥 Raw orders from DB:', ords?.slice(0, 3).map((o: any) => ({
@@ -269,7 +274,7 @@ export default function UserDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-4xl font-bold text-black">Hello, {firstName}</h1>
+          <h1 className="text-4xl font-bold text-black">Hello, {firstNameOnly}</h1>
         </div>
 
         {/* Tabs */}
@@ -735,10 +740,16 @@ export default function UserDashboard() {
                   description: "You need to be logged in to submit a review.",
                   variant: "destructive",
                 })
+              } else if (/product_reviews_rating_check/i.test(msg) || /violates check constraint/i.test(msg)) {
+                toast({
+                  title: "Invalid Rating",
+                  description: "Your rating must be between 1 and 5 stars.",
+                  variant: "destructive",
+                })
               } else {
                 toast({
-                  title: "Submission Failed",
-                  description: msg,
+                  title: "Review Submission Failed",
+                  description: "Something went wrong. Please try again or contact support if the problem persists.",
                   variant: "destructive",
                 })
               }

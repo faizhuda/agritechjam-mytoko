@@ -123,15 +123,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
             if (!mounted) return
             setCartItems(clamped)
           } catch (e) {
-            console.error('realtime cart refresh failed', e)
+            // ...existing code...
           }
         })
         .subscribe()
 
       const prodCh = supabase
   .channel(`products-for-cart-${cartId}`)
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, async (payload: any) => {
-          const changedId = Number((payload.new as any)?.id ?? (payload.old as any)?.id)
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, async (payload: { new: { id?: number }, old: { id?: number } }) => {
+    const changedId = Number(payload.new?.id ?? payload.old?.id)
           if (!changedId) return
           setCartItems((prev) => {
             if (!prev.some((i) => i.id === changedId)) return prev
@@ -181,7 +181,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }).filter(Boolean) as CartItem[]
         setCartItems(updated)
       } catch (e) {
-        console.error("cart rehydrate failed", e)
+        // ...existing code...
       }
     }
     // Fire-and-forget; doesn't need to block UI
@@ -210,7 +210,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         // Persist delta to DB if logged in
         if (user && isSupabaseConfigured()) {
           const delta = finalQty - existingQty
-          if (delta > 0) dbAdd(user.id, item.id, delta).catch((e) => console.error("dbAdd error", e))
+          if (delta > 0) dbAdd(user.id, item.id, delta).catch(() => {})
         }
         return next
       })
@@ -220,7 +220,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const removeFromCart = (id: number) => {
     setCartItems((prevItems) => prevItems.filter((i) => i.id !== id))
     if (user && isSupabaseConfigured()) {
-      dbRemove(user.id, id).catch((e) => console.error("dbRemove error", e))
+  dbRemove(user.id, id).catch(() => {})
     }
   }
 
@@ -232,13 +232,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (finalQty <= 0) {
         setCartItems((prevItems) => prevItems.filter((i) => i.id !== id))
         if (user && isSupabaseConfigured()) {
-          dbRemove(user.id, id).catch((e) => console.error("dbRemove error", e))
+          dbRemove(user.id, id).catch(() => {})
         }
         return
       }
       setCartItems((prevItems) => prevItems.map((i) => (i.id === id ? { ...i, quantity: finalQty } : i)))
       if (user && isSupabaseConfigured()) {
-        dbUpdate(user.id, id, finalQty).catch((e) => console.error("dbUpdate error", e))
+  dbUpdate(user.id, id, finalQty).catch(() => {})
       }
     })()
   }
@@ -246,7 +246,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = () => {
     setCartItems([])
     if (user && isSupabaseConfigured()) {
-      dbClear(user.id).catch((e) => console.error("dbClear error", e))
+  dbClear(user.id).catch(() => {})
     }
   }
 

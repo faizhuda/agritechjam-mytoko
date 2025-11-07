@@ -1,11 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+import { useEffect, useState } from "react";
+import { supabaseBrowser } from "../../lib/supabase/browser";
 
 export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
@@ -35,15 +31,15 @@ export default function ResetPasswordPage() {
       if (!token) throw new Error("Invalid recovery token");
       if (!email) throw new Error("Email is required");
       // Step 1: Exchange recovery token for session
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({ type: "recovery", token, email });
-      if (verifyError) throw new Error(verifyError.message);
-      // Step 2: Update password
-      const { error: updateError } = await supabase.auth.updateUser({ password });
-      if (updateError) throw new Error(updateError.message);
+  if (!supabaseBrowser) throw new Error("Supabase client not configured");
+  const { data, error: verifyError } = await supabaseBrowser.auth.verifyOtp({ type: "recovery", token, email });
+  if (verifyError) throw new Error(verifyError.message);
+  // Step 2: Update password
+  const { error: updateError } = await supabaseBrowser.auth.updateUser({ password });
+  if (updateError) throw new Error(updateError.message);
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || "Failed to update password");
-      console.error("Update password error:", err);
     } finally {
       setLoading(false);
     }

@@ -53,9 +53,9 @@ export default function WishlistPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/profile" className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-bold mb-4">
+          <Link href="/dashboard" className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-bold mb-4">
             <ArrowLeft size={20} />
-            Back to Profile
+            Back to Dashboard
           </Link>
           <h1 className="text-4xl font-bold text-black mb-2">My Wishlist</h1>
           <p className="text-black text-lg font-semibold">

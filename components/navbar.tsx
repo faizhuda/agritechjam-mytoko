@@ -2,7 +2,7 @@
 
 import React, { Suspense, useState } from "react"
 import Link from "next/link"
-import { Menu, X, ShoppingCart, MessageCircle, Search } from "lucide-react"
+import { Menu, X, ShoppingCart, MessageCircle, Search, Heart } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
@@ -51,8 +51,10 @@ export default function Navbar() {
         .eq("id", user.id)
         .maybeSingle()
       const p: any = prof || {}
-      const full = (p.full_name as string | undefined) || [p.first_name, p.last_name].filter(Boolean).join(" ")
-      const dn = full && full.trim().length > 0 ? full : (user.email ?? "Profile")
+      // Standar: gunakan full_name jika ada, jika tidak gabungan first_name + last_name, jika tidak email
+      const dn = (p.full_name && p.full_name.trim().length > 0)
+        ? p.full_name
+        : [p.first_name, p.last_name].filter(Boolean).join(" ") || (user.email ?? "Profile")
       setDisplayName(dn)
       setIsAdmin(Boolean(p?.is_admin))
     }
@@ -76,6 +78,10 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-8">
             <Link href="/catalog" className="text-black hover:text-blue-600 transition font-bold">
               Catalog
+            </Link>
+            <Link href="/wishlist" className="flex items-center gap-2 text-black hover:text-pink-600 transition font-bold">
+              <Heart size={20} className="text-pink-500" />
+              Wishlist
             </Link>
             <Link
               href="/cart"

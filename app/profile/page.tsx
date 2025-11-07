@@ -60,9 +60,8 @@ export default function ProfilePage() {
       const { data: auth } = await supabase.auth.getUser()
       const uid = auth.user?.id
       if (!uid) return
-      const derivedFull = form.full_name && form.full_name.trim().length > 0
-        ? form.full_name
-        : [form.first_name, form.last_name].filter(Boolean).join(" ")
+      // Always update full_name: gabungan first_name + last_name
+      const derivedFull = [form.first_name, form.last_name].filter(Boolean).join(" ").trim()
       const { error: profErr } = await supabase
         .from("profiles")
         .update({
@@ -81,7 +80,9 @@ export default function ProfilePage() {
         if (emailErr) throw emailErr
         toast({ title: "Email update requested", description: "Check your inbox to confirm the new email." })
       }
-      toast({ title: "Profile saved", description: "Your changes have been updated." })
+  toast({ title: "Profile saved", description: "Your changes have been updated." })
+  // Force reload to sync global user data (navbar, dashboard, etc)
+  setTimeout(() => window.location.reload(), 500)
     } catch (e: any) {
       console.error("profile save error", e)
       const msg = e?.message ?? (e instanceof Error ? e.message : String(e))
