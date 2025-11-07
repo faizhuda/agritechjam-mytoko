@@ -106,28 +106,37 @@ export default function InvoiceClient() {
         }
 
         try {
-          // Fetch profile of the user who placed the order
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", order.user_id)
-            .maybeSingle()
+          const { data: authData } = await supabase.auth.getUser()
+          const authedEmail = authData.user?.email ?? ""
 
-          if (profile) {
-            const first =
-              profile.first_name ||
-              (profile.full_name ? String(profile.full_name).split(" ")[0] : "")
-            const last =
-              profile.last_name ||
-              (profile.full_name ? String(profile.full_name).split(" ").slice(1).join(" ") : "")
+          if (authData.user) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", authData.user.id)
+              .maybeSingle()
 
-            customer = {
-              name: `${first} ${last}`.trim() || profile.full_name || "Customer",
-              email: profile.email ?? "",
-              phone: profile.phone ?? "",
-              address: profile.address ?? "",
-              city: profile.city ?? "",
-              zipCode: profile.zip_code ?? "",
+            if (profile) {
+              const first =
+                profile.first_name ||
+                (profile.full_name ? String(profile.full_name).split(" ")[0] : "")
+              const last =
+                profile.last_name ||
+                (profile.full_name ? String(profile.full_name).split(" ").slice(1).join(" ") : "")
+
+              customer = {
+                name: `${first} ${last}`.trim() || profile.full_name || "Customer",
+                email: authedEmail,
+                phone: profile.phone ?? "",
+                address: profile.address ?? "",
+                city: profile.city ?? "",
+                zipCode: profile.zip_code ?? "",
+              }
+            } else {
+              customer = {
+                ...customer,
+                email: authedEmail,
+              }
             }
           }
         } catch {
