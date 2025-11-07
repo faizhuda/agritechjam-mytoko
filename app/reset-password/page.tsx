@@ -68,22 +68,22 @@ function ResetPasswordForm() {
           return
         }
 
-        console.log("✓ Found recovery token, calling setSession...")
+        console.log("✓ Found recovery token, verifying...")
 
-        // Use setSession to establish the recovery session
-        const { data, error: sessionError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || "",
+        // Use verifyOtp for recovery tokens (doesn't need refresh_token)
+        const { data, error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: accessToken,
+          type: 'recovery',
         })
 
-        if (sessionError) {
-          console.error("❌ setSession error:", sessionError)
-          setError("Unable to verify reset link: " + sessionError.message)
+        if (verifyError) {
+          console.error("❌ verifyOtp error:", verifyError)
+          setError("Unable to verify reset link: " + verifyError.message)
           return
         }
 
         if (!data.session) {
-          console.error("❌ No session returned from setSession")
+          console.error("❌ No session returned from verifyOtp")
           setError("Unable to establish session. Please try requesting a new reset link.")
           return
         }
