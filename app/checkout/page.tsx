@@ -19,6 +19,16 @@ import {
 import { formatIDR } from "@/lib/utils"
 
 export default function CheckoutPage() {
+  // Validation state for shipping fields
+  const [fieldErrors, setFieldErrors] = useState({
+    email: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
+    address: "",
+    city: "",
+    zipCode: "",
+  })
   const { cartItems, clearCart, updateQuantity, removeFromCart } = useCart()
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
@@ -190,6 +200,34 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (step === 1) {
+      // Validate required fields (not blank, not just spaces)
+      type Field = "email" | "firstName" | "lastName" | "phone" | "address" | "city" | "zipCode"
+      const requiredFields: Field[] = ["email", "firstName", "lastName", "phone", "address", "city", "zipCode"]
+      const errors: Record<Field, string> = {
+        email: "",
+        firstName: "",
+        lastName: "",
+        phone: "",
+        address: "",
+        city: "",
+        zipCode: "",
+      }
+      let hasError = false
+      requiredFields.forEach((field) => {
+        const value = formData[field]
+        if (!value || !value.trim()) {
+          errors[field] = "Field is required"
+          hasError = true
+        } else {
+          errors[field] = ""
+        }
+      })
+      setFieldErrors(errors)
+      if (hasError) return
+      setStep(step + 1)
+      return
+    }
     if (step < 3) {
       setStep(step + 1)
       return
@@ -394,28 +432,35 @@ export default function CheckoutPage() {
                     placeholder="Email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    className={`w-full px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.email ? 'border-red-500' : 'border-gray-300'}`}
                     required
                   />
+                  {fieldErrors.email && <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.email}</p>}
                   <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      name="firstName"
-                      placeholder="First Name"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      className="px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                      required
-                    />
-                    <input
-                      type="text"
-                      name="lastName"
-                      placeholder="Last Name"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      className="px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                      required
-                    />
+                    <div>
+                      <input
+                        type="text"
+                        name="firstName"
+                        placeholder="First Name"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        className={`px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.firstName ? 'border-red-500' : 'border-gray-300'}`}
+                        required
+                      />
+                      {fieldErrors.firstName && <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.firstName}</p>}
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        name="lastName"
+                        placeholder="Last Name"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        className={`px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.lastName ? 'border-red-500' : 'border-gray-300'}`}
+                        required
+                      />
+                      {fieldErrors.lastName && <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.lastName}</p>}
+                    </div>
                   </div>
                   <input
                     type="tel"
@@ -423,37 +468,45 @@ export default function CheckoutPage() {
                     placeholder="Phone Number"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    className={`w-full px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.phone ? 'border-red-500' : 'border-gray-300'}`}
                     required
                   />
+                  {fieldErrors.phone && <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.phone}</p>}
                   <input
                     type="text"
                     name="address"
                     placeholder="Street Address"
                     value={formData.address}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    className={`w-full px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.address ? 'border-red-500' : 'border-gray-300'}`}
                     required
                   />
+                  {fieldErrors.address && <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.address}</p>}
                   <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      name="city"
-                      placeholder="City"
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      className="px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                      required
-                    />
-                    <input
-                      type="text"
-                      name="zipCode"
-                      placeholder="ZIP Code"
-                      value={formData.zipCode}
-                      onChange={handleInputChange}
-                      className="px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                      required
-                    />
+                    <div>
+                      <input
+                        type="text"
+                        name="city"
+                        placeholder="City"
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        className={`px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.city ? 'border-red-500' : 'border-gray-300'}`}
+                        required
+                      />
+                      {fieldErrors.city && <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.city}</p>}
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        name="zipCode"
+                        placeholder="ZIP Code"
+                        value={formData.zipCode}
+                        onChange={handleInputChange}
+                        className={`px-4 py-3 border-2 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent ${fieldErrors.zipCode ? 'border-red-500' : 'border-gray-300'}`}
+                        required
+                      />
+                      {fieldErrors.zipCode && <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.zipCode}</p>}
+                    </div>
                   </div>
                 </div>
               )}
