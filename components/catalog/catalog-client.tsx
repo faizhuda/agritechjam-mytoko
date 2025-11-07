@@ -2,16 +2,18 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Star, ShoppingCart } from "lucide-react"
+import { Star, ShoppingCart, Heart } from "lucide-react"
 import type { Product } from "@/lib/product-data"
 import { fetchReviewStatsForProductIds } from "@/lib/db/products"
 import { useCart } from "@/lib/cart-context"
+import { useWishlist } from "@/lib/wishlist-context"
 import { normalizeSearch, formatIDR } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 
 type Props = { initialProducts: Product[]; initialSearch?: string }
 
 export default function CatalogClient({ initialProducts, initialSearch }: Props) {
+  const { addToWishlist, removeFromWishlist, wishlistItems } = useWishlist()
   const { addToCart, cartItems } = useCart()
   const [products] = useState<Product[]>(initialProducts)
   const [loading] = useState(false)
@@ -183,7 +185,7 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
-                className="bg-white border-2 border-gray-300 rounded-xl overflow-hidden hover:shadow-lg transition-all hover:scale-105"
+                className="bg-white border-2 border-gray-300 rounded-xl overflow-hidden hover:shadow-lg transition-all hover:scale-105 relative"
               >
                 <Link href={`/product/${product.id}`}>
                   <img
@@ -193,6 +195,27 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
                   />
                 </Link>
                 <div className="p-4">
+                  {/* Wishlist Button - pojok kanan atas */}
+                  {(() => {
+                    const isWishlisted = wishlistItems.some((w) => w.id === product.id)
+                    return (
+                      <button
+                        aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                        onClick={() => {
+                          if (isWishlisted) removeFromWishlist(product.id)
+                          else addToWishlist({
+                            id: product.id,
+                            name: product.name,
+                            price: product.price,
+                            image: product.image,
+                          })
+                        }}
+                        className={`absolute top-3 right-3 z-10 p-2 rounded-full shadow transition ${isWishlisted ? "bg-pink-100" : "bg-gray-100 hover:bg-pink-200"}`}
+                      >
+                        <Heart size={22} className={isWishlisted ? "fill-green-600 text-green-600" : "text-gray-400"} />
+                      </button>
+                    )
+                  })()}
                   <Link href={`/product/${product.id}`}>
                     <h3 className="font-bold text-lg mb-2 text-black hover:text-blue-600 cursor-pointer">
                       {product.name}
@@ -213,6 +236,7 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xl font-bold text-blue-600">{formatIDR(product.price)}</span>
+                    {/* Cart Button Only */}
                     {(() => {
                       const outOfStock = !product.inStock || Number(product.stock ?? 0) <= 0
                       if (outOfStock) {
