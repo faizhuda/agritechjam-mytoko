@@ -30,9 +30,19 @@ function ResetPasswordForm() {
           return
         }
 
-        // Get access_token from URL (query param)
-        const accessToken = searchParams.get("access_token")
-        const type = searchParams.get("type")
+        // Try to get access_token from query params first
+        let accessToken = searchParams.get("access_token")
+        let refreshToken = searchParams.get("refresh_token") || ""
+        let type = searchParams.get("type")
+
+        // If not in query params, check hash (for email links)
+        if (!accessToken && typeof window !== "undefined") {
+          const hash = window.location.hash.substring(1)
+          const hashParams = new URLSearchParams(hash)
+          accessToken = hashParams.get("access_token")
+          refreshToken = hashParams.get("refresh_token") || ""
+          type = hashParams.get("type")
+        }
 
         if (!accessToken || type !== "recovery") {
           setError("Invalid reset link. Please request a new password reset.")
@@ -44,7 +54,7 @@ function ResetPasswordForm() {
         // Set the session using the token
         const { data, error: sessionError } = await supabase.auth.setSession({
           access_token: accessToken,
-          refresh_token: searchParams.get("refresh_token") || "",
+          refresh_token: refreshToken,
         })
 
         if (sessionError || !data.session) {
