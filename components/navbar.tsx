@@ -80,8 +80,7 @@ export default function Navbar() {
               Catalog
             </Link>
             <Link href="/wishlist" className="flex items-center gap-2 text-black hover:text-pink-600 transition font-bold">
-              <Heart size={20} className="text-pink-500" />
-              Wishlist
+            <Heart size={20} className="text-pink-500" />
             </Link>
             <Link
               href="/cart"
