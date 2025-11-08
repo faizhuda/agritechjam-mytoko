@@ -30,7 +30,7 @@ export default function RootLayout({
         <CartProvider>
           <WishlistProvider>
             <Navbar />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 site-content">{children}</main>
             <Footer />
             <WhatsAppFloat />
             <Toaster />

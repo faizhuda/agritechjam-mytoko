@@ -99,198 +99,221 @@ cp env.example .env.local
 Create `.env.local` with the following variables:
 
 ```bash
-# Required - Get these from your Supabase project settings
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+<!--
+  Comprehensive README for MyToko
+  - Updated: 2025-11-08
+  - Author: repo maintainers
+  This file aims to be a single source of truth for developers onboarding onto the project.
+-->
 
-# Optional - For admin APIs only
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+# 🛒 MyToko (agritechjam-mytoko)
+
+Modern e‑commerce reference app built with Next.js 16, TypeScript, Tailwind CSS and Supabase.
+
+Badges: Next.js 16 · React 18 · TypeScript · Supabase · Tailwind
+
+Table of contents
+- Features
+- Quick start (dev)
+- Environment & configuration
+- Development workflow
+- Database & Supabase
+- Styling & layout notes (compact/site-content)
+- Charts notes (Recharts)
+- Testing, linting & formatting
+- Deploy & production notes
+- Troubleshooting
+- Contributing
+- License
+
+---
+
+## ✨ Highlights / Feature overview
+
+- Customer UX: product catalog, cart, checkout, wishlist, reviews & ratings, invoices (PDF)
+- Admin: analytics dashboard (sales, revenue trends), product CRUD, order management, role-based admin flows
+- Real-time: Pub/Sub for orders/reviews using Supabase realtime
+- Security: Supabase Auth + Row-Level Security (RLS) + server-side validation for admin endpoints
+
+## 🚀 Quick start (developer)
+
+Prerequisites
+- Node.js 18+ (LTS)
+- npm (or pnpm/yarn) installed
+- Supabase project (for database, auth, storage)
+
+Clone and install
+
+```powershell
+git clone https://github.com/faizhuda/agritechjam-mytoko.git
+cd agritechjam-mytoko
+npm install
 ```
 
-### Run Development Server
+Environment
+- Copy the example env and fill values from your Supabase project:
 
-```bash
+```powershell
+copy env.example .env.local
+# then edit .env.local with your SUPABASE variables
+```
+
+Minimum required variables (in `.env.local`):
+
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+# Optional: service role for admin scripts (keep secret)
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+Run development server
+
+```powershell
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser 🎉
+Open http://localhost:3000
 
-### Production Build
+Build for production
 
-```bash
+```powershell
 npm run build
 npm start
 ```
 
-## 🗄️ Database Setup
+---
 
-### Quick Setup (Windows)
+## 🗄️ Database & Supabase
+
+Project contains SQL scripts and helpers under the `supabase/` folder.
+
+- Use the Supabase SQL Editor to run listed scripts (table schemas, RLS, RPCs).
+- There's a collection of maintenance / migration scripts in `supabase/` (look before running).
+
+Quick (Windows) apply script (if present in your workspace):
 
 ```powershell
-# Run all migrations automatically
 ./supabase/apply-migrations.ps1
 ```
 
-### Manual Setup
+Important scripts/examples (see `supabase/` folder):
+- `products_public_read.sql`, `products_storage.sql` — storage & read policies
+- `orders_create_rpc.sql`, `orders_set_status_rpc.sql` — secure RPCs for order flow
+- `product_reviews_public_read.sql`, `reviews_helpful_rpc.sql` — reviews & helpful toggles
 
-Execute these SQL scripts in your Supabase SQL Editor:
-
-| Script | Purpose |
-|--------|---------|
-| `products_storage.sql` | Create public `products` bucket with admin-only writes |
-| `reviews_insert_policies.sql` | RLS policies for user reviews |
-| `orders_create_rpc.sql` | Secure order creation RPC |
-| `orders_policies.sql` | Order access policies |
-| `reviews_helpful_rpc.sql` | Toggle review helpful function |
-| `products_public_read.sql` | Public product read access |
-
-### Enable Realtime
-
-For live updates, enable Realtime replication in your Supabase project for these tables:
-- `products`
-- `cart_items`
-- `orders`
-- `reviews`
-
-> 💡 **Tip:** Check `supabase/MIGRATIONS_RUNBOOK.md` for detailed migration guide
-
-## 🔒 Security
-
-### Admin APIs
-
-All admin operations use server-side validation with authentication and role checks.
-
-#### `PATCH /api/orders/[id]/status`
-Update order status through secure RPC.
-
-```json
-{
-  "status": "pending|paid|shipped|delivered|cancelled"
-}
-```
-
-**Returns:** `{ ok: true }` or error message
-
-#### `PATCH /api/products/[id]`
-Edit product details with field validation.
-
-**✅ Allowed Fields:**
-- `name`, `long_description`, `category`, `stock`, `image`
-
-**❌ Protected Fields:**
-- `in_stock`, `price`, `original_price`, `rating`, `reviews`
-
-**Validations:**
-- String length limits
-- Category enum validation
-- Stock range checks
-- Image URL format
-
-### Role-Based Access Control
-
-- **Admin Gate:** `profiles.is_admin = true`
-- **RLS Policies:** Row-level security on all tables
-- **API Validation:** Server-side auth checks on all mutations
-- **Storage Security:** Public read, admin-only writes
-
-### Database Managed Fields
-
-`in_stock` is automatically managed by the database:
-
-```sql
--- Option 1: Generated column (recommended)
-ALTER TABLE products ADD COLUMN in_stock boolean 
-  GENERATED ALWAYS AS ((stock > 0)) STORED;
-
--- Option 2: Trigger-based
-CREATE FUNCTION update_in_stock() ...
-CREATE TRIGGER sync_in_stock BEFORE INSERT OR UPDATE ...
-```
-
-## 📁 Project Structure
-
-```
-agritechjam-mytoko/
-├── app/                    # Next.js App Router pages & API routes
-│   ├── admin/             # Admin dashboard pages
-│   ├── api/               # Server-side API endpoints
-│   ├── auth/              # Authentication pages
-│   └── ...                # Customer-facing pages
-├── components/            # React components
-│   ├── ui/                # shadcn/ui components
-│   ├── catalog/           # Product catalog components
-│   └── home/              # Homepage components
-├── lib/                   # Utilities & helpers
-│   ├── db/                # Database query functions
-│   └── supabase/          # Supabase client setup
-└── public/                # Static assets
-```
-
-## 🛠️ Development Commands
-
-```bash
-npm run dev      # Start development server (Turbopack)
-npm run build    # Build for production
-npm start        # Run production server
-npm run lint     # Run ESLint (optional)
-```
-
-## 🐛 Troubleshooting
-
-<details>
-<summary><b>Favicon not showing</b></summary>
-
-Ensure `app/favicon.ico` exists and is a file (not folder). Hard refresh with `Ctrl+F5`.
-</details>
-
-<details>
-<summary><b>Admin can't edit products</b></summary>
-
-Check that:
-1. User has `is_admin = true` in `profiles` table
-2. RLS policies are properly set up
-3. `in_stock` is managed by database (not manually updated)
-</details>
-
-<details>
-<summary><b>Reviews not showing</b></summary>
-
-1. Check RLS policies with `reviews_public_read.sql`
-2. Verify realtime is enabled for `reviews` table
-3. Check browser console for errors
-</details>
-
-<details>
-<summary><b>Storage/upload errors</b></summary>
-
-Ensure:
-1. `products` bucket exists in Supabase Storage
-2. Public read policy is enabled
-3. Admin-only write policies are set
-</details>
-
-## 🎨 Customization
-
-### Branding
-- **Favicon:** Place at `app/favicon.ico`
-- **App Icon:** `app/icon.png` (512×512)
-- **Apple Touch Icon:** `app/apple-touch-icon.png` (180×180)
-
-### Styling
-- Modify `app/globals.css` for global styles
-- Update `tailwind.config.ts` for theme customization
-- Edit `components.json` for shadcn/ui configuration
-
-## 📝 License
-
-MIT License - feel free to use this project for personal or commercial purposes.
+Security
+- RLS is enabled for sensitive tables; admin-only operations must be performed server-side or via RPCs authenticated with appropriate roles.
+- Keep `SUPABASE_SERVICE_ROLE_KEY` out of client code. Only use it on server side or in CI secrets.
 
 ---
 
-<div align="center">
+## 🎨 Styling & layout notes
 
-**Built with ❤️ using Next.js, TypeScript, and Supabase**
+- Styling is built with Tailwind CSS and a small set of global CSS variables in `app/globals.css`.
+- There is an intentional density / compact mode implemented by scoping tighter utility overrides to `.site-content`. The `Navbar` and `Footer` remain unchanged so the app chrome keeps consistent sizing.
 
-[Report Bug](https://github.com/faizhuda/agritechjam-mytoko/issues) • [Request Feature](https://github.com/faizhuda/agritechjam-mytoko/issues)
+Where to change compact/density:
+- `app/globals.css` — contains `.site-content` overrides (smaller font sizes, reduced paddings) applied to `<main className="site-content">` in `app/layout.tsx`.
 
-</div>
+Tailwind notes
+- If you add CSS rules targeting utility class names, avoid raw selectors like `.gap-2.5` (Turbopack/CSS parser may error). Use attribute selectors instead (example used in the project):
+
+```css
+[class*="gap-2.5"] { /* ... */ }
+```
+
+---
+
+## 📊 Charts (Recharts) — important notes
+
+- Charts live in the Admin dashboard (`app/admin/page.tsx`) and use Recharts `ResponsiveContainer` with `BarChart` and `LineChart`.
+- Y-axis labels required reserving left space: we compute a responsive `yAxisWidth` in the dashboard which combines viewport percentage and an estimate of the formatted max value. This prevents clipping on mobile and keeps both charts visually aligned.
+- Tick formatting: we use `Intl.NumberFormat('id-ID')` and `formatIDR()` helper for currency to show Indonesian locale separators.
+
+If you adjust chart styles, ensure:
+- `YAxis.width` is large enough for formatted labels (or use a ResizeObserver / measureText for pixel-perfect sizing)
+- `axisLine` and `tickLine` can be toggled to show/hide axis strokes. The project uses subtle gray strokes for axis lines to keep visuals clean.
+
+---
+
+## 🧪 Testing, linting & formatting
+
+- Linting (ESLint):
+
+```powershell
+npm run lint
+```
+
+- Formatting (Prettier if included): run locally via your editor or the project's npm script if present.
+
+- Unit/E2E tests: none are included by default — consider adding Jest/Playwright for critical flows.
+
+---
+
+## ⚙️ Development workflow & commands
+
+- Start dev server: `npm run dev` (Turbopack)
+- Build: `npm run build`
+- Start (production): `npm start`
+- Lint: `npm run lint`
+
+Recommended editor setup
+- VSCode with: ESLint, TypeScript, Tailwind CSS IntelliSense, Prettier (optional)
+
+---
+
+## � Deployment
+
+- The app is well-suited for Vercel / Supabase hosting. Typical steps:
+  1. Push to GitHub
+  2. Configure Vercel project and set environment variables
+  3. Add Supabase service key to Vercel's secrets only if running server-side jobs
+
+- Notes for production:
+  - Ensure RLS policies are correct and service role keys are not exposed.
+  - Configure Supabase bucket CORS and image caching settings.
+
+---
+
+## 🐛 Troubleshooting (common issues)
+
+- CSS parse error mentioning `.gap-2.5` or "Unexpected token Number": avoid unescaped utility selectors; prefer attribute selectors such as `[class*="gap-2.5"]`.
+- Chart labels clipped on mobile: increase `YAxis.width` or enable the responsive width logic in `app/admin/page.tsx`. Consider using ResizeObserver or canvas `measureText` for perfect measurements.
+- Admin operations failing:
+  - Verify `profiles.is_admin` is true for the admin user in Supabase
+  - Check relevant RLS SQL in `supabase/`
+  - For uploads, ensure the `products` bucket exists and policies are correct
+
+---
+
+## 🙌 Contributing
+
+1. Fork the repo
+2. Create a feature branch: `git checkout -b feat/your-change`
+3. Commit, push, open a PR
+
+Coding guidelines
+- Keep changes TypeScript-first and add small unit tests where possible
+- Update README or docs when adding new environment variables or SQL migrations
+
+---
+
+## 📝 Where to look next in this repo
+
+- `app/layout.tsx` — site shell (Navbar / Footer / main with `site-content`)
+- `app/globals.css` — global variables and density overrides
+- `app/admin/page.tsx` — admin charts and Y-axis responsive logic
+- `components/` — shared UI pieces (notification center, modals, inputs)
+- `lib/supabase/` — supabase client helpers
+- `supabase/` — SQL scripts and maintenance helpers
+
+---
+
+## License
+
+MIT — see the LICENSE file in this repository.
+
+---
+
+If you'd like this README translated to Indonesian or expanded with a short developer onboarding checklist (screenshots, local seeding commands), tell me which sections to add and I'll extend it.

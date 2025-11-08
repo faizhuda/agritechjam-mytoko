@@ -80,6 +80,28 @@ export default function AdminDashboard() {
     description: "",
     features: "",
   })
+  // responsive Y axis width: combine viewport and formatted-label estimate so mobile labels fit
+  const [yAxisWidth, setYAxisWidth] = useState<number>(72)
+  useEffect(() => {
+    const compute = () => {
+      const w = typeof window !== 'undefined' ? window.innerWidth : 1200
+      const vwVal = Math.round(w * 0.06) // ~6% of viewport width
+
+      // estimate label width from the largest sales value in data
+      const maxVal = salesData && salesData.length ? Math.max(...salesData.map((d) => Number(d.sales) || 0)) : 0
+      const formatted = new Intl.NumberFormat('id-ID').format(maxVal)
+      // approximate px per character (conservative) + padding
+      const estCharPx = 8
+      const labelEstimate = Math.round(formatted.length * estCharPx + 24)
+
+      // choose the bigger of viewport-based and label-based estimates, clamped
+      const chosen = Math.max(56, Math.min(140, Math.max(vwVal, labelEstimate)))
+      setYAxisWidth(chosen)
+    }
+    compute()
+    window.addEventListener('resize', compute)
+    return () => window.removeEventListener('resize', compute)
+  }, [salesData])
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Product | null>(null)
@@ -542,10 +564,19 @@ export default function AdminDashboard() {
           <div className="bg-white border-2 border-gray-300 rounded-lg p-6 shadow-md">
             <h2 className="text-xl font-bold text-black mb-6">Sales Overview</h2>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={salesData}>
+              <BarChart data={salesData} margin={{ top: 10, right: 16, left: 0, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" />
-                <XAxis dataKey="month" stroke="#000" />
-                <YAxis stroke="#000" tickFormatter={(v: number) => Number(v).toLocaleString('id-ID')} />
+                <XAxis dataKey="month" stroke="#374151" axisLine={true} tickLine={true} />
+                {/* responsive Y axis width so labels don't overflow */}
+                <YAxis
+                  width={yAxisWidth}
+                  stroke="#9ca3af"
+                  axisLine={true}
+                  tickLine={true}
+                  tick={{ fill: '#374151', fontSize: 13 }}
+                  tickMargin={8}
+                  tickFormatter={(v: number) => new Intl.NumberFormat('id-ID').format(Number(v || 0))}
+                />
                 <Tooltip
                   contentStyle={{ backgroundColor: "#fff", border: "2px solid #0066cc" }}
                   cursor={{ fill: "rgba(0, 102, 204, 0.1)" }}
@@ -565,10 +596,18 @@ export default function AdminDashboard() {
           <div className="bg-white border-2 border-gray-300 rounded-lg p-6 shadow-md">
             <h2 className="text-xl font-bold text-black mb-6">Revenue Trend</h2>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={salesData}>
+              <LineChart data={salesData} margin={{ top: 10, right: 16, left: 0, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" />
-                <XAxis dataKey="month" stroke="#000" />
-                <YAxis stroke="#000" tickFormatter={(v: number) => Number(v).toLocaleString('id-ID')} />
+                <XAxis dataKey="month" stroke="#374151" axisLine={true} tickLine={true} />
+                <YAxis
+                  width={yAxisWidth}
+                  stroke="#9ca3af"
+                  axisLine={true}
+                  tickLine={true}
+                  tick={{ fill: '#374151', fontSize: 13 }}
+                  tickMargin={8}
+                  tickFormatter={(v: number) => new Intl.NumberFormat('id-ID').format(Number(v || 0))}
+                />
                 <Tooltip
                   contentStyle={{ backgroundColor: "#fff", border: "2px solid #0066cc" }}
                   formatter={(value: number) => [formatIDR(Number(value)), 'sales']}

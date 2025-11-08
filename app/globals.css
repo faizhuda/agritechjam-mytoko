@@ -194,3 +194,54 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* Density / compact mode tokens
+   - Use `.compact` on the <html> element to enable a slightly denser UI.
+   - This reduces the root font-size (so rem-based Tailwind utilities shrink)
+     and tightens a few design tokens like radius.
+   - Users can toggle this at runtime (we wire a small toggle in layout).
+*/
+
+:root {
+  --base-font-size: 16px;
+}
+
+html {
+  font-size: var(--base-font-size);
+}
+
+/* Global compact-like overrides applied only to the main site content
+   (so navbar and footer remain unchanged). The main content container
+   uses the `.site-content` class added to <main> in `app/layout.tsx`.
+*/
+
+/* Reduce radius inside site content for a slightly tighter look */
+.site-content { --radius: 0.5rem; }
+
+/* Targeted compact overrides for common large utilities used in the app.
+   We use more specific selectors and !important to override Tailwind utility classes
+   so we don't have to change many components. These are conservative adjustments.
+*/
+.site-content .h-96 { height: 18rem !important; } /* hero: h-72 */
+.site-content .w-96 { width: 20rem !important; max-width: 20rem !important; } /* notifications: w-80 */
+.site-content .p-8 { padding: 1.5rem !important; } /* modal/container paddings */
+.site-content .px-4 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+.site-content .py-3 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+.site-content .px-3 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+.site-content .text-5xl { font-size: 1.75rem !important; line-height: 2rem !important; }
+.site-content .text-4xl { font-size: 1.5rem !important; line-height: 1.75rem !important; }
+.site-content .text-3xl { font-size: 1.25rem !important; line-height: 1.5rem !important; }
+.site-content .text-2xl { font-size: 1.125rem !important; line-height: 1.4rem !important; }
+.site-content .h-20 { height: 4.5rem !important; } /* slightly reduce large buttons/hero controls */
+.site-content .h-12 { height: 2.5rem !important; }
+
+/* Reduce gaps used in some components */
+.site-content .gap-4 { gap: 0.5rem !important; }
+.site-content .gap-2 { gap: 0.25rem !important; }
+.site-content [class*="gap-2.5"] { gap: 0.375rem !important; }
+/* Reduce icon/text sizes inside the WhatsApp float so it doesn't look oversized */
+.site-content .whatsapp-float, .site-content a[href*="wa.me"] {
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
