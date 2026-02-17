@@ -315,5 +315,3 @@ Coding guidelines
 MIT — see the LICENSE file in this repository.
 
 ---
-
-If you'd like this README translated to Indonesian or expanded with a short developer onboarding checklist (screenshots, local seeding commands), tell me which sections to add and I'll extend it.
