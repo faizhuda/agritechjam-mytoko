@@ -136,7 +136,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-stone-50 text-foreground;
   }
 
   /* Always show hand cursor for clickable elements (except disabled) */
@@ -294,4 +294,46 @@ html {
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(63, 63, 70, 0.5);
 }
+
+/* Neo-Brutalist design utilities */
+.neo-border {
+  border: 3px solid #000000 !important;
+}
+
+.neo-border-sm {
+  border: 2px solid #000000 !important;
+}
+
+.neo-shadow-sm {
+  box-shadow: 2px 2px 0px 0px #000000 !important;
+}
+
+.neo-shadow {
+  box-shadow: 4px 4px 0px 0px #000000 !important;
+}
+
+.neo-shadow-lg {
+  box-shadow: 8px 8px 0px 0px #000000 !important;
+}
+
+/* Neo-Brutalist Button */
+.neo-btn {
+  border: 3px solid #000000 !important;
+  box-shadow: 4px 4px 0px 0px #000000 !important;
+  transition: all 0.15s ease-in-out !important;
+  transform: translate(0px, 0px);
+}
+
+.neo-btn:not(:disabled):hover {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 2px 2px 0px 0px #000000 !important;
+  filter: brightness(1) !important;
+}
+
+.neo-btn:not(:disabled):active {
+  transform: translate(4px, 4px) !important;
+  box-shadow: 0px 0px 0px 0px #000000 !important;
+  scale: 100% !important;
+}
+
 

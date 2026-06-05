@@ -66,20 +66,23 @@ export default function Navbar() {
   const toggleMenu = () => setIsOpen(!isOpen)
 
   return (
-    <nav className="sticky top-0 z-50 glass-header shadow-sm">
+    <nav className="sticky top-0 z-50 bg-white border-b-4 border-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="shrink-0 flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-              <span className="text-white font-black text-lg">M</span>
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">MyToko</span>
+          <Link
+            href="/"
+            className="shrink-0 font-black tracking-tight text-xl uppercase bg-yellow-300 border-2 border-black px-3 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-100"
+          >
+            MyToko
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
-            <Link href="/catalog" className="text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors">
+            <Link
+              href="/catalog"
+              className="text-sm font-black text-black uppercase hover:underline underline-offset-4 decoration-2"
+            >
               Catalog
             </Link>
             
@@ -98,47 +101,50 @@ export default function Navbar() {
                   placeholder="Search products..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="w-56 px-4 py-1.5 pr-9 border border-gray-200 rounded-full bg-gray-50/70 text-sm text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white focus:w-64 transition-all duration-300 font-medium"
+                  className="w-56 px-4 py-1.5 pr-9 border-2 border-black bg-white text-sm text-black placeholder-gray-700 focus:outline-none focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 font-bold"
                 />
                 <button
                   type="submit"
                   aria-label="Search"
-                  className="absolute right-3 top-2 text-gray-400 hover:text-blue-600 cursor-pointer transition-colors"
+                  className="absolute right-3 top-2.5 text-black hover:text-blue-600 cursor-pointer transition-colors"
                 >
-                  <Search size={16} />
+                  <Search size={16} className="stroke-[2.5]" />
                 </button>
               </form>
             </Suspense>
 
             <button
-              className="flex items-center gap-2 p-2 text-gray-500 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all duration-200"
+              className="flex items-center justify-center p-2 text-black bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-100"
               onClick={() => {
                 if (!user) router.push('/login')
                 else router.push('/wishlist')
               }}
               title="Wishlist"
             >
-              <Heart size={20} className="transition-transform active:scale-90" />
+              <Heart size={18} className="stroke-[2.5] hover:text-rose-500 hover:fill-rose-500 transition-colors" />
             </button>
 
             <button
-              className="flex items-center gap-2 p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-200 relative"
+              className="flex items-center justify-center p-2 text-black bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-100 relative"
               onClick={() => {
                 if (!user) router.push('/login')
                 else router.push('/cart')
               }}
               title="Cart"
             >
-              <ShoppingCart size={20} className="transition-transform active:scale-90" />
+              <ShoppingCart size={18} className="stroke-[2.5]" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center shadow-md animate-pulse">
+                <span className="absolute -top-1.5 -right-1.5 bg-yellow-300 text-black border border-black text-[9px] font-black w-4.5 h-4.5 flex items-center justify-center shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
                   {cartCount}
                 </span>
               )}
             </button>
 
             {isAdmin && (
-              <Link href="/admin" className="text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors">
+              <Link
+                href="/admin"
+                className="text-sm font-black text-black uppercase hover:underline underline-offset-4 decoration-2"
+              >
                 Admin
               </Link>
             )}
@@ -147,22 +153,25 @@ export default function Navbar() {
               href="https://wa.me/6287787128257"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-all duration-200"
+              className="flex items-center justify-center p-2 text-black bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-100"
               title="Chat Support"
             >
-              <MessageCircle size={20} />
+              <MessageCircle size={18} className="stroke-[2.5]" />
             </a>
 
-            <div className="h-4 w-[1px] bg-gray-200" />
+            <div className="h-6 w-[2px] bg-black" />
 
             {user ? (
               <div className="flex items-center gap-4">
-                <Link href="/dashboard" className="text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors">
+                <Link
+                  href="/dashboard"
+                  className="text-sm font-black text-black uppercase hover:underline underline-offset-4 decoration-2"
+                >
                   {displayName}
                 </Link>
                 <button
                   onClick={() => signOut()}
-                  className="px-4 py-1.5 text-sm bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors font-semibold shadow-sm"
+                  className="px-4 py-1.5 text-sm bg-rose-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all font-black uppercase"
                 >
                   Logout
                 </button>
@@ -170,7 +179,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="px-5 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors font-semibold shadow-md shadow-blue-500/10"
+                className="px-5 py-1.5 text-sm bg-blue-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all font-black uppercase"
               >
                 Login
               </Link>
@@ -180,23 +189,23 @@ export default function Navbar() {
           {/* Mobile Menu Button */}
           <button
             onClick={toggleMenu}
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition text-black font-bold"
+            className="md:hidden p-2 border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black"
           >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
+            {isOpen ? <X size={20} className="stroke-[2.5]" /> : <Menu size={20} className="stroke-[2.5]" />}
           </button>
         </div>
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden pb-4 space-y-2 bg-white">
+          <div className="md:hidden pb-4 space-y-2 bg-stone-50 border-t-2 border-black pt-2">
             <Link
               href="/catalog"
-              className="block px-4 py-2 text-black hover:bg-gray-100 rounded-lg transition font-bold"
+              className="block px-4 py-2 text-black hover:bg-yellow-200 border-2 border-black font-black uppercase bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mx-2"
             >
               Catalog
             </Link>
             <button
-              className="block px-4 py-2 text-black hover:bg-gray-100 rounded-lg transition font-bold w-full text-left"
+              className="block px-4 py-2 text-black hover:bg-yellow-200 border-2 border-black font-black uppercase bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mx-2 w-[calc(100%-1rem)] text-left"
               onClick={() => {
                 if (!user) router.push('/login')
                 else router.push('/wishlist')
@@ -205,7 +214,7 @@ export default function Navbar() {
               Wishlist
             </button>
             <button
-              className="block px-4 py-2 text-black hover:bg-gray-100 rounded-lg transition font-bold w-full text-left"
+              className="block px-4 py-2 text-black hover:bg-yellow-200 border-2 border-black font-black uppercase bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mx-2 w-[calc(100%-1rem)] text-left"
               onClick={() => {
                 if (!user) router.push('/login')
                 else router.push('/cart')
@@ -216,7 +225,7 @@ export default function Navbar() {
             {isAdmin && (
               <Link
                 href="/admin"
-                className="block px-4 py-2 text-black hover:bg-gray-100 rounded-lg transition font-bold"
+                className="block px-4 py-2 text-black hover:bg-yellow-200 border-2 border-black font-black uppercase bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mx-2"
               >
                 Admin Dashboard
               </Link>
@@ -225,29 +234,29 @@ export default function Navbar() {
               href="https://wa.me/6287787128257"
               target="_blank"
               rel="noopener noreferrer"
-              className="block px-4 py-2 text-black hover:bg-gray-100 rounded-lg transition font-bold"
+              className="block px-4 py-2 text-black hover:bg-yellow-200 border-2 border-black font-black uppercase bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mx-2"
             >
               Chat Support
             </a>
             {user ? (
-              <>
+              <div className="space-y-2 px-2 pt-2">
                 <Link
                   href="/dashboard"
-                  className="block px-4 py-2 text-black hover:bg-gray-100 rounded-lg transition font-bold"
+                  className="block px-4 py-2 text-black hover:bg-yellow-200 border-2 border-black font-black uppercase bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 >
                   {displayName}
                 </Link>
                 <button
                   onClick={() => signOut()}
-                  className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-bold"
+                  className="w-full px-4 py-2 bg-rose-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black uppercase"
                 >
                   Logout
                 </button>
-              </>
+              </div>
             ) : (
               <Link
                 href="/login"
-                className="block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-center font-bold"
+                className="block px-4 py-2 bg-blue-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-center font-black uppercase mx-2"
               >
                 Login
               </Link>

@@ -531,16 +531,16 @@ export default function CheckoutPage() {
                 <div className="space-y-6">
                   <h2 className="text-2xl font-bold mb-6 text-black">Payment Method</h2>
                   <p className="text-base text-black mb-4 font-bold">QRIS Payment</p>
-                  <div className="bg-slate-50 p-6 rounded-2xl border border-gray-200 text-center">
-                    <div className="max-w-xs mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                  <div className="bg-stone-100 p-6 border-4 border-black text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="max-w-xs mx-auto bg-white rounded-none border-4 border-black overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                       {/* QRIS Header */}
-                      <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-rose-600 px-4 py-3 text-center">
-                        <span className="text-white font-black tracking-widest text-lg">QRIS</span>
-                        <p className="text-[9px] text-white/80 font-bold -mt-1 uppercase tracking-wider">Quick Response Code Indonesian Standard</p>
+                      <div className="bg-rose-300 px-4 py-3 text-center border-b-4 border-black">
+                        <span className="text-black font-black tracking-widest text-lg">QRIS</span>
+                        <p className="text-[9px] text-black font-black -mt-1 uppercase tracking-wider">Quick Response Code Indonesian Standard</p>
                       </div>
                       
                       <div className="p-6 flex flex-col items-center justify-center">
-                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 mb-4">
+                        <div className="p-3 bg-yellow-100 border-2 border-black mb-4">
                           <svg viewBox="0 0 100 100" className="w-44 h-44" fill="none">
                             {/* Corner 1 */}
                             <path d="M5,5 h25 v25 h-25 z M10,10 h15 v15 h-15 z" fill="black" />
@@ -553,12 +553,12 @@ export default function CheckoutPage() {
                             {/* Random code bits */}
                             <path d="M35,5 h10 v10 h-10 z M50,10 h10 v10 h-10 z M35,25 h10 v10 h-10 z M55,25 h10 v10 h-10 z M45,45 h10 v10 h-10 z M35,60 h10 v10 h-10 z M60,45 h10 v10 h-10 z M50,65 h15 v10 h-15 z M10,35 h15 v10 h-15 z M25,50 h10 v10 h-10 z M75,35 h15 v10 h-15 z M80,50 h10 v15 h-10 z" fill="black" />
                             {/* Center square accent */}
-                            <rect x="44" y="44" width="12" height="12" rx="2" fill="white" />
-                            <rect x="46" y="46" width="8" height="8" rx="1.5" fill="#2563eb" />
+                            <rect x="44" y="44" width="12" height="12" fill="white" />
+                            <rect x="46" y="46" width="8" height="8" fill="black" />
                           </svg>
                         </div>
-                        <p className="text-sm font-bold text-gray-800">GOPAY / OVO / DANA / LinkAja</p>
-                        <p className="text-xs text-gray-500 font-medium mt-1">NMID: ID1020304050607</p>
+                        <p className="text-sm font-black text-black uppercase">GOPAY / OVO / DANA / LinkAja</p>
+                        <p className="text-xs text-black font-bold mt-1">NMID: ID1020304050607</p>
                       </div>
                     </div>
                   </div>

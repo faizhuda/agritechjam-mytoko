@@ -163,23 +163,22 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   }
   const decrementQuantity = () => quantity > 1 && setQuantity(quantity - 1)
   // relatedProducts prepared from fetched list above
-
   return (
-    <div className="min-h-screen bg-white pb-24 sm:pb-0">
+    <div className="min-h-screen bg-stone-50 pb-24 sm:pb-12">
       {/* Auto-refresh when products change */}
       <RealtimeRefresh table="products" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link
           href="/catalog"
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition mb-8 font-bold"
+          className="inline-flex items-center gap-2 text-black hover:underline decoration-2 transition mb-8 font-black uppercase text-sm"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={16} className="stroke-[3]" />
           Back to Catalog
         </Link>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
           {/* Product Image */}
-          <div className="flex items-center justify-center bg-white rounded-xl shadow-lg p-8 border-2 border-gray-300">
+          <div className="flex items-center justify-center bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             <img
               src={product.image || "/placeholder.svg"}
               alt={product.name}
@@ -190,7 +189,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           {/* Product Details */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-4xl font-bold text-black mb-4">{product.name}</h1>
+              <h1 className="text-4xl font-black text-black mb-4 uppercase tracking-tight">{product.name}</h1>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => {
@@ -199,41 +198,41 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     return (
                       <Star
                         key={i}
-                        size={20}
-                        className={full ? "fill-amber-400 text-amber-400" : half ? "fill-amber-300 text-amber-300" : "text-gray-200"}
+                        size={18}
+                        className={full ? "fill-amber-400 text-amber-400 stroke-black stroke-[1.5]" : half ? "fill-amber-300 text-amber-300 stroke-black stroke-[1.5]" : "text-gray-200"}
                         style={half ? { clipPath: "inset(0 50% 0 0)" } : {}}
                       />
                     )
                   })}
                 </div>
-                <span className="text-black font-bold">{averageRating.toFixed(1)} ({reviewCount} reviews)</span>
+                <span className="text-black font-black text-sm">{averageRating.toFixed(1)} ({reviewCount} reviews)</span>
               </div>
             </div>
 
-            <div className="bg-blue-50 rounded-lg p-6 border-2 border-blue-600">
-              <p className="text-black text-sm mb-2 font-bold">Price</p>
+            <div className="bg-yellow-200 p-6 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <p className="text-black text-xs mb-1 font-black uppercase">Price</p>
               <div className="flex items-baseline gap-3">
-                <p className="text-4xl font-bold text-blue-600">{formatIDR(product.price)}</p>
+                <p className="text-4xl font-black text-black">{formatIDR(product.price)}</p>
                 {product.originalPrice && (
-                  <p className="text-lg text-black line-through font-bold">{formatIDR(product.originalPrice)}</p>
+                  <p className="text-lg text-black/70 line-through font-black">{formatIDR(product.originalPrice)}</p>
                 )}
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <h3 className="text-lg font-bold text-black mb-2">Description</h3>
-              <p className="text-black leading-relaxed font-semibold">{product.longDescription}</p>
+              <h3 className="text-lg font-black text-black mb-2 uppercase tracking-wide">Description</h3>
+              <p className="text-black leading-relaxed font-bold">{product.longDescription}</p>
             </div>
 
             {/* Features */}
             <div>
-              <h3 className="text-lg font-bold text-black mb-3">Key Features</h3>
+              <h3 className="text-lg font-black text-black mb-3 uppercase tracking-wide">Key Features</h3>
               <ul className="space-y-2">
                 {product.features.map((feature: string, index: number) => (
                   <li key={index} className="flex items-start gap-3">
-                    <span className="text-blue-600 font-bold mt-1">✓</span>
-                    <span className="text-black font-semibold">{feature}</span>
+                    <span className="text-black font-black mt-1">✓</span>
+                    <span className="text-black font-bold">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -241,35 +240,35 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
             {/* Stock Status */}
             <div>
-              <p className={`font-bold text-lg ${product.inStock ? "text-green-600" : "text-red-600"}`}>
+              <p className={`font-black text-lg uppercase tracking-wide ${product.inStock ? "text-green-600" : "text-red-600"}`}>
                 {product.inStock ? `In Stock (${product.stock} available)` : "Out of Stock"}
               </p>
             </div>
 
             {/* Quantity Selector and Add to Cart */}
             <div className="hidden md:flex items-center gap-4 pt-4">
-              <div className="flex items-center border-2 border-gray-300 rounded-lg">
-                <button onClick={decrementQuantity} className="p-3 text-black hover:bg-gray-100 transition">
-                  <Minus size={20} />
+              <div className="flex items-center border-4 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <button onClick={decrementQuantity} className="p-3 text-black hover:bg-stone-100 transition border-r-2 border-black">
+                  <Minus size={16} className="stroke-[3]" />
                 </button>
-                <span className="px-6 py-2 text-black font-bold text-lg" aria-live="polite">{quantity}</span>
-                <button onClick={incrementQuantity} className="p-3 text-black hover:bg-gray-100 transition">
-                  <Plus size={20} />
+                <span className="px-6 py-2 text-black font-black text-lg" aria-live="polite">{quantity}</span>
+                <button onClick={incrementQuantity} className="p-3 text-black hover:bg-stone-100 transition border-l-2 border-black">
+                  <Plus size={16} className="stroke-[3]" />
                 </button>
               </div>
               <button
                 onClick={handleAddToCart}
                 disabled={!product.inStock}
-                className={`flex-1 flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-bold transition ${
+                className={`flex-1 flex items-center justify-center gap-2 px-8 py-3.5 border-4 border-black font-black uppercase transition-all duration-100 ${
                   maxStock
-                    ? "bg-orange-600 text-white"
+                    ? "bg-orange-300 text-black shadow-none translate-x-[2px] translate-y-[2px]"
                     : addedToCart
-                      ? "bg-green-600 text-white"
-                      : "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      ? "bg-green-300 text-black shadow-none translate-x-[2px] translate-y-[2px]"
+                      : "bg-blue-300 text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:bg-stone-300 disabled:cursor-not-allowed"
                 }`}
               >
-                <ShoppingCart size={20} />
-                {maxStock ? "Max Stock Reached!" : addedToCart ? "Added to Cart!" : "Add to Cart"}
+                <ShoppingCart size={18} className="stroke-[2.5]" />
+                {maxStock ? "Max Stock!" : addedToCart ? "Added!" : "Add to Cart"}
               </button>
               <button
                 onClick={() => {
@@ -291,51 +290,51 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     })
                   }
                 }}
-                className={`p-3 rounded-lg border transition ${
-                  isFavorite
-                    ? "bg-rose-50 text-rose-500 border-rose-200 shadow-sm"
-                    : "border-gray-200 text-gray-400 hover:text-rose-500 hover:border-rose-200 bg-white"
+                className={`p-3 border-4 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-100 ${
+                  isFavorite ? "text-rose-500" : "text-black"
                 }`}
               >
-                <Heart size={20} className="transition-transform active:scale-95" fill={isFavorite ? "currentColor" : "none"} />
+                <Heart size={20} className="stroke-[2.5]" fill={isFavorite ? "currentColor" : "none"} />
               </button>
             </div>
           </div>
         </div>
 
-        <div className="border-t-2 border-gray-300 pt-12">
-          <h2 className="text-2xl font-bold text-black mb-8">Customer Reviews</h2>
+        <div className="border-t-4 border-black pt-12">
+          <h2 className="text-2xl font-black text-black mb-8 uppercase tracking-wide">Customer Reviews</h2>
           {reviews.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {reviews.map((review) => (
-                <div key={review.id} className="bg-white border-2 border-gray-300 rounded-xl p-6 shadow-md">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="font-bold text-black">{review.author}</p>
-                      <p className="text-sm text-black font-semibold">
-                        {new Date(review.date).toLocaleString("id-ID", {
-                          year: "numeric",
-                          month: "short",
-                          day: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
+                <div key={review.id} className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="font-black text-black">{review.author}</p>
+                        <p className="text-xs text-black/70 font-bold">
+                          {new Date(review.date).toLocaleString("id-ID", {
+                            year: "numeric",
+                            month: "short",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
                     </div>
+                    <div className="flex gap-1 mb-3">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={14}
+                          className={i < review.rating ? "fill-amber-400 text-amber-400 stroke-black stroke-[1.5]" : "text-gray-200"}
+                        />
+                      ))}
+                    </div>
+                    <h4 className="font-black text-black mb-2 uppercase text-sm">{review.title}</h4>
+                    <p className="text-black text-sm mb-4 font-bold">{review.comment}</p>
                   </div>
-                  <div className="flex gap-1 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        size={16}
-                        className={`${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
-                      />
-                    ))}
-                  </div>
-                  <h4 className="font-bold text-black mb-2">{review.title}</h4>
-                  <p className="text-black text-sm mb-4 font-semibold">{review.comment}</p>
                   <button
-                    className={`flex items-center gap-2 font-bold text-sm ${review.liked ? "text-blue-800" : "text-blue-600 hover:text-blue-800"}`}
+                    className="flex items-center justify-center gap-2 font-black text-xs border-2 border-black px-3 py-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none bg-stone-100 transition-all max-w-max uppercase"
                     onClick={async () => {
                       try {
                         if (!isSupabaseConfigured()) {
@@ -382,14 +381,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                       }
                     }}
                   >
-                    <ThumbsUp size={16} />
+                    <ThumbsUp size={14} className="stroke-[2.5]" />
                     {review.liked ? "Helpful (You)" : `Helpful (${review.helpful})`}
                   </button>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-black text-center py-8 font-bold">
+            <p className="text-black text-center py-8 font-black uppercase">
               No reviews yet. Be the first to review this product!
             </p>
           )}
@@ -397,37 +396,35 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
         {/* Related Products Section */}
         {relatedProducts.length > 0 && (
-          <div className="mt-16 pt-12 border-t-2 border-gray-300">
-            <h2 className="text-2xl font-bold text-black mb-8">Related Products</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="mt-16 pt-12 border-t-4 border-black">
+            <h2 className="text-2xl font-black text-black mb-8 uppercase tracking-wide">Related Products</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {relatedProducts.map((relatedProduct) => (
                 <Link
                   key={relatedProduct.id}
                   href={`/product/${relatedProduct.id}`}
-                  className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+                  className="bg-white border-4 border-black rounded-none shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-150 group"
                 >
-                  <div className="overflow-hidden bg-gray-50">
+                  <div className="overflow-hidden bg-stone-100 border-b-4 border-black">
                     <img
                       src={relatedProduct.image || "/placeholder.svg"}
                       alt={relatedProduct.name}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-48 object-cover"
                     />
                   </div>
                   <div className="p-5">
-                    <h3 className="font-bold text-gray-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors text-base">{relatedProduct.name}</h3>
+                    <h3 className="font-black text-black mb-1 line-clamp-1 group-hover:underline decoration-2 transition-all text-base uppercase">{relatedProduct.name}</h3>
                     <div className="flex items-center gap-1 mb-3">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
                           size={14}
-                          className={`${
-                            i < Math.floor(relatedProduct.rating) ? "fill-amber-400 text-amber-400" : "text-gray-200"
-                          }`}
+                          className={i < Math.floor(relatedProduct.rating) ? "fill-amber-400 text-amber-400 stroke-black stroke-[1.5]" : "text-gray-200"}
                         />
                       ))}
-                      <span className="text-xs text-black font-bold ml-1">({relatedProduct.rating})</span>
+                      <span className="text-xs text-black font-black ml-1">({relatedProduct.rating})</span>
                     </div>
-                    <p className="text-lg font-bold text-blue-600">{formatIDR(relatedProduct.price)}</p>
+                    <p className="text-base font-black text-black bg-yellow-200 border-2 border-black px-2 py-0.5 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] inline-block">{formatIDR(relatedProduct.price)}</p>
                   </div>
                 </Link>
               ))}
@@ -436,29 +433,29 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         )}
       </div>
       {/* Mobile sticky add-to-cart bar */}
-  <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t-2 border-gray-200 bg-white/95 backdrop-blur supports-backdrop-filter:bg-white/80">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t-4 border-black bg-white py-3">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center border-2 border-gray-300 rounded-lg">
-            <button onClick={decrementQuantity} className="p-2 text-black hover:bg-gray-100 transition">
+          <div className="flex items-center border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            <button onClick={decrementQuantity} className="p-2 text-black hover:bg-stone-100 transition">
               <Minus size={18} />
             </button>
-            <span className="px-4 py-1 text-black font-bold" aria-live="polite">{quantity}</span>
-            <button onClick={incrementQuantity} className="p-2 text-black hover:bg-gray-100 transition">
+            <span className="px-4 py-1 text-black font-black" aria-live="polite">{quantity}</span>
+            <button onClick={incrementQuantity} className="p-2 text-black hover:bg-stone-100 transition">
               <Plus size={18} />
             </button>
           </div>
           <button
             onClick={handleAddToCart}
             disabled={!product.inStock}
-            className={`flex-1 text-center py-3 rounded-lg font-bold transition ${
+            className={`flex-1 text-center py-3 border-2 border-black font-black uppercase transition ${
               maxStock
-                ? "bg-orange-600 text-white"
+                ? "bg-orange-300 text-black"
                 : addedToCart
-                  ? "bg-green-600 text-white"
-                  : "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  ? "bg-green-300 text-black"
+                  : "bg-blue-300 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
             }`}
           >
-            {maxStock ? "Max Stock!" : addedToCart ? "Added!" : "Add To Cart"}
+            {maxStock ? "Max!" : addedToCart ? "Added!" : "Buy Now"}
           </button>
         </div>
       </div>

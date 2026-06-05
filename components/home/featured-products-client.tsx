@@ -49,13 +49,13 @@ export default function FeaturedProductsClient({ products }: { products: Product
   }
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-white">
-      <h2 className="text-3xl font-extrabold mb-12 text-gray-900 tracking-tight text-balance">Featured Products</h2>
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-stone-50">
+      <h2 className="text-3xl font-black mb-12 text-black tracking-tight uppercase">Featured Products</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {products.map((product) => (
           <div
             key={product.id}
-            className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative group"
+            className="bg-white border-4 border-black rounded-none shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-150 relative group"
           >
             {/* Wishlist Button - pojok kanan atas */}
             {(() => {
@@ -76,22 +76,22 @@ export default function FeaturedProductsClient({ products }: { products: Product
                       image: product.image,
                     })
                   }}
-                  className={`absolute top-3 right-3 z-10 p-2 rounded-full shadow-sm transition-all duration-300 ${isWishlisted ? "bg-rose-50 border border-rose-100" : "bg-white/80 hover:bg-rose-50 backdrop-blur-sm hover:scale-115"}`}
+                  className={`absolute top-3 right-3 z-10 p-2 border-2 border-black rounded-none bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-100`}
                 >
-                  <Heart size={18} className={isWishlisted ? "fill-rose-500 text-rose-500" : "text-gray-400 hover:text-rose-500 transition-colors"} />
+                  <Heart size={16} className={isWishlisted ? "fill-rose-500 text-rose-500 stroke-[2.5]" : "text-black stroke-[2.5] hover:text-rose-500 transition-colors"} />
                 </button>
               )
             })()}
-            <Link href={`/product/${product.id}`} className="block overflow-hidden bg-gray-50">
+            <Link href={`/product/${product.id}`} className="block overflow-hidden bg-stone-100 border-b-4 border-black">
               <img
                 src={product.image || "/placeholder.svg"}
                 alt={product.name}
-                className="w-full h-48 object-cover cursor-pointer group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-48 object-cover cursor-pointer"
               />
             </Link>
             <div className="p-5">
               <Link href={`/product/${product.id}`}>
-                <h3 className="font-bold text-gray-900 text-base mb-1 hover:text-blue-600 line-clamp-1 cursor-pointer transition-colors">
+                <h3 className="font-black text-black text-base mb-1 hover:underline decoration-2 line-clamp-1 cursor-pointer transition-all">
                   {product.name}
                 </h3>
               </Link>
@@ -107,18 +107,18 @@ export default function FeaturedProductsClient({ products }: { products: Product
                           <Star
                             key={i}
                             size={14}
-                            className={full ? "fill-amber-400 text-amber-400" : half ? "fill-amber-300 text-amber-300" : "text-gray-200"}
+                            className={full ? "fill-amber-400 text-amber-400 stroke-black stroke-[1.5]" : half ? "fill-amber-300 text-amber-300 stroke-black stroke-[1.5]" : "text-gray-200"}
                             style={half ? { clipPath: "inset(0 50% 0 0)" } : {}}
                           />
                         )
                       })}
-                      <span className="text-xs text-gray-500 font-semibold ml-1.5">{avg.toFixed(1)} ({stats[product.id]?.count ?? 0})</span>
+                      <span className="text-xs text-black font-black ml-1.5">{avg.toFixed(1)} ({stats[product.id]?.count ?? 0})</span>
                     </>
                   )
                 })()}
               </div>
               <div className="flex justify-between items-center gap-2">
-                <span className="text-lg font-black text-blue-600">{formatIDR(product.price)}</span>
+                <span className="text-lg font-black text-black bg-yellow-200 border-2 border-black px-2 py-0.5 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">{formatIDR(product.price)}</span>
                 {/* Cart Button Only */}
                 {(() => {
                   const outOfStock = !product.inStock || Number(product.stock ?? 0) <= 0
@@ -126,10 +126,9 @@ export default function FeaturedProductsClient({ products }: { products: Product
                     return (
                       <button
                         disabled
-                        className="px-2.5 py-1.5 text-xs rounded-full font-semibold inline-flex items-center gap-1 border border-red-200 text-red-500 bg-red-50/50 cursor-not-allowed"
+                        className="px-2.5 py-1.5 text-xs border-2 border-black font-black text-black bg-stone-200 cursor-not-allowed uppercase"
                         title="Out of stock"
                       >
-                        <ShoppingCart size={12} />
                         Sold Out
                       </button>
                     )
@@ -137,16 +136,18 @@ export default function FeaturedProductsClient({ products }: { products: Product
                   return (
                     <button
                       onClick={() => handleAddToCart(product)}
-                      className={`p-2 rounded-full font-semibold transition-all active:scale-90 inline-flex items-center gap-1 ${
+                      className={`p-2 border-2 border-black rounded-none transition-all duration-100 inline-flex items-center gap-1 ${
                         maxStockItem === product.id
-                          ? "bg-orange-500 text-white"
+                          ? "bg-orange-300 text-black shadow-none translate-x-[2px] translate-y-[2px]"
                           : addedItem === product.id
-                            ? "bg-green-500 text-white"
-                            : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow"
+                            ? "bg-green-300 text-black shadow-none translate-x-[2px] translate-y-[2px]"
+                            : "bg-blue-300 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
                       }`}
                     >
-                      <ShoppingCart size={16} />
-                      {maxStockItem === product.id ? "Max!" : addedItem === product.id ? "In!" : ""}
+                      <ShoppingCart size={16} className="stroke-[2.5]" />
+                      <span className="text-xs font-black uppercase">
+                        {maxStockItem === product.id ? "Max!" : addedItem === product.id ? "In!" : "Buy"}
+                      </span>
                     </button>
                   )
                 })()}
