@@ -179,7 +179,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
           const qty = Math.min(i.quantity, max)
           return qty > 0 ? { ...i, name: p.name, price: p.price, image: p.image, quantity: qty } : null
         }).filter(Boolean) as CartItem[]
-        setCartItems(updated)
+        
+        // Prevent infinite render loop by checking if cartItems actually changed
+        const isChanged = updated.length !== cartItems.length || updated.some((item, idx) => {
+          const old = cartItems[idx]
+          return !old ||
+            old.id !== item.id ||
+            old.name !== item.name ||
+            old.price !== item.price ||
+            old.image !== item.image ||
+            old.quantity !== item.quantity
+        })
+        
+        if (isChanged) {
+          setCartItems(updated)
+        }
       } catch (e) {
         // ...existing code...
       }

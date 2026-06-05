@@ -814,6 +814,7 @@ function InvoicePDF({ data }: { data: InvoiceData }) {
           {data.paymentProofBase64 ? (
             <View style={{ marginTop: 10 }}>
               <Text style={styles.sectionTitle}>PAYMENT PROOF</Text>
+                  {/* eslint-disable-next-line jsx-a11y/alt-text */}
                   <Image
                     src={data.paymentProofBase64}
                     style={{ width: "100%", maxHeight: 140, objectFit: "contain", marginTop: 8 }}

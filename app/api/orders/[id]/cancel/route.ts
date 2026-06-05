@@ -64,44 +64,17 @@ export async function POST(
   }
 
   try {
-    // 1. Update order status to cancelled
-    // Use the same client (service or route client) to perform updates
-    const { error: updateErr } = await client
-      .from("orders")
-      .update({ status: "cancelled" })
-      .eq("id", id)
+    // Call database RPC to cancel order and restore stock in a transaction
+    const { error: rpcErr } = await client.rpc("cancel_order_and_restore_stock", {
+      p_order_id: id,
+    })
 
-    if (updateErr) {
-      console.error("❌ Failed to cancel order:", updateErr)
+    if (rpcErr) {
+      console.error("❌ Failed to cancel order via RPC:", rpcErr)
       return NextResponse.json(
-        { success: false, error: updateErr.message },
+        { success: false, error: rpcErr.message },
         { status: 500 }
       )
-    }
-
-    // 2. Get order items to return stock
-    const { data: items } = await client
-      .from("order_items")
-      .select("product_id, quantity")
-      .eq("order_id", id)
-
-    // 3. Return stock for each item
-    if (items && items.length > 0) {
-      for (const item of items) {
-        const { data: product } = await client
-          .from("products")
-          .select("stock")
-          .eq("id", item.product_id)
-          .single()
-
-        if (product) {
-          const newStock = Number(product.stock || 0) + item.quantity
-          await client
-            .from("products")
-            .update({ stock: newStock })
-            .eq("id", item.product_id)
-        }
-      }
     }
 
     return NextResponse.json({ 

@@ -185,51 +185,51 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
             <p className="text-lg text-black font-bold">Loading products…</p>
           </div>
         ) : filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
-                className="bg-white border-2 border-gray-300 rounded-xl overflow-hidden hover:shadow-lg transition-all hover:scale-105 relative"
+                className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative group"
               >
-                <Link href={`/product/${product.id}`}>
+                {/* Wishlist Button - pojok kanan atas */}
+                {(() => {
+                  const isWishlisted = wishlistItems.some((w) => w.id === product.id)
+                  return (
+                    <button
+                      aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                      onClick={() => {
+                        if (!user) {
+                          router.push("/login")
+                          return
+                        }
+                        if (isWishlisted) removeFromWishlist(product.id)
+                        else addToWishlist({
+                          id: product.id,
+                          name: product.name,
+                          price: product.price,
+                          image: product.image,
+                        })
+                      }}
+                      className={`absolute top-3 right-3 z-10 p-2 rounded-full shadow-sm transition-all duration-300 ${isWishlisted ? "bg-rose-50 border border-rose-100" : "bg-white/80 hover:bg-rose-50 backdrop-blur-sm hover:scale-115"}`}
+                    >
+                      <Heart size={18} className={isWishlisted ? "fill-rose-500 text-rose-500" : "text-gray-400 hover:text-rose-500 transition-colors"} />
+                    </button>
+                  )
+                })()}
+                <Link href={`/product/${product.id}`} className="block overflow-hidden bg-gray-50">
                   <img
                     src={product.image || "/placeholder.svg"}
                     alt={product.name}
-                    className="w-full h-48 object-cover cursor-pointer"
+                    className="w-full h-48 object-cover cursor-pointer group-hover:scale-105 transition-transform duration-500"
                   />
                 </Link>
-                <div className="p-4">
-                  {/* Wishlist Button - pojok kanan atas */}
-                  {(() => {
-                    const isWishlisted = wishlistItems.some((w) => w.id === product.id)
-                    return (
-                      <button
-                        aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                        onClick={() => {
-                          if (!user) {
-                            router.push("/login")
-                            return
-                          }
-                          if (isWishlisted) removeFromWishlist(product.id)
-                          else addToWishlist({
-                            id: product.id,
-                            name: product.name,
-                            price: product.price,
-                            image: product.image,
-                          })
-                        }}
-                        className={`absolute top-3 right-3 z-10 p-2 rounded-full shadow transition ${isWishlisted ? "bg-pink-100" : "bg-gray-100 hover:bg-pink-200"}`}
-                      >
-                        <Heart size={22} className={isWishlisted ? "fill-green-600 text-green-600" : "text-gray-400"} />
-                      </button>
-                    )
-                  })()}
+                <div className="p-5">
                   <Link href={`/product/${product.id}`}>
-                    <h3 className="font-bold text-lg mb-2 text-black hover:text-blue-600 cursor-pointer">
+                    <h3 className="font-bold text-gray-900 text-base mb-1 hover:text-blue-600 line-clamp-1 cursor-pointer transition-colors">
                       {product.name}
                     </h3>
                   </Link>
-                  <div className="flex items-center gap-1 mb-3">
+                  <div className="flex items-center gap-1 mb-4">
                     {(() => {
                       const avg = stats[product.id]?.average ?? 0
                       return (
@@ -240,19 +240,19 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
                             return (
                               <Star
                                 key={i}
-                                size={16}
-                                className={full ? "fill-red-600 text-red-600" : half ? "fill-red-400 text-red-400" : "text-gray-300"}
+                                size={14}
+                                className={full ? "fill-amber-400 text-amber-400" : half ? "fill-amber-300 text-amber-300" : "text-gray-200"}
                                 style={half ? { clipPath: "inset(0 50% 0 0)" } : {}}
                               />
                             )
                           })}
-                          <span className="text-xs text-black font-bold ml-1">{avg.toFixed(1)} · {stats[product.id]?.count ?? 0}</span>
+                          <span className="text-xs text-gray-500 font-semibold ml-1.5">{avg.toFixed(1)} ({stats[product.id]?.count ?? 0})</span>
                         </>
                       )
                     })()}
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold text-blue-600">{formatIDR(product.price)}</span>
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-lg font-black text-blue-600">{formatIDR(product.price)}</span>
                     {/* Cart Button Only */}
                     {(() => {
                       const outOfStock = !product.inStock || Number(product.stock ?? 0) <= 0
@@ -260,27 +260,27 @@ export default function CatalogClient({ initialProducts, initialSearch }: Props)
                         return (
                           <button
                             disabled
-                            className="px-2 py-1 text-xs rounded-md font-semibold inline-flex items-center gap-1 border border-red-600 text-red-600 bg-white cursor-not-allowed"
+                            className="px-2.5 py-1.5 text-xs rounded-full font-semibold inline-flex items-center gap-1 border border-red-200 text-red-500 bg-red-50/50 cursor-not-allowed"
                             title="Out of stock"
                           >
-                            <ShoppingCart size={14} />
-                            Out of stock
+                            <ShoppingCart size={12} />
+                            Sold Out
                           </button>
                         )
                       }
                       return (
                         <button
                           onClick={() => handleAddToCart(product)}
-                          className={`p-2 rounded-lg font-semibold transition inline-flex items-center gap-1 ${
+                          className={`p-2 rounded-full font-semibold transition-all active:scale-90 inline-flex items-center gap-1 ${
                             maxStockItem === product.id
-                              ? "bg-orange-600 text-white"
+                              ? "bg-orange-500 text-white"
                               : addedItem === product.id
-                                ? "bg-green-600 text-white"
-                                : "bg-blue-600 text-white hover:bg-blue-700"
+                                ? "bg-green-500 text-white"
+                                : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow"
                           }`}
                         >
-                          <ShoppingCart size={18} />
-                          {maxStockItem === product.id ? "Max stock!" : addedItem === product.id ? "Added!" : ""}
+                          <ShoppingCart size={16} />
+                          {maxStockItem === product.id ? "Max!" : addedItem === product.id ? "In!" : ""}
                         </button>
                       )
                     })()}

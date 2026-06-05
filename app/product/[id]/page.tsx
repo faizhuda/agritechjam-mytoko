@@ -29,24 +29,24 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [loading, setLoading] = useState(true)
   const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlist()
 
-  const loadData = async () => {
-    const [p, all, rs] = await Promise.all([
-      fetchProductById(productId),
-      fetchProducts(),
-      fetchReviewsByProductId(productId),
-    ])
-    console.log('🔍 Product Page - Reviews loaded:', rs)
-    console.log('🔍 Product Page - Reviews count:', rs.length)
-    setProduct(p)
-    setReviews(rs)
-    if (p) {
-      setRelatedProducts(all.filter((x) => x.category === p.category && x.id !== p.id).slice(0, 4))
-    }
-    setLoading(false)
-  }
-
   useEffect(() => {
     let mounted = true
+    const loadData = async () => {
+      const [p, all, rs] = await Promise.all([
+        fetchProductById(productId),
+        fetchProducts(),
+        fetchReviewsByProductId(productId),
+      ])
+      console.log('🔍 Product Page - Reviews loaded:', rs)
+      console.log('🔍 Product Page - Reviews count:', rs.length)
+      if (!mounted) return
+      setProduct(p)
+      setReviews(rs)
+      if (p) {
+        setRelatedProducts(all.filter((x) => x.category === p.category && x.id !== p.id).slice(0, 4))
+      }
+      setLoading(false)
+    }
     loadData()
     return () => {
       mounted = false
@@ -200,7 +200,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                       <Star
                         key={i}
                         size={20}
-                        className={full ? "fill-red-600 text-red-600" : half ? "fill-red-400 text-red-400" : "text-gray-300"}
+                        className={full ? "fill-amber-400 text-amber-400" : half ? "fill-amber-300 text-amber-300" : "text-gray-200"}
                         style={half ? { clipPath: "inset(0 50% 0 0)" } : {}}
                       />
                     )
@@ -291,13 +291,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     })
                   }
                 }}
-                className={`p-3 rounded-lg border-2 transition ${
+                className={`p-3 rounded-lg border transition ${
                   isFavorite
-                    ? "bg-green-600 text-white border-green-600"
-                    : "border-gray-300 text-black hover:border-green-600"
+                    ? "bg-rose-50 text-rose-500 border-rose-200 shadow-sm"
+                    : "border-gray-200 text-gray-400 hover:text-rose-500 hover:border-rose-200 bg-white"
                 }`}
               >
-                <Heart size={20} className={isFavorite ? "text-white" : "text-current"} fill={isFavorite ? "currentColor" : "none"} />
+                <Heart size={20} className="transition-transform active:scale-95" fill={isFavorite ? "currentColor" : "none"} />
               </button>
             </div>
           </div>
@@ -404,22 +404,24 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <Link
                   key={relatedProduct.id}
                   href={`/product/${relatedProduct.id}`}
-                  className="bg-white border-2 border-gray-300 rounded-xl overflow-hidden hover:shadow-lg transition-all hover:scale-105"
+                  className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
                 >
-                  <img
-                    src={relatedProduct.image || "/placeholder.svg"}
-                    alt={relatedProduct.name}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="p-4">
-                    <h3 className="font-bold text-black mb-2 line-clamp-2">{relatedProduct.name}</h3>
+                  <div className="overflow-hidden bg-gray-50">
+                    <img
+                      src={relatedProduct.image || "/placeholder.svg"}
+                      alt={relatedProduct.name}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-bold text-gray-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors text-base">{relatedProduct.name}</h3>
                     <div className="flex items-center gap-1 mb-3">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
                           size={14}
                           className={`${
-                            i < Math.floor(relatedProduct.rating) ? "fill-red-600 text-red-600" : "text-gray-300"
+                            i < Math.floor(relatedProduct.rating) ? "fill-amber-400 text-amber-400" : "text-gray-200"
                           }`}
                         />
                       ))}

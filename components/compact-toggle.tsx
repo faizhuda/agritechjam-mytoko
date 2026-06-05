@@ -9,6 +9,7 @@ export default function CompactToggle() {
     try {
       const saved = localStorage.getItem("ui-density")
       const isCompact = saved === "compact"
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCompact(isCompact)
       if (isCompact) document.documentElement.classList.add("compact")
     } catch (e) {

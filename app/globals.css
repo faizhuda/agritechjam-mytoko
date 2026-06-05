@@ -216,32 +216,82 @@ html {
 */
 
 /* Reduce radius inside site content for a slightly tighter look */
-.site-content { --radius: 0.5rem; }
+.compact .site-content { --radius: 0.5rem; }
 
 /* Targeted compact overrides for common large utilities used in the app.
    We use more specific selectors and !important to override Tailwind utility classes
    so we don't have to change many components. These are conservative adjustments.
 */
-.site-content .h-96 { height: 18rem !important; } /* hero: h-72 */
-.site-content .w-96 { width: 20rem !important; max-width: 20rem !important; } /* notifications: w-80 */
-.site-content .p-8 { padding: 1.5rem !important; } /* modal/container paddings */
-.site-content .px-4 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
-.site-content .py-3 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
-.site-content .px-3 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
-.site-content .text-5xl { font-size: 1.75rem !important; line-height: 2rem !important; }
-.site-content .text-4xl { font-size: 1.5rem !important; line-height: 1.75rem !important; }
-.site-content .text-3xl { font-size: 1.25rem !important; line-height: 1.5rem !important; }
-.site-content .text-2xl { font-size: 1.125rem !important; line-height: 1.4rem !important; }
-.site-content .h-20 { height: 4.5rem !important; } /* slightly reduce large buttons/hero controls */
-.site-content .h-12 { height: 2.5rem !important; }
+.compact .site-content .h-96 { height: 18rem !important; } /* hero: h-72 */
+.compact .site-content .w-96 { width: 20rem !important; max-width: 20rem !important; } /* notifications: w-80 */
+.compact .site-content .p-8 { padding: 1.5rem !important; } /* modal/container paddings */
+.compact .site-content .px-4 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+.compact .site-content .py-3 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+.compact .site-content .px-3 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+.compact .site-content .text-5xl { font-size: 1.75rem !important; line-height: 2rem !important; }
+.compact .site-content .text-4xl { font-size: 1.5rem !important; line-height: 1.75rem !important; }
+.compact .site-content .text-3xl { font-size: 1.25rem !important; line-height: 1.5rem !important; }
+.compact .site-content .text-2xl { font-size: 1.125rem !important; line-height: 1.4rem !important; }
+.compact .site-content .h-20 { height: 4.5rem !important; } /* slightly reduce large buttons/hero controls */
+.compact .site-content .h-12 { height: 2.5rem !important; }
 
 /* Reduce gaps used in some components */
-.site-content .gap-4 { gap: 0.5rem !important; }
-.site-content .gap-2 { gap: 0.25rem !important; }
-.site-content [class*="gap-2.5"] { gap: 0.375rem !important; }
+.compact .site-content .gap-4 { gap: 0.5rem !important; }
+.compact .site-content .gap-2 { gap: 0.25rem !important; }
+.compact .site-content [class*="gap-2.5"] { gap: 0.375rem !important; }
 /* Reduce icon/text sizes inside the WhatsApp float so it doesn't look oversized */
-.site-content .whatsapp-float, .site-content a[href*="wa.me"] {
+.compact .site-content .whatsapp-float, .compact .site-content a[href*="wa.me"] {
   padding-left: 0.5rem !important;
   padding-right: 0.5rem !important;
+}
+
+/* Custom premium animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.6);
+  }
+  70% {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 10px rgba(22, 163, 74, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.whatsapp-pulse {
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Glassmorphism theme helper */
+.glass-header {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.dark .glass-header {
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(63, 63, 70, 0.5);
 }
 

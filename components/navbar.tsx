@@ -66,42 +66,23 @@ export default function Navbar() {
   const toggleMenu = () => setIsOpen(!isOpen)
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b-2 border-gray-300 shadow-md">
+    <nav className="sticky top-0 z-50 glass-header shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="shrink-0">
-            <span className="text-2xl font-bold text-blue-600">MyToko</span>
+          <Link href="/" className="shrink-0 flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+              <span className="text-white font-black text-lg">M</span>
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">MyToko</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link href="/catalog" className="text-black hover:text-blue-600 transition font-bold">
+          <div className="hidden md:flex items-center gap-6">
+            <Link href="/catalog" className="text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors">
               Catalog
             </Link>
-            <button
-              className="flex items-center gap-2 text-black hover:text-pink-600 transition font-bold"
-              onClick={() => {
-                if (!user) router.push('/login')
-                else router.push('/wishlist')
-              }}
-            >
-              <Heart size={20} className="text-pink-500" />
-            </button>
-            <button
-              className="flex items-center gap-2 text-black hover:text-blue-600 transition font-bold relative"
-              onClick={() => {
-                if (!user) router.push('/login')
-                else router.push('/cart')
-              }}
-            >
-              <ShoppingCart size={20} />
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </button>
+            
             <Suspense fallback={null}>
               <form
                 className="relative"
@@ -117,38 +98,71 @@ export default function Navbar() {
                   placeholder="Search products..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="px-4 py-2 pr-9 border-2 border-gray-300 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-56 px-4 py-1.5 pr-9 border border-gray-200 rounded-full bg-gray-50/70 text-sm text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white focus:w-64 transition-all duration-300 font-medium"
                 />
                 <button
                   type="submit"
                   aria-label="Search"
-                  className="absolute right-2 top-2.5 text-black hover:text-blue-600 cursor-pointer"
+                  className="absolute right-3 top-2 text-gray-400 hover:text-blue-600 cursor-pointer transition-colors"
                 >
-                  <Search size={18} />
+                  <Search size={16} />
                 </button>
               </form>
             </Suspense>
+
+            <button
+              className="flex items-center gap-2 p-2 text-gray-500 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all duration-200"
+              onClick={() => {
+                if (!user) router.push('/login')
+                else router.push('/wishlist')
+              }}
+              title="Wishlist"
+            >
+              <Heart size={20} className="transition-transform active:scale-90" />
+            </button>
+
+            <button
+              className="flex items-center gap-2 p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-200 relative"
+              onClick={() => {
+                if (!user) router.push('/login')
+                else router.push('/cart')
+              }}
+              title="Cart"
+            >
+              <ShoppingCart size={20} className="transition-transform active:scale-90" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center shadow-md animate-pulse">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+
             {isAdmin && (
-              <Link href="/admin" className="text-black hover:text-blue-600 transition font-bold">
+              <Link href="/admin" className="text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors">
                 Admin
               </Link>
             )}
+
             <a
               href="https://wa.me/6287787128257"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-black hover:text-blue-600 transition"
+              className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-all duration-200"
+              title="Chat Support"
             >
               <MessageCircle size={20} />
             </a>
+
+            <div className="h-4 w-[1px] bg-gray-200" />
+
             {user ? (
               <div className="flex items-center gap-4">
-                <Link href="/dashboard" className="text-black hover:text-blue-600 transition font-bold">
+                <Link href="/dashboard" className="text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors">
                   {displayName}
                 </Link>
                 <button
                   onClick={() => signOut()}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-bold"
+                  className="px-4 py-1.5 text-sm bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors font-semibold shadow-sm"
                 >
                   Logout
                 </button>
@@ -156,7 +170,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold"
+                className="px-5 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors font-semibold shadow-md shadow-blue-500/10"
               >
                 Login
               </Link>

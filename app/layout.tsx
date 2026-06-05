@@ -6,6 +6,7 @@ import "./globals.css"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import WhatsAppFloat from "@/components/whatsapp-float"
+import CompactToggle from "@/components/compact-toggle"
 import { CartProvider } from "@/lib/cart-context"
 import { WishlistProvider } from "@/lib/wishlist-context"
 import { Toaster } from "@/components/ui/toaster"
@@ -33,6 +34,7 @@ export default function RootLayout({
             <main className="flex-1 site-content">{children}</main>
             <Footer />
             <WhatsAppFloat />
+            <CompactToggle />
             <Toaster />
           </WishlistProvider>
         </CartProvider>
