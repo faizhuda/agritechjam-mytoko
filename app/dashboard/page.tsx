@@ -38,12 +38,12 @@ export default function UserDashboard() {
   // Profile editing moved to /profile page
 
   const statusColors: Record<string, string> = {
-    completed: "bg-green-100 text-green-800",
-    pending: "bg-yellow-100 text-yellow-800",
-    shipped: "bg-blue-100 text-blue-800",
-    delivered: "bg-green-100 text-green-800",
-    paid: "bg-green-100 text-green-800",
-    cancelled: "bg-red-100 text-red-800",
+    completed: "bg-green-200 text-black border-2 border-black font-black uppercase text-xs rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-3 py-1.5",
+    pending: "bg-yellow-200 text-black border-2 border-black font-black uppercase text-xs rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-3 py-1.5",
+    shipped: "bg-cyan-200 text-black border-2 border-black font-black uppercase text-xs rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-3 py-1.5",
+    delivered: "bg-green-200 text-black border-2 border-black font-black uppercase text-xs rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-3 py-1.5",
+    paid: "bg-green-200 text-black border-2 border-black font-black uppercase text-xs rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-3 py-1.5",
+    cancelled: "bg-red-200 text-black border-2 border-black font-black uppercase text-xs rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-3 py-1.5",
   }
 
   // Function to reload reviews to write (simplified - per product not per order)
@@ -270,27 +270,31 @@ export default function UserDashboard() {
   })()
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-stone-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-4xl font-bold text-black">Hello, {firstNameOnly}</h1>
+          <h1 className="text-4xl font-black text-black uppercase tracking-tight">Hello, {firstNameOnly}</h1>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-4 mb-8 flex-wrap md:flex-nowrap">
           <button
             onClick={() => setActiveTab("overview")}
-            className={`px-6 py-3 rounded-lg font-bold transition ${
-              activeTab === "overview" ? "bg-blue-600 text-white" : "bg-gray-100 text-black hover:bg-gray-200"
+            className={`px-6 py-3 border-2 border-black rounded-none font-black uppercase transition-all ${
+              activeTab === "overview"
+                ? "bg-yellow-200 text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-[1px] translate-y-[1px]"
+                : "bg-white text-black hover:bg-stone-50 hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
             }`}
           >
             Overview
           </button>
           <button
             onClick={() => setActiveTab("orders")}
-            className={`px-6 py-3 rounded-lg font-bold transition ${
-              activeTab === "orders" ? "bg-blue-600 text-white" : "bg-gray-100 text-black hover:bg-gray-200"
+            className={`px-6 py-3 border-2 border-black rounded-none font-black uppercase transition-all ${
+              activeTab === "orders"
+                ? "bg-yellow-200 text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-[1px] translate-y-[1px]"
+                : "bg-white text-black hover:bg-stone-50 hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
             }`}
           >
             Order History
@@ -302,34 +306,34 @@ export default function UserDashboard() {
           <div>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-12">
               {/* User Info Card */}
-              <div className="bg-white border-2 border-gray-300 rounded-xl p-6 shadow-lg">
+              <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
                 <div className="flex flex-col items-center mb-6 text-center">
-                  <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
-                    <User size={36} className="text-white" />
+                  <div className="w-20 h-20 bg-blue-300 border-2 border-black rounded-none flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <User size={36} className="text-black stroke-[2.5]" />
                   </div>
-                  <h2 className="mt-3 font-bold text-lg text-black wrap-break-word">{profile?.full_name ?? authEmail}</h2>
-                  <p className="text-sm text-black font-semibold break-all">{authEmail}</p>
-                  <p className="text-sm text-black font-semibold mt-2">Member since {memberSince}</p>
+                  <h2 className="mt-4 font-black text-lg text-black wrap-break-word uppercase tracking-tight">{profile?.full_name ?? authEmail}</h2>
+                  <p className="text-sm text-black font-bold break-all mt-1">{authEmail}</p>
+                  <p className="text-xs text-black font-black uppercase mt-3 bg-stone-100 border border-black px-2 py-1">Member since {memberSince}</p>
                 </div>
                 <Link
                   href="/profile"
-                  className="mt-4 w-full py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition block text-center"
+                  className="mt-4 w-full py-2 bg-blue-300 text-black border-2 border-black font-black uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all block text-center"
                 >
                   Edit Profile
                 </Link>
                 <Link
                   href="/wishlist"
-                  className="mt-3 w-full py-2 border-2 border-pink-500 text-pink-600 rounded-lg font-bold hover:bg-pink-50 transition flex items-center justify-center gap-2"
+                  className="mt-3 w-full py-2 bg-pink-200 text-black border-2 border-black font-black uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all flex items-center justify-center gap-2"
                 >
-                  <Heart size={16} /> Wishlist
+                  <Heart size={16} className="stroke-[2.5]" /> Wishlist
                 </Link>
                 {profile?.is_admin ? (
                   <Link
                     href="/admin"
-                    className="mt-3 w-full py-2 border-2 border-green-600 text-green-700 rounded-lg font-bold hover:bg-green-50 transition flex items-center justify-center gap-2"
+                    className="mt-3 w-full py-2 bg-green-200 text-black border-2 border-black font-black uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all flex items-center justify-center gap-2"
                     title="Admin Panel"
                   >
-                    <ShieldCheck size={16} /> Admin Panel
+                    <ShieldCheck size={16} className="stroke-[2.5]" /> Admin Panel
                   </Link>
                 ) : null}
               </div>
@@ -337,24 +341,24 @@ export default function UserDashboard() {
               {/* Overview actionable cards (span remaining columns) */}
               <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Active Orders */}
-                <div className="bg-white border-2 border-gray-300 rounded-xl p-6 shadow-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-black text-sm">Active Orders</h3>
-                    <Package size={20} className="text-orange-600" />
+                <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
+                  <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-2">
+                    <h3 className="font-black text-black text-sm uppercase tracking-wider">Active Orders</h3>
+                    <Package size={20} className="text-black stroke-[2.5]" />
                   </div>
                   {activeOrders.length === 0 ? (
-                    <p className="text-sm text-black font-semibold">No active orders. </p>
+                    <p className="text-sm text-black font-bold">No active orders. </p>
                   ) : (
                     <div className="space-y-3">
                       {activeOrders.map((o) => (
-                        <div key={o.id} className="flex items-center justify-between">
+                        <div key={o.id} className="flex items-center justify-between border-b border-stone-200 pb-2 last:border-b-0 last:pb-0">
                           <div>
-                            <p className="font-bold text-black text-sm">{o.orderNumber ?? o.id}</p>
-                            <p className="text-xs text-black font-semibold capitalize">{o.status}</p>
+                            <p className="font-black text-black text-sm">{o.orderNumber ?? o.id}</p>
+                            <p className="text-xs text-black font-bold uppercase mt-0.5">{o.status}</p>
                           </div>
                           <Link
                             href={`/invoice?orderId=${o.id}`}
-                            className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700"
+                            className="px-3 py-1 bg-cyan-200 border-2 border-black text-black text-xs font-black uppercase hover:bg-cyan-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
                             title="Track order"
                           >
                             Track
@@ -366,17 +370,17 @@ export default function UserDashboard() {
                 </div>
 
                 {/* Reviews to write */}
-                <div className="bg-white border-2 border-gray-300 rounded-xl p-6 shadow-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-black text-sm">Reviews to write</h3>
+                <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
+                  <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-2">
+                    <h3 className="font-black text-black text-sm uppercase tracking-wider">Reviews to write</h3>
                   </div>
                   {reviewToWrite.length === 0 ? (
-                    <p className="text-sm text-black font-semibold">No pending reviews.</p>
+                    <p className="text-sm text-black font-bold">No pending reviews.</p>
                   ) : (
                     <div className="space-y-3">
                       {reviewToWrite.map((it, idx) => (
-                        <div key={`${it.orderId}-${idx}`} className="flex items-center justify-between">
-                          <span className="text-sm text-black font-semibold truncate mr-3">{it.productName}</span>
+                        <div key={`${it.orderId}-${idx}`} className="flex items-center justify-between border-b border-stone-200 pb-2 last:border-b-0 last:pb-0">
+                          <span className="text-sm text-black font-bold truncate mr-3">{it.productName}</span>
                           <button
                             onClick={async () => {
                               console.log('🎯 Clicked Rate now for:', {
@@ -412,7 +416,7 @@ export default function UserDashboard() {
                               setRatingTarget({ orderId: '', productId: it.productId, productName: it.productName })
                               setRatingOpen(true)
                             }}
-                            className="px-3 py-1 border-2 border-yellow-600 text-yellow-700 rounded-lg text-sm font-bold hover:bg-yellow-50"
+                            className="px-3 py-1 bg-yellow-200 border-2 border-black text-black text-xs font-black uppercase hover:bg-yellow-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
                           >
                             Rate now
                           </button>
@@ -423,20 +427,25 @@ export default function UserDashboard() {
                 </div>
 
                 {/* Wishlist alerts */}
-                <div className="bg-white border-2 border-gray-300 rounded-xl p-6 shadow-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-black text-sm">Wishlist alerts</h3>
+                <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
+                  <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-2">
+                    <h3 className="font-black text-black text-sm uppercase tracking-wider">Wishlist alerts</h3>
                   </div>
                   {wishlistAlerts.length === 0 ? (
-                    <p className="text-sm text-black font-semibold">No in-stock alerts from your wishlist.</p>
+                    <p className="text-sm text-black font-bold">No in-stock alerts from your wishlist.</p>
                   ) : (
                     <div className="space-y-3">
                       {wishlistAlerts.map((p) => (
-                        <div key={p.id} className="flex items-center justify-between">
-                          <span className="text-sm text-black font-semibold truncate mr-3">{p.name}</span>
+                        <div key={p.id} className="flex items-center justify-between border-b border-stone-200 pb-2 last:border-b-0 last:pb-0">
+                          <span className="text-sm text-black font-bold truncate mr-3">{p.name}</span>
                           <div className="flex items-center gap-3">
-                            <span className="text-sm font-bold text-blue-600">{formatIDR(p.price)}</span>
-                            <Link href={`/product/${p.id}`} className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700">View</Link>
+                            <span className="text-sm font-black text-black bg-yellow-200 border border-black px-1.5 py-0.5">{formatIDR(p.price)}</span>
+                            <Link
+                              href={`/product/${p.id}`}
+                              className="px-3 py-1 bg-green-200 border-2 border-black text-black text-xs font-black uppercase hover:bg-green-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
+                            >
+                              View
+                            </Link>
                           </div>
                         </div>
                       ))}
@@ -445,18 +454,18 @@ export default function UserDashboard() {
                 </div>
 
                 {/* Recommended for you */}
-                <div className="bg-white border-2 border-gray-300 rounded-xl p-6 shadow-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-black text-sm">Recommended for you</h3>
+                <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
+                  <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-2">
+                    <h3 className="font-black text-black text-sm uppercase tracking-wider">Recommended for you</h3>
                   </div>
                   {recommendations.length === 0 ? (
-                    <p className="text-sm text-black font-semibold">Add some items to your wishlist or place an order to get personalized picks.</p>
+                    <p className="text-sm text-black font-bold">Add some items to your wishlist or place an order to get personalized picks.</p>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {recommendations.slice(0, 4).map((p) => (
-                        <Link key={p.id} href={`/product/${p.id}`} className="border-2 border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition">
-                          <p className="text-sm font-bold text-black truncate">{p.name}</p>
-                          <p className="text-sm font-bold text-blue-600">{formatIDR(p.price)}</p>
+                        <Link key={p.id} href={`/product/${p.id}`} className="border-2 border-black rounded-none p-3 bg-white hover:bg-stone-50 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] block">
+                          <p className="text-xs font-black text-black truncate uppercase tracking-tight">{p.name}</p>
+                          <p className="text-xs font-black text-blue-600 mt-1">{formatIDR(p.price)}</p>
                         </Link>
                       ))}
                     </div>
@@ -464,16 +473,21 @@ export default function UserDashboard() {
                 </div>
 
                 {/* Profile completion */}
-                <div className="bg-white border-2 border-gray-300 rounded-xl p-6 shadow-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-black text-sm">Profile completion</h3>
+                <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
+                  <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-2">
+                    <h3 className="font-black text-black text-sm uppercase tracking-wider">Profile completion</h3>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2 mb-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${profileCompleted || 0}%` }} />
+                  <div className="w-full bg-stone-100 border-2 border-black rounded-none h-4 mb-3 overflow-hidden">
+                    <div className="bg-blue-300 h-full border-r-2 border-black transition-all" style={{ width: `${profileCompleted || 0}%` }} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-black font-semibold">{profileCompleted || 0}% complete</span>
-                    <Link href="/profile" className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">Complete</Link>
+                    <span className="text-xs text-black font-black uppercase">{profileCompleted || 0}% complete</span>
+                    <Link
+                      href="/profile"
+                      className="px-3 py-1 bg-blue-300 border-2 border-black text-black text-xs font-black uppercase hover:bg-blue-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
+                    >
+                      Complete
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -488,50 +502,42 @@ export default function UserDashboard() {
         {/* Orders Tab */}
         {activeTab === "orders" && (
           <div>
-            <h2 className="text-2xl font-bold text-black mb-6">Order History</h2>
-            <div className="space-y-4">
+            <h2 className="text-2xl font-black text-black mb-6 uppercase tracking-tight">Order History</h2>
+            <div className="space-y-6">
               {orders.map((order: OrderRow) => (
                 <div
                   key={order.id}
-                  className="border-2 border-gray-300 rounded-lg p-4 hover:shadow-md transition bg-white"
+                  className="border-4 border-black rounded-none p-6 bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
                 >
                   {/* Mobile Layout */}
                   <div className="md:hidden mb-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1 min-w-0 pr-2">
-                        <h3 className="font-bold text-black text-base truncate">{order.orderNumber ?? order.id}</h3>
-                        <p className="text-xs text-black font-semibold">{new Date(order.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</p>
+                        <h3 className="font-black text-black text-base truncate uppercase tracking-tight">{order.orderNumber ?? order.id}</h3>
+                        <p className="text-xs text-stone-600 font-bold mt-1">{new Date(order.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</p>
                       </div>
-                      <span
-                        className={`px-3 py-1 rounded-full font-bold text-xs capitalize whitespace-nowrap shrink-0 ${
-                          statusColors[(order.status || "").toLowerCase()] || "bg-gray-100 text-gray-800"
-                        }`}
-                      >
+                      <span className={statusColors[(order.status || "").toLowerCase()] || "bg-stone-200 text-black border-2 border-black font-black uppercase text-xs rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-3 py-1.5"}>
                         {order.status}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-black font-semibold">Total</p>
-                      <p className="font-bold text-black text-base">{formatIDR(order.total)}</p>
+                    <div className="flex items-center justify-between border-t border-stone-200 pt-3 mt-3">
+                      <p className="text-xs text-stone-600 font-bold uppercase">Total</p>
+                      <p className="font-black text-black text-lg">{formatIDR(order.total)}</p>
                     </div>
                   </div>
 
                   {/* Desktop Layout */}
                   <div className="hidden md:flex items-center justify-between mb-4 gap-4">
                     <div className="flex-1">
-                      <h3 className="font-bold text-black text-lg">{order.orderNumber ?? order.id}</h3>
-                      <p className="text-sm text-black font-semibold">{new Date(order.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</p>
+                      <h3 className="font-black text-black text-lg uppercase tracking-tight">{order.orderNumber ?? order.id}</h3>
+                      <p className="text-xs text-stone-600 font-bold mt-1">{new Date(order.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</p>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-6">
                       <div className="text-right w-[150px]">
-                        <p className="text-sm text-black font-semibold">Total</p>
-                        <p className="font-bold text-black text-lg">{formatIDR(order.total)}</p>
+                        <p className="text-xs text-stone-600 font-bold uppercase">Total</p>
+                        <p className="font-black text-black text-lg mt-0.5">{formatIDR(order.total)}</p>
                       </div>
-                      <span
-                        className={`px-4 py-2 rounded-full font-bold text-sm capitalize w-[100px] text-center ${
-                          statusColors[(order.status || "").toLowerCase()] || "bg-gray-100 text-gray-800"
-                        }`}
-                      >
+                      <span className={statusColors[(order.status || "").toLowerCase()] || "bg-stone-200 text-black border-2 border-black font-black uppercase text-xs rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-3 py-1.5"}>
                         {order.status}
                       </span>
                     </div>
@@ -539,18 +545,18 @@ export default function UserDashboard() {
 
                   <button
                     onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
-                    className="w-full text-left py-2 px-3 bg-gray-50 rounded-lg text-blue-600 hover:bg-gray-100 font-bold transition"
+                    className="w-full text-center py-2.5 px-3 border-2 border-black bg-stone-50 hover:bg-stone-100 rounded-none text-black font-black uppercase tracking-wide transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
                   >
                     {expandedOrder === order.id ? "Hide Details" : "View Details"}
                   </button>
 
                   {expandedOrder === order.id && (
-                    <div className="mt-4 pt-4 border-t-2 border-gray-300">
-                      <div className="space-y-3 mb-4">
+                    <div className="mt-4 pt-4 border-t-4 border-black">
+                      <div className="space-y-3 mb-6">
                         {order.items.map((item: OrderItem, idx: number) => (
-                          <div key={idx} className="flex items-center justify-between text-black font-semibold">
+                          <div key={idx} className="flex items-center justify-between text-black font-bold text-sm">
                             <span>
-                              {item.productName} x{item.quantity}
+                              {item.productName} <span className="font-black">x{item.quantity}</span>
                             </span>
                             <div className="flex items-center gap-3 min-w-[200px] justify-end">
                               {/* Only show Rate button for delivered orders */}
@@ -565,36 +571,36 @@ export default function UserDashboard() {
                                     setRatingTarget({ orderId: '', productId: item.productId, productName: item.productName })
                                     setRatingOpen(true)
                                   }}
-                                  className="px-3 py-1 border-2 border-yellow-500 text-yellow-600 rounded-lg hover:bg-yellow-50 font-bold text-sm w-[60px] text-center"
+                                  className="px-3 py-1 bg-yellow-200 border-2 border-black text-black text-xs font-black uppercase hover:bg-yellow-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
                                 >
                                   Rate
                                 </button>
                               )}
-                              <span className="w-[120px] text-right">{formatIDR(item.price * item.quantity)}</span>
+                              <span className="w-[120px] text-right font-black">{formatIDR(item.price * item.quantity)}</span>
                             </div>
                           </div>
                         ))}
                       </div>
                       {order.rating && (
-                        <div className="bg-blue-50 p-3 rounded-lg mb-4 border-2 border-blue-200">
-                          <p className="font-bold text-black text-sm mb-1">Your Rating</p>
+                        <div className="bg-cyan-100 p-4 rounded-none mb-6 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                          <p className="font-black text-black text-xs uppercase tracking-wide mb-1">Your Rating</p>
                           <div className="flex gap-1 mb-2">
                             {[...Array(5)].map((_, i) => (
                               <span
                                 key={i}
-                                className={i < order.rating! ? "text-yellow-400 text-lg" : "text-gray-300 text-lg"}
+                                className={i < order.rating! ? "text-amber-400 text-xl" : "text-stone-300 text-xl"}
                               >
                                 ★
                               </span>
                             ))}
                           </div>
-                          {order.review && <p className="text-sm text-black font-semibold">{order.review}</p>}
+                          {order.review && <p className="text-sm text-black font-bold">{order.review}</p>}
                         </div>
                       )}
                       <div className="flex gap-3">
                         <Link
                           href={`/invoice?orderId=${order.id}`}
-                          className={`py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition text-center ${
+                          className={`py-2 bg-blue-300 border-2 border-black text-black rounded-none font-black text-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all uppercase text-sm ${
                             order.status.toLowerCase() === 'pending' ? 'flex-1' : 'w-full'
                           }`}
                         >
@@ -646,7 +652,7 @@ export default function UserDashboard() {
                                 })
                               }
                             }}
-                            className="flex-1 py-2 border-2 border-red-600 text-red-700 rounded-lg font-bold hover:bg-red-50 transition"
+                            className="flex-1 py-2 bg-red-200 border-2 border-black text-black rounded-none font-black text-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all uppercase text-sm"
                           >
                             Cancel Order
                           </button>

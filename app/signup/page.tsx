@@ -67,55 +67,55 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="bg-white border-2 border-gray-200 rounded-xl p-8 shadow-lg">
-          <h1 className="text-3xl font-bold text-center mb-2 text-black">Create Account</h1>
-          <p className="text-center text-black mb-8 font-medium">Join MyToko and start shopping</p>
+        <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none">
+          <h1 className="text-3xl font-black text-center mb-2 text-black uppercase tracking-tight">Create Account</h1>
+          <p className="text-center text-black mb-8 font-bold text-sm">Join MyToko and start shopping</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold text-black mb-2">First Name</label>
+                <label className="block text-sm font-black text-black mb-2 uppercase tracking-wide">First Name</label>
                 <input
                   type="text"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
                   placeholder="John"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                  className="w-full px-4 py-3 border-2 border-black rounded-none bg-white text-black font-bold placeholder-gray-500 focus:outline-none focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-black mb-2">Last Name</label>
+                <label className="block text-sm font-black text-black mb-2 uppercase tracking-wide">Last Name</label>
                 <input
                   type="text"
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
                   placeholder="Doe"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                  className="w-full px-4 py-3 border-2 border-black rounded-none bg-white text-black font-bold placeholder-gray-500 focus:outline-none focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Email Address</label>
+              <label className="block text-sm font-black text-black mb-2 uppercase tracking-wide">Email Address</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                className="w-full px-4 py-3 border-2 border-black rounded-none bg-white text-black font-bold placeholder-gray-500 focus:outline-none focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Password</label>
+              <label className="block text-sm font-black text-black mb-2 uppercase tracking-wide">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -123,15 +123,15 @@ export default function SignupPage() {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                  className="w-full px-4 py-3 border-2 border-black rounded-none bg-white text-black font-bold placeholder-gray-500 focus:outline-none focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-black hover:text-blue-600 transition"
+                  className="absolute right-3 top-3 text-black hover:text-blue-600 transition-colors"
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff size={20} className="stroke-[2.5]" /> : <Eye size={20} className="stroke-[2.5]" />}
                 </button>
               </div>
               {formData.password && (
@@ -140,11 +140,11 @@ export default function SignupPage() {
                     {[...Array(4)].map((_, i) => (
                       <div
                         key={i}
-                        className={`h-2 flex-1 rounded-full ${i < passwordStrength ? getPasswordStrengthColor() : "bg-gray-300"}`}
+                        className={`h-2 flex-1 border border-black rounded-none ${i < passwordStrength ? getPasswordStrengthColor() : "bg-gray-300"}`}
                       />
                     ))}
                   </div>
-                  <p className="text-xs font-semibold text-black">
+                  <p className="text-xs font-black text-black uppercase">
                     {passwordStrength === 0 && "Very weak"}
                     {passwordStrength === 1 && "Weak"}
                     {passwordStrength === 2 && "Fair"}
@@ -156,7 +156,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Confirm Password</label>
+              <label className="block text-sm font-black text-black mb-2 uppercase tracking-wide">Confirm Password</label>
               <div className="relative">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
@@ -164,34 +164,38 @@ export default function SignupPage() {
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                  className="w-full px-4 py-3 border-2 border-black rounded-none bg-white text-black font-bold placeholder-gray-500 focus:outline-none focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-3 text-black hover:text-blue-600 transition"
+                  className="absolute right-3 top-3 text-black hover:text-blue-600 transition-colors"
                 >
-                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showConfirmPassword ? <EyeOff size={20} className="stroke-[2.5]" /> : <Eye size={20} className="stroke-[2.5]" />}
                 </button>
               </div>
               {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                <div className="flex items-center gap-2 mt-2 text-green-600 text-sm font-semibold">
-                  <CheckCircle2 size={16} />
+                <div className="flex items-center gap-2 mt-2 text-green-600 text-sm font-black uppercase">
+                  <CheckCircle2 size={16} className="stroke-[2.5]" />
                   <span>Passwords match</span>
                 </div>
               )}
             </div>
 
-            <label className="flex items-start gap-2 cursor-pointer mt-6">
-              <input type="checkbox" className="w-4 h-4 rounded border-2 border-gray-300 bg-white mt-1" required />
-              <span className="text-sm font-medium text-black">
+            <label className="flex items-start gap-2 cursor-pointer mt-6 select-none">
+              <input
+                type="checkbox"
+                className="w-4 h-4 border-2 border-black rounded-none accent-black bg-white focus:outline-none mt-1"
+                required
+              />
+              <span className="text-sm font-bold text-black">
                 I agree to the{" "}
-                <Link href="/terms" className="text-blue-600 hover:text-blue-800 font-bold">
+                <Link href="/terms" className="text-black underline font-black hover:text-blue-600">
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="text-blue-600 hover:text-blue-800 font-bold">
+                <Link href="/privacy" className="text-black underline font-black hover:text-blue-600">
                   Privacy Policy
                 </Link>
               </span>
@@ -199,16 +203,16 @@ export default function SignupPage() {
 
             <button
               type="submit"
-              className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition mt-6"
+              className="w-full py-3 bg-blue-300 text-black border-2 border-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all mt-6"
             >
               Create Account
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t-2 border-gray-200 text-center">
-            <p className="text-black font-medium">
+          <div className="mt-6 pt-6 border-t-2 border-black text-center">
+            <p className="text-black font-bold">
               Already have an account?{" "}
-              <Link href="/login" className="text-blue-600 font-bold hover:text-blue-800">
+              <Link href="/login" className="text-black underline font-black hover:text-blue-600">
                 Sign in
               </Link>
             </p>

@@ -71,28 +71,28 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="bg-white border-2 border-gray-300 rounded-xl p-8 shadow-lg">
-          <h1 className="text-3xl font-bold text-center mb-2 text-black">Welcome Back</h1>
-          <p className="text-center text-black mb-8 font-bold">Sign in to your MyToko account</p>
+        <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none">
+          <h1 className="text-3xl font-black text-center mb-2 text-black uppercase tracking-tight">Welcome Back</h1>
+          <p className="text-center text-black mb-8 font-bold text-sm">Sign in to your MyToko account</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Email Address</label>
+              <label className="block text-sm font-black text-black mb-2 uppercase tracking-wide">Email Address</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                className="w-full px-4 py-3 border-2 border-black rounded-none bg-white text-black font-bold placeholder-gray-500 focus:outline-none focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Password</label>
+              <label className="block text-sm font-black text-black mb-2 uppercase tracking-wide">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -100,15 +100,15 @@ export default function LoginPage() {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                  className="w-full px-4 py-3 border-2 border-black rounded-none bg-white text-black font-bold placeholder-gray-500 focus:outline-none focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-black hover:text-blue-600 transition"
+                  className="absolute right-3 top-3 text-black hover:text-blue-600 transition-colors"
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff size={20} className="stroke-[2.5]" /> : <Eye size={20} className="stroke-[2.5]" />}
                 </button>
               </div>
             </div>
@@ -118,41 +118,40 @@ export default function LoginPage() {
                 <input
                   type="checkbox"
                   checked={remember}
-                  onChange={(e)=>setRemember(e.target.checked)}
-                  className="w-4 h-4 rounded border-2 border-gray-300 bg-white"
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="w-4 h-4 border-2 border-black rounded-none accent-black bg-white focus:outline-none"
                 />
                 <span className="font-bold text-black">Remember Me</span>
               </label>
-              <Link href="/forgot-password" className="text-blue-600 hover:text-blue-800 font-bold">
+              <Link href="/forgot-password" className="text-black underline font-black hover:text-blue-600">
                 Forgot password?
               </Link>
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition mt-6"
+              className="w-full py-3 bg-blue-300 text-black border-2 border-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all mt-6"
             >
               Sign In
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t-2 border-gray-300 text-center">
+          <div className="mt-6 pt-6 border-t-2 border-black text-center">
             <p className="text-black mb-4 font-bold">
               Don't have an account?{" "}
-              <Link href="/signup" className="text-blue-600 font-bold hover:text-blue-800">
+              <Link href="/signup" className="text-black underline font-black hover:text-blue-600">
                 Sign up
               </Link>
             </p>
           </div>
 
-          <div className="mt-6 pt-6 border-t-2 border-gray-300">
-            <p className="text-xs text-black text-center mb-4 font-bold">Or continue with</p>
+          <div className="mt-6 pt-6 border-t-2 border-black">
+            <p className="text-xs text-black text-center mb-4 font-black uppercase">Or continue with</p>
             <div className="flex">
               <button
                 type="button"
                 onClick={async () => {
                   try {
-                    // Preserve redirect target by passing it to /auth/callback
                     const origin = typeof window !== "undefined" ? window.location.origin : ""
                     const url = new URL("/auth/callback", origin)
                     const redirectTo = getRedirect()
@@ -162,7 +161,7 @@ export default function LoginPage() {
                     toast({ title: "Google sign-in failed", description: err?.message ?? "Check provider config" })
                   }
                 }}
-                className="w-full py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-100 transition font-bold text-black text-sm flex items-center justify-center gap-2"
+                className="w-full py-2 border-2 border-black rounded-none bg-white hover:bg-stone-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all font-black text-black text-sm flex items-center justify-center gap-2"
               >
                 <svg
                   className="w-5 h-5"
@@ -184,11 +183,11 @@ export default function LoginPage() {
 
         <p className="text-center text-xs text-black mt-6 font-bold">
           By signing in, you agree to our{" "}
-          <Link href="/terms" className="text-blue-600 hover:text-blue-800 font-bold">
+          <Link href="/terms" className="text-black underline font-black hover:text-blue-600">
             Terms of Service
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" className="text-blue-600 hover:text-blue-800 font-bold">
+          <Link href="/privacy" className="text-black underline font-black hover:text-blue-600">
             Privacy Policy
           </Link>
         </p>

@@ -315,22 +315,22 @@ export default function InvoiceClient() {
   const data = invoiceData!
   const statusClass = (() => {
     const s = String(data.status || "").toLowerCase()
-    if (s === "pending") return "bg-yellow-100 text-yellow-800"
-    if (s === "paid" || s === "shipped") return "bg-blue-100 text-blue-800"
-    if (s === "delivered" || s === "completed") return "bg-green-100 text-green-800"
-    if (s === "cancelled") return "bg-red-100 text-red-800"
-    return "bg-gray-100 text-gray-800"
+    if (s === "pending") return "bg-yellow-200 text-black border-2 border-black"
+    if (s === "paid" || s === "shipped") return "bg-blue-300 text-black border-2 border-black"
+    if (s === "delivered" || s === "completed") return "bg-green-300 text-black border-2 border-black"
+    if (s === "cancelled") return "bg-red-400 text-black border-2 border-black"
+    return "bg-stone-200 text-black border-2 border-black"
   })()
 
   return (
-    <div className="min-h-full bg-white">
+    <div className="min-h-screen bg-stone-50">
       <style>{`
         @media print {
           @page {
             size: A4;
             margin: 10mm;
           }
-          body { margin: 0; padding: 0; }
+          body { margin: 0; padding: 0; background-color: #fff !important; }
           .no-print { display: none !important; }
           .max-w-4xl { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
           /* Hide global layout chrome when printing the invoice */
@@ -345,102 +345,102 @@ export default function InvoiceClient() {
         /* Limit payment proof height on screen as well */
         .payment-proof-img { max-height: 260px; object-fit: contain; }
       `}</style>
-  <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-  <div className="flex items-center justify-between mb-6 no-print">
+        <div className="flex items-center justify-between mb-8 no-print flex-wrap gap-4">
           <Link
             href={backTo}
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-bold"
+            className="flex items-center gap-2 text-black hover:underline font-black uppercase text-xs"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={16} className="stroke-[3]" />
             {backTo === "/admin" ? "Back to Admin Panel" : "Back to Dashboard"}
           </Link>
           <div className="flex gap-4">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-100 transition font-bold text-black"
+              className="flex items-center gap-2 px-4 py-2 border-2 border-black bg-white hover:bg-stone-50 text-black rounded-none transition-all font-black uppercase text-xs shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
             >
-              <Printer size={20} />
+              <Printer size={16} className="stroke-[2.5]" />
               Print
             </button>
             <button
               onClick={handleDownload}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-300 border-2 border-black text-black rounded-none hover:bg-blue-400 transition-all font-black uppercase text-xs shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
             >
-              <Download size={20} />
+              <Download size={16} className="stroke-[2.5]" />
               Download PDF
             </button>
           </div>
         </div>
 
         {/* Invoice box */}
-  <div className="bg-white border-2 border-gray-300 rounded-lg p-6 print:border-0 print:shadow-none shadow-lg invoice-card">
+        <div className="bg-white border-4 border-black p-8 print:p-0 print:border-none print:shadow-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none invoice-card">
           {/* Header */}
-          <div className="flex justify-between items-start mb-6 pb-6 border-b-2 border-gray-300">
+          <div className="flex justify-between items-start mb-8 pb-6 border-b-4 border-black flex-wrap gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-blue-600">MyToko</h1>
-              <p className="text-black text-sm mt-2 font-bold">E-Commerce Platform</p>
+              <h1 className="text-3xl font-black text-black uppercase tracking-tight">MyToko</h1>
+              <p className="text-stone-600 text-xs font-black uppercase mt-1">E-Commerce Platform</p>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-black font-bold">Invoice Number</p>
-              <p className="text-xl font-bold text-black">{data.orderNumber}</p>
-              <p className="text-sm text-black font-bold mt-4">Status</p>
-              <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold mt-1 ${statusClass}`}>
+            <div className="text-right sm:text-right text-left">
+              <p className="text-xs text-stone-600 font-black uppercase">Invoice Number</p>
+              <p className="text-2xl font-black text-black underline decoration-cyan-300 decoration-4">{data.orderNumber}</p>
+              <p className="text-xs text-stone-600 font-black uppercase mt-4">Status</p>
+              <span className={`inline-block px-3 py-1 text-xs font-black uppercase mt-1 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${statusClass}`}>
                 {data.status}
               </span>
             </div>
           </div>
 
           {/* Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div>
-              <p className="text-sm text-black font-bold mb-2">BILL TO</p>
-              <div className="space-y-1 wrap-break-word">
-                <p className="font-bold text-black wrap-break-word">{data.customer.name}</p>
-                <p className="text-sm text-black font-bold wrap-break-word">{data.customer.email}</p>
-                <p className="text-sm text-black font-bold wrap-break-word">{data.customer.phone}</p>
-                <p className="text-sm text-black font-bold wrap-break-word">{data.customer.address}</p>
-                <p className="text-sm text-black font-bold wrap-break-word">
+              <p className="text-xs font-black text-black uppercase tracking-wider mb-3 border-b-2 border-black pb-1">BILL TO</p>
+              <div className="space-y-1.5 wrap-break-word font-bold text-black text-sm">
+                <p className="font-black text-base">{data.customer.name}</p>
+                {data.customer.email && <p className="wrap-break-word text-stone-600">{data.customer.email}</p>}
+                {data.customer.phone && <p className="wrap-break-word">{data.customer.phone}</p>}
+                {data.customer.address && <p className="wrap-break-word">{data.customer.address}</p>}
+                <p className="wrap-break-word">
                   {data.customer.city} {data.customer.zipCode}
                 </p>
               </div>
             </div>
-            <div className="text-right space-y-3">
+            <div className="md:text-right text-left space-y-4">
               <div>
-                <p className="text-sm text-black font-bold">Invoice Date</p>
-                <p className="font-bold text-black">{data.invoiceDate}</p>
+                <p className="text-xs font-black text-black uppercase tracking-wider mb-1">Invoice Date</p>
+                <p className="font-bold text-black text-sm">{data.invoiceDate}</p>
               </div>
               <div>
-                <p className="text-sm text-black font-bold">Due Date</p>
-                <p className="font-bold text-black">{data.dueDate}</p>
+                <p className="text-xs font-black text-black uppercase tracking-wider mb-1">Due Date</p>
+                <p className="font-bold text-black text-sm">{data.dueDate}</p>
               </div>
               <div>
-                <p className="text-sm text-black font-bold">Payment Method</p>
-                <p className="font-bold text-black">{data.paymentMethod}</p>
+                <p className="text-xs font-black text-black uppercase tracking-wider mb-1">Payment Method</p>
+                <p className="font-bold text-black text-sm">{data.paymentMethod}</p>
               </div>
             </div>
           </div>
 
           {/* Items */}
-          <div className="mb-6 overflow-x-auto">
-            <table className="w-full">
+          <div className="mb-8 overflow-x-auto border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b-2 border-gray-300">
-                  <th className="text-left py-3 px-4 font-bold text-black">Description</th>
-                  <th className="text-right py-3 px-4 font-bold text-black">Quantity</th>
-                  <th className="text-right py-3 px-4 font-bold text-black">Unit Price</th>
-                  <th className="text-right py-3 px-4 font-bold text-black">Total</th>
+                <tr className="bg-stone-100 border-b-2 border-black">
+                  <th className="text-left py-3 px-4 font-black text-black uppercase text-xs">Description</th>
+                  <th className="text-right py-3 px-4 font-black text-black uppercase text-xs w-24">Qty</th>
+                  <th className="text-right py-3 px-4 font-black text-black uppercase text-xs w-32">Unit Price</th>
+                  <th className="text-right py-3 px-4 font-black text-black uppercase text-xs w-36">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {data.items.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-300">
-                    <td className="py-3 px-4 text-black font-bold wrap-break-word">{item.name}</td>
-                    <td className="text-right py-3 px-4 text-black font-bold">{item.quantity}</td>
-                    <td className="text-right py-3 px-4 text-black font-bold">
+                  <tr key={item.id} className="border-b border-black last:border-b-0 hover:bg-stone-50 transition-colors">
+                    <td className="py-3 px-4 text-black font-black text-sm wrap-break-word">{item.name}</td>
+                    <td className="text-right py-3 px-4 text-black font-bold text-sm">{item.quantity}</td>
+                    <td className="text-right py-3 px-4 text-black font-bold text-sm">
                       {formatIDR(item.unitPrice)}
                     </td>
-                    <td className="text-right py-3 px-4 text-black font-bold">{formatIDR(item.total)}</td>
+                    <td className="text-right py-3 px-4 text-black font-black text-sm">{formatIDR(item.total)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -448,44 +448,46 @@ export default function InvoiceClient() {
           </div>
 
           {/* Totals */}
-          <div className="flex justify-end mb-6">
-            <div className="w-full sm:w-80">
-              <div className="space-y-2 mb-4 pb-4 border-b-2 border-gray-300">
-                <div className="flex justify-between text-sm">
-                  <span className="text-black font-bold">Subtotal</span>
-                  <span className="text-black font-bold">{formatIDR(data.subtotal)}</span>
+          <div className="flex justify-end mb-8">
+            <div className="w-full sm:w-80 space-y-3">
+              <div className="space-y-2 pb-3 border-b-2 border-black">
+                <div className="flex justify-between text-sm font-bold text-black">
+                  <span className="uppercase text-xs tracking-wider text-stone-600">Subtotal</span>
+                  <span>{formatIDR(data.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-black font-bold">Tax</span>
-                  <span className="text-black font-bold">{formatIDR(data.tax)}</span>
+                <div className="flex justify-between text-sm font-bold text-black">
+                  <span className="uppercase text-xs tracking-wider text-stone-600">Tax</span>
+                  <span>{formatIDR(data.tax)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-black font-bold">Shipping</span>
-                  <span className="text-black font-bold">{formatIDR(data.shipping)}</span>
+                <div className="flex justify-between text-sm font-bold text-black">
+                  <span className="uppercase text-xs tracking-wider text-stone-600">Shipping</span>
+                  <span>{formatIDR(data.shipping)}</span>
                 </div>
               </div>
-              <div className="flex justify-between text-xl font-bold text-black">
-                <span>Total</span>
-                <span className="text-blue-600">{formatIDR(data.total)}</span>
+              <div className="flex justify-between items-center font-bold text-black">
+                <span className="uppercase text-xs tracking-widest font-black">Total</span>
+                <span className="text-xl font-black text-black bg-yellow-200 border-2 border-black px-3 py-1.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                  {formatIDR(data.total)}
+                </span>
               </div>
             </div>
           </div>
 
           {/* Payment Info */}
-          <div className="bg-gray-100 p-5 rounded-lg mb-6 border-2 border-gray-300">
-            <p className="text-sm text-black font-bold mb-2">PAYMENT INFORMATION</p>
-            <div className="space-y-1">
-              <p className="text-sm text-black">
-                <span className="font-bold">Transaction ID:</span>{" "}
-                <span className="font-bold">{data.transactionId}</span>
+          <div className="bg-stone-100 p-6 border-2 border-black mb-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none">
+            <p className="text-xs font-black text-black mb-3 uppercase tracking-wider">PAYMENT INFORMATION</p>
+            <div className="space-y-2 text-sm font-bold text-black">
+              <p>
+                <span className="text-stone-600 uppercase text-xs mr-2">Transaction ID:</span>{" "}
+                <span className="underline">{data.transactionId}</span>
               </p>
-              <p className="text-sm text-black">
-                <span className="font-bold">Payment Method:</span>{" "}
-                <span className="font-bold">{data.paymentMethod}</span>
+              <p>
+                <span className="text-stone-600 uppercase text-xs mr-2">Payment Method:</span>{" "}
+                <span>{data.paymentMethod}</span>
               </p>
-              <p className="text-sm text-black">
-                <span className="font-bold">Payment Status:</span>{" "}
-                <span className={`font-bold px-2 py-0.5 rounded-full ${statusClass}`}>
+              <p className="flex items-center gap-2">
+                <span className="text-stone-600 uppercase text-xs">Payment Status:</span>{" "}
+                <span className={`px-2 py-0.5 text-xs font-black uppercase rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${statusClass}`}>
                   {data.status}
                 </span>
               </p>
@@ -494,28 +496,28 @@ export default function InvoiceClient() {
 
           {/* Payment Proof */}
           {data.paymentProofUrl && (
-            <div className="bg-white p-5 rounded-lg mb-6 border-2 border-gray-300">
-              <p className="text-sm text-black font-bold mb-3">PAYMENT PROOF</p>
-              <div className="flex justify-center">
+            <div className="bg-white p-6 border-2 border-black mb-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none">
+              <p className="text-xs font-black text-black mb-4 uppercase tracking-wider">PAYMENT PROOF</p>
+              <div className="flex justify-center border-2 border-black p-4 bg-stone-50">
                 <img
                   src={data.paymentProofUrl}
                   alt="Payment Proof"
-                  className="max-w-md w-full h-auto rounded-lg border-2 border-gray-300 shadow-md max-h-64 object-contain payment-proof-img"
+                  className="max-w-md w-full h-auto rounded-none border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] max-h-64 object-contain payment-proof-img"
                 />
               </div>
-              <p className="text-xs text-center text-gray-600 mt-2 font-bold">
-                Payment proof uploaded on {data.invoiceDate}
+              <p className="text-xs text-center text-stone-600 mt-4 font-black uppercase">
+                Receipt uploaded on {data.invoiceDate}
               </p>
             </div>
           )}
 
           {/* Footer */}
-          <div className="border-t-2 border-gray-300 pt-6 text-center text-sm text-black">
-            <p className="font-bold">Thank you for your business!</p>
-            <p className="mt-2 font-bold">
-              For support, contact us at faiznaufal2015@gmail.com or call +62 877-8712-8257
+          <div className="border-t-4 border-black pt-8 text-center text-sm text-black space-y-2">
+            <p className="font-black uppercase text-base tracking-wider">Thank you for your business!</p>
+            <p className="font-bold text-stone-600">
+              For support, contact us at <span className="underline text-black font-black">faiznaufal2015@gmail.com</span> or call <span className="text-black font-black">+62 877-8712-8257</span>
             </p>
-            <p className="mt-4 text-xs text-black font-bold">
+            <p className="pt-4 text-[10px] text-stone-400 font-bold uppercase tracking-wider">
               This is an official invoice from MyToko. Please keep this for your records.
             </p>
           </div>

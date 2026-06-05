@@ -38,9 +38,9 @@ export default function CompactToggle() {
       type="button"
       onClick={toggle}
       title="Toggle compact UI density"
-      className="fixed bottom-4 left-4 z-50 bg-background/90 text-foreground border border-border px-3 py-2 rounded-md shadow-sm text-sm hover:brightness-95"
+      className="fixed bottom-4 left-4 z-50 bg-white border-2 border-black px-3 py-2 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs font-black uppercase text-black hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
     >
-      {compact ? "Compact: On" : "Compact: Off"}
+      {compact ? "Density: Compact" : "Density: Default"}
     </button>
   )
 }

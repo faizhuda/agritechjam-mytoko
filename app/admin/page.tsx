@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import {
   BarChart,
   Bar,
@@ -39,11 +40,11 @@ type TxnRow = {
 
 const statusClass = (status: string) => {
   const s = status.toLowerCase()
-  if (s === "completed" || s === "delivered") return "bg-green-100 text-green-800"
-  if (s === "pending") return "bg-yellow-100 text-yellow-800"
-  if (s === "paid" || s === "shipped") return "bg-blue-100 text-blue-800"
-  if (s === "cancelled") return "bg-red-100 text-red-800"
-  return "bg-gray-100 text-gray-800"
+  if (s === "completed" || s === "delivered") return "bg-green-300 text-black border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
+  if (s === "pending") return "bg-yellow-200 text-black border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
+  if (s === "paid" || s === "shipped") return "bg-blue-300 text-black border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
+  if (s === "cancelled") return "bg-red-400 text-black border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
+  return "bg-stone-200 text-black border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
 }
 
 const capitalize = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s
@@ -497,135 +498,149 @@ export default function AdminDashboard() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-white grid place-items-center">
-        <p className="text-black font-bold">Loading...</p>
+      <div className="min-h-screen bg-stone-50 grid place-items-center">
+        <p className="text-black font-black uppercase bg-yellow-200 border-4 border-black px-6 py-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          Loading...
+        </p>
       </div>
     )
   }
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-white grid place-items-center p-6">
-        <div className="max-w-xl text-center">
-          <p className="text-black font-bold">You do not have access to the Admin Dashboard.</p>
+      <div className="min-h-screen bg-stone-50 grid place-items-center p-6">
+        <div className="max-w-xl text-center bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none">
+          <p className="text-black font-black uppercase text-lg mb-4">Access Denied</p>
+          <p className="text-black font-bold mb-6">You do not have access to the Admin Dashboard.</p>
+          <Link href="/" className="inline-block px-6 py-3 bg-yellow-200 border-2 border-black text-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all">
+            Back to Home
+          </Link>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-stone-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-black">Admin Dashboard</h1>
+        <div className="flex justify-between items-center mb-8 border-b-4 border-black pb-4">
+          <h1 className="text-4xl font-black text-black uppercase tracking-tight">Admin Dashboard</h1>
         </div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white border-2 border-gray-300 rounded-lg p-6 shadow-md">
+          <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-black">Total Revenue</p>
-                <p className="text-3xl font-bold text-black">{formatIDR(kpi.totalRevenue)}</p>
+                <p className="text-xs font-black text-stone-600 uppercase tracking-wider">Total Revenue</p>
+                <p className="text-2xl font-black text-black mt-1">{formatIDR(kpi.totalRevenue)}</p>
               </div>
-              <DollarSign size={32} className="text-blue-600" />
+              <div className="p-3 bg-cyan-200 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none text-black">
+                <DollarSign size={24} className="stroke-[2.5]" />
+              </div>
             </div>
           </div>
-          <div className="bg-white border-2 border-gray-300 rounded-lg p-6 shadow-md">
+          <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-black">Total Orders</p>
-                <p className="text-3xl font-bold text-black">{kpi.totalOrders.toLocaleString()}</p>
+                <p className="text-xs font-black text-stone-600 uppercase tracking-wider">Total Orders</p>
+                <p className="text-2xl font-black text-black mt-1">{kpi.totalOrders.toLocaleString()}</p>
               </div>
-              <ShoppingCart size={32} className="text-blue-600" />
+              <div className="p-3 bg-yellow-200 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none text-black">
+                <ShoppingCart size={24} className="stroke-[2.5]" />
+              </div>
             </div>
           </div>
-          <div className="bg-white border-2 border-gray-300 rounded-lg p-6 shadow-md">
+          <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-black">Total Customers</p>
-                <p className="text-3xl font-bold text-black">{kpi.totalCustomers.toLocaleString()}</p>
+                <p className="text-xs font-black text-stone-600 uppercase tracking-wider">Total Customers</p>
+                <p className="text-2xl font-black text-black mt-1">{kpi.totalCustomers.toLocaleString()}</p>
               </div>
-              <Users size={32} className="text-blue-600" />
+              <div className="p-3 bg-pink-200 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none text-black">
+                <Users size={24} className="stroke-[2.5]" />
+              </div>
             </div>
           </div>
-          <div className="bg-white border-2 border-gray-300 rounded-lg p-6 shadow-md">
+          <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-black">Growth Rate</p>
-                <p className="text-3xl font-bold text-black">{`${(kpi.growthRate).toFixed(1)}%`}</p>
+                <p className="text-xs font-black text-stone-600 uppercase tracking-wider">Growth Rate</p>
+                <p className="text-2xl font-black text-black mt-1">{`${(kpi.growthRate).toFixed(1)}%`}</p>
               </div>
-              <TrendingUp size={32} className="text-green-600" />
+              <div className="p-3 bg-green-200 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none text-black">
+                <TrendingUp size={24} className="stroke-[2.5]" />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <div className="bg-white border-2 border-gray-300 rounded-lg p-6 shadow-md">
-            <h2 className="text-xl font-bold text-black mb-6">Sales Overview</h2>
+          <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
+            <h2 className="text-xl font-black text-black mb-6 uppercase tracking-tight border-b-2 border-black pb-2">Sales Overview</h2>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={salesData} margin={{ top: 10, right: 16, left: 0, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" />
-                <XAxis dataKey="month" stroke="#374151" axisLine={true} tickLine={true} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#000000" strokeWidth={1} />
+                <XAxis dataKey="month" stroke="#000000" axisLine={{ strokeWidth: 2 }} tickLine={{ strokeWidth: 2 }} tick={{ fill: '#000000', fontWeight: 'bold' }} />
                 {/* responsive Y axis width so labels don't overflow */}
                 <YAxis
                   width={yAxisWidth}
-                  stroke="#9ca3af"
-                  axisLine={true}
-                  tickLine={true}
-                  tick={{ fill: '#374151', fontSize: 13 }}
+                  stroke="#000000"
+                  axisLine={{ strokeWidth: 2 }}
+                  tickLine={{ strokeWidth: 2 }}
+                  tick={{ fill: '#000000', fontSize: 12, fontWeight: 'bold' }}
                   tickMargin={8}
                   tickFormatter={(v: number) => new Intl.NumberFormat('id-ID').format(Number(v || 0))}
                 />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#fff", border: "2px solid #0066cc" }}
-                  cursor={{ fill: "rgba(0, 102, 204, 0.1)" }}
+                  contentStyle={{ backgroundColor: "#fff", border: "3px solid #000", borderRadius: 0, fontFamily: "monospace", fontWeight: "bold" }}
+                  cursor={{ fill: "rgba(0, 0, 0, 0.05)" }}
                   formatter={(value: number, name: string) => (
                     name === 'sales'
                       ? [formatIDR(Number(value)), 'sales']
                       : [Number(value).toLocaleString('id-ID'), 'orders']
                   )}
                 />
-                <Legend />
-                <Bar dataKey="sales" fill="#0066cc" />
-                <Bar dataKey="orders" fill="#cc0000" />
+                <Legend wrapperStyle={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: 11 }} />
+                <Bar dataKey="sales" fill="#60a5fa" stroke="#000000" strokeWidth={2} />
+                <Bar dataKey="orders" fill="#fbcfe8" stroke="#000000" strokeWidth={2} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white border-2 border-gray-300 rounded-lg p-6 shadow-md">
-            <h2 className="text-xl font-bold text-black mb-6">Revenue Trend</h2>
+          <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
+            <h2 className="text-xl font-black text-black mb-6 uppercase tracking-tight border-b-2 border-black pb-2">Revenue Trend</h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={salesData} margin={{ top: 10, right: 16, left: 0, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" />
-                <XAxis dataKey="month" stroke="#374151" axisLine={true} tickLine={true} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#000000" strokeWidth={1} />
+                <XAxis dataKey="month" stroke="#000000" axisLine={{ strokeWidth: 2 }} tickLine={{ strokeWidth: 2 }} tick={{ fill: '#000000', fontWeight: 'bold' }} />
                 <YAxis
                   width={yAxisWidth}
-                  stroke="#9ca3af"
-                  axisLine={true}
-                  tickLine={true}
-                  tick={{ fill: '#374151', fontSize: 13 }}
+                  stroke="#000000"
+                  axisLine={{ strokeWidth: 2 }}
+                  tickLine={{ strokeWidth: 2 }}
+                  tick={{ fill: '#000000', fontSize: 12, fontWeight: 'bold' }}
                   tickMargin={8}
                   tickFormatter={(v: number) => new Intl.NumberFormat('id-ID').format(Number(v || 0))}
                 />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#fff", border: "2px solid #0066cc" }}
+                  contentStyle={{ backgroundColor: "#fff", border: "3px solid #000", borderRadius: 0, fontFamily: "monospace", fontWeight: "bold" }}
                   formatter={(value: number) => [formatIDR(Number(value)), 'sales']}
                 />
-                <Legend />
-                <Line type="monotone" dataKey="sales" stroke="#0066cc" strokeWidth={2} />
+                <Legend wrapperStyle={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: 11 }} />
+                <Line type="monotone" dataKey="sales" stroke="#ffedd5" strokeWidth={4} activeDot={{ r: 6, stroke: '#000', strokeWidth: 2 }} dot={{ r: 4, stroke: '#000', strokeWidth: 2, fill: '#ffedd5' }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Customer Orders */}
-        <div className="bg-white border-2 border-gray-300 rounded-lg p-6 mb-8 shadow-md">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-white border-4 border-black p-6 mb-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-4 border-b-2 border-black pb-3">
             <div>
-              <h2 className="text-xl font-bold text-black">Customer Orders</h2>
+              <h2 className="text-xl font-black text-black uppercase tracking-tight">Customer Orders</h2>
               {filteredOrders.length < recent.length && (
-                <p className="text-sm text-gray-600 font-semibold mt-1">
+                <p className="text-xs text-stone-600 font-black uppercase mt-1">
                   Showing {filteredOrders.length} of {recent.length} orders
                 </p>
               )}
@@ -633,7 +648,7 @@ export default function AdminDashboard() {
             {recent.length > 10 && (
               <button
                 onClick={() => setShowAllOrders(!showAllOrders)}
-                className="px-4 py-2 text-sm font-bold text-blue-600 border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition"
+                className="px-4 py-2 text-xs font-black text-black bg-yellow-200 border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all uppercase"
               >
                 {showAllOrders ? 'Show Less' : `View All (${filteredOrders.length})`}
               </button>
@@ -643,11 +658,11 @@ export default function AdminDashboard() {
           {/* Filters and Sorting */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Filter by Status</label>
+              <label className="block text-xs font-black text-black mb-2 uppercase">Filter by Status</label>
               <select
                 value={orderStatusFilter}
                 onChange={(e) => setOrderStatusFilter(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
@@ -659,11 +674,11 @@ export default function AdminDashboard() {
             </div>
             
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Sort By</label>
+              <label className="block text-xs font-black text-black mb-2 uppercase">Sort By</label>
               <select
                 value={orderSortBy}
                 onChange={(e) => setOrderSortBy(e.target.value as 'date' | 'amount')}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
                 <option value="date">Date</option>
                 <option value="amount">Amount</option>
@@ -671,11 +686,11 @@ export default function AdminDashboard() {
             </div>
             
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Order</label>
+              <label className="block text-xs font-black text-black mb-2 uppercase">Order</label>
               <select
                 value={orderSortOrder}
                 onChange={(e) => setOrderSortOrder(e.target.value as 'asc' | 'desc')}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
                 <option value="asc">Ascending</option>
                 <option value="desc">Descending</option>
@@ -689,36 +704,36 @@ export default function AdminDashboard() {
                   setOrderSortBy('date')
                   setOrderSortOrder('desc')
                 }}
-                className="w-full px-4 py-2 border-2 border-gray-300 text-black rounded-lg font-bold hover:bg-gray-100 transition"
+                className="w-full px-4 py-2 border-2 border-black bg-white text-black rounded-none font-black uppercase text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
               >
                 Reset Filters
               </button>
             </div>
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b-2 border-gray-300">
-                  <th className="text-left py-3 px-4 font-bold text-black">Customer</th>
-                  <th className="text-left py-3 px-4 font-bold text-black">Amount</th>
-                  <th className="text-left py-3 px-4 font-bold text-black">Status</th>
-                  <th className="text-left py-3 px-4 font-bold text-black">Date</th>
-                  <th className="text-left py-3 px-4 font-bold text-black">Actions</th>
+                <tr className="border-b-2 border-black bg-stone-100">
+                  <th className="text-left py-3 px-4 font-black text-black uppercase text-xs">Customer</th>
+                  <th className="text-left py-3 px-4 font-black text-black uppercase text-xs">Amount</th>
+                  <th className="text-left py-3 px-4 font-black text-black uppercase text-xs">Status</th>
+                  <th className="text-left py-3 px-4 font-black text-black uppercase text-xs">Date</th>
+                  <th className="text-left py-3 px-4 font-black text-black uppercase text-xs">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {(showAllOrders ? filteredOrders : filteredOrders.slice(0, 10)).map((transaction) => (
-                  <tr key={transaction.id} className="border-b border-gray-300 hover:bg-gray-50 transition">
-                    <td className="py-3 px-4 text-black font-bold">{transaction.customer}</td>
-                    <td className="py-3 px-4 text-black font-bold">{formatIDR(transaction.amount)}</td>
+                  <tr key={transaction.id} className="border-b border-black last:border-b-0 hover:bg-stone-50 transition-colors">
+                    <td className="py-3 px-4 text-black font-black text-sm">{transaction.customer}</td>
+                    <td className="py-3 px-4 text-black font-bold text-sm">{formatIDR(transaction.amount)}</td>
                     <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${statusClass(transaction.status)} min-w-[100px] text-center`}>
-                          {capitalize(transaction.status)}
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className={`px-3 py-1 text-xs font-black uppercase rounded-none min-w-[100px] text-center ${statusClass(transaction.status)}`}>
+                          {transaction.status}
                         </span>
                         <select
-                          className="border-2 border-gray-300 rounded-lg text-sm font-bold text-black px-2 py-1 disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px]"
+                          className="border-2 border-black rounded-none text-xs font-black text-black px-2 py-1 bg-white focus:outline-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-60 disabled:cursor-not-allowed"
                           value={transaction.status.toLowerCase()}
                           onChange={(e) => handleChangeStatus(transaction.id, e.target.value.replace(/^./, (c) => c.toUpperCase()))}
                           disabled={['delivered', 'cancelled'].includes(transaction.status.toLowerCase())}
@@ -745,9 +760,9 @@ export default function AdminDashboard() {
                         </select>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-black font-bold">{transaction.date}</td>
+                    <td className="py-3 px-4 text-black font-bold text-sm">{transaction.date}</td>
                     <td className="py-3 px-4">
-                      <a href={`/invoice?orderId=${transaction.id}&from=admin`} className="text-blue-600 font-bold hover:underline">View</a>
+                      <a href={`/invoice?orderId=${transaction.id}&from=admin`} className="text-blue-600 font-black hover:underline uppercase text-xs">View</a>
                     </td>
                   </tr>
                 ))}
@@ -757,34 +772,34 @@ export default function AdminDashboard() {
         </div>
 
         {/* Product Management */}
-        <div className="bg-white border-2 border-gray-300 rounded-lg p-6 shadow-md">
-          <div className="flex justify-between items-center mb-6">
+        <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
+          <div className="flex justify-between items-center mb-6 flex-wrap gap-4 border-b-2 border-black pb-3">
             <div>
-              <h2 className="text-xl font-bold text-black">Product Management</h2>
+              <h2 className="text-xl font-black text-black uppercase tracking-tight">Product Management</h2>
               {filteredProducts.length < products.length && (
-                <p className="text-sm text-gray-600 font-semibold mt-1">
+                <p className="text-xs text-stone-600 font-black uppercase mt-1">
                   Showing {filteredProducts.length} of {products.length} products
                 </p>
               )}
             </div>
             <button
               onClick={() => setShowAddProduct(!showAddProduct)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-300 text-black border-2 border-black rounded-none font-black uppercase text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
             >
-              <Plus size={20} />
+              <Plus size={16} className="stroke-[3]" />
               Add Product
             </button>
           </div>
 
           {showAddProduct && (
-            <form onSubmit={handleAddProduct} className="mb-6 p-4 bg-blue-50 border-2 border-blue-600 rounded-lg">
+            <form onSubmit={handleAddProduct} className="mb-8 p-6 bg-blue-50 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none">
               <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-4">
                 <input
                   type="text"
                   placeholder="Product name"
                   value={newProduct.name}
                   onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                  className="px-4 py-2 border-2 border-blue-600 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold placeholder-stone-500 focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                   required
                 />
                 <input
@@ -792,7 +807,7 @@ export default function AdminDashboard() {
                   placeholder="Price"
                   value={newProduct.price}
                   onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                  className="px-4 py-2 border-2 border-blue-600 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold placeholder-stone-500 focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                   required
                 />
                 <input
@@ -800,13 +815,13 @@ export default function AdminDashboard() {
                   placeholder="Stock"
                   value={newProduct.stock}
                   onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
-                  className="px-4 py-2 border-2 border-blue-600 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold placeholder-stone-500 focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                   required
                 />
                 <select
                   value={newProduct.category}
                   onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                  className="px-4 py-2 border-2 border-blue-600 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                 >
                   <option value="electronics">Electronics</option>
                   <option value="accessories">Accessories</option>
@@ -815,40 +830,40 @@ export default function AdminDashboard() {
                   type="file"
                   accept="image/*"
                   onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                  className="px-4 py-2 border-2 border-blue-600 rounded-lg bg-white text-black font-bold file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+                  className="px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold file:mr-4 file:py-1 file:px-3 file:border-2 file:border-black file:bg-yellow-200 file:text-black file:font-black file:uppercase file:rounded-none file:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:file:translate-x-[0.5px] hover:file:translate-y-[0.5px]"
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-bold text-black mb-2">Description</label>
+                  <label className="block text-xs font-black text-black mb-2 uppercase">Description</label>
                   <textarea
                     placeholder="Short description shown on product page"
                     value={newProduct.description}
                     onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                    className="w-full min-h-24 px-4 py-2 border-2 border-blue-600 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full min-h-24 px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold placeholder-stone-500 focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-black mb-2">Key Features</label>
+                  <label className="block text-xs font-black text-black mb-2 uppercase">Key Features</label>
                   <textarea
                     placeholder="Comma or newline separated, e.g. Fast charging, Durable cable, 1-year warranty"
                     value={newProduct.features}
                     onChange={(e) => setNewProduct({ ...newProduct, features: e.target.value })}
-                    className="w-full min-h-24 px-4 py-2 border-2 border-blue-600 rounded-lg bg-white text-black font-bold placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full min-h-24 px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold placeholder-stone-500 focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-4">
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition"
+                  className="px-6 py-2.5 bg-blue-300 text-black border-2 border-black rounded-none font-black uppercase text-xs shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all"
                 >
                   Add
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddProduct(false)}
-                  className="px-6 py-2 border-2 border-gray-300 text-black rounded-lg font-bold hover:bg-gray-100 transition"
+                  className="px-6 py-2.5 bg-white text-black border-2 border-black rounded-none font-black uppercase text-xs shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all"
                 >
                   Cancel
                 </button>
@@ -859,11 +874,11 @@ export default function AdminDashboard() {
           {/* Filters and Sorting */}
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Category</label>
+              <label className="block text-xs font-black text-black mb-2 uppercase">Category</label>
               <select
                 value={productCategoryFilter}
                 onChange={(e) => setProductCategoryFilter(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
                 <option value="all">All Categories</option>
                 <option value="electronics">Electronics</option>
@@ -872,11 +887,11 @@ export default function AdminDashboard() {
             </div>
             
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Stock Status</label>
+              <label className="block text-xs font-black text-black mb-2 uppercase">Stock Status</label>
               <select
                 value={productStockFilter}
                 onChange={(e) => setProductStockFilter(e.target.value as any)}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
                 <option value="all">All Stock</option>
                 <option value="in-stock">In Stock (&gt;10)</option>
@@ -886,11 +901,11 @@ export default function AdminDashboard() {
             </div>
             
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Sort By</label>
+              <label className="block text-xs font-black text-black mb-2 uppercase">Sort By</label>
               <select
                 value={productSortBy}
                 onChange={(e) => setProductSortBy(e.target.value as any)}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
                 <option value="name">Name</option>
                 <option value="price">Price</option>
@@ -900,11 +915,11 @@ export default function AdminDashboard() {
             </div>
             
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Order</label>
+              <label className="block text-xs font-black text-black mb-2 uppercase">Order</label>
               <select
                 value={productSortOrder}
                 onChange={(e) => setProductSortOrder(e.target.value as 'asc' | 'desc')}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
                 <option value="asc">Ascending</option>
                 <option value="desc">Descending</option>
@@ -919,7 +934,7 @@ export default function AdminDashboard() {
                   setProductSortBy('name')
                   setProductSortOrder('asc')
                 }}
-                className="w-full px-4 py-2 border-2 border-gray-300 text-black rounded-lg font-bold hover:bg-gray-100 transition"
+                className="w-full px-4 py-2 border-2 border-black bg-white text-black rounded-none font-black uppercase text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
               >
                 Reset
               </button>
@@ -930,30 +945,30 @@ export default function AdminDashboard() {
             <div className="mb-4 flex justify-end">
               <button
                 onClick={() => setShowAllProducts(!showAllProducts)}
-                className="px-4 py-2 text-sm font-bold text-blue-600 border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition"
+                className="px-4 py-2 text-xs font-black text-black bg-yellow-200 border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all uppercase"
               >
                 {showAllProducts ? 'Show Less' : `View All Products (${filteredProducts.length})`}
               </button>
             </div>
           )}
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b-2 border-gray-300">
-                  <th className="text-left py-3 px-4 font-bold text-black">Product Name</th>
-                  <th className="text-left py-3 px-4 font-bold text-black">Price</th>
-                  <th className="text-left py-3 px-4 font-bold text-black">Stock</th>
-                  <th className="text-left py-3 px-4 font-bold text-black">Rating</th>
-                  <th className="text-left py-3 px-4 font-bold text-black">Actions</th>
+                <tr className="border-b-2 border-black bg-stone-100">
+                  <th className="text-left py-3 px-4 font-black text-black uppercase text-xs">Product Name</th>
+                  <th className="text-left py-3 px-4 font-black text-black uppercase text-xs w-36">Price</th>
+                  <th className="text-left py-3 px-4 font-black text-black uppercase text-xs w-24">Stock</th>
+                  <th className="text-left py-3 px-4 font-black text-black uppercase text-xs w-44">Rating</th>
+                  <th className="text-left py-3 px-4 font-black text-black uppercase text-xs w-28">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {(showAllProducts ? filteredProducts : filteredProducts.slice(0, 10)).map((product) => (
-                  <tr key={product.id} className="border-b border-gray-300 hover:bg-gray-50 transition">
-                    <td className="py-3 px-4 text-black font-bold">{product.name}</td>
-                    <td className="py-3 px-4 text-black font-bold">{formatIDR(product.price)}</td>
-                    <td className="py-3 px-4 text-black font-bold">{product.stock}</td>
+                  <tr key={product.id} className="border-b border-black last:border-b-0 hover:bg-stone-50 transition-colors">
+                    <td className="py-3 px-4 text-black font-black text-sm">{product.name}</td>
+                    <td className="py-3 px-4 text-black font-bold text-sm">{formatIDR(product.price)}</td>
+                    <td className="py-3 px-4 text-black font-bold text-sm">{product.stock}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => {
@@ -964,12 +979,18 @@ export default function AdminDashboard() {
                             <Star
                               key={i}
                               size={16}
-                              className={full ? "fill-red-600 text-red-600" : half ? "fill-red-400 text-red-400" : "text-gray-300"}
+                              className={
+                                full 
+                                  ? "fill-amber-400 text-amber-400 stroke-black stroke-[1.5]" 
+                                  : half 
+                                    ? "fill-amber-300 text-amber-300 stroke-black stroke-[1.5]" 
+                                    : "fill-transparent text-stone-300 stroke-stone-400 stroke-[1.5]"
+                              }
                               style={half ? { clipPath: "inset(0 50% 0 0)" } : {}}
                             />
                           )
                         })}
-                        <span className="text-sm font-bold text-black ml-1">({(reviewStats[product.id]?.average ?? product.rating).toFixed(1)})</span>
+                        <span className="text-xs font-black text-black ml-2">({(reviewStats[product.id]?.average ?? product.rating).toFixed(1)})</span>
                       </div>
                     </td>
                     <td className="py-3 px-4">
@@ -981,15 +1002,17 @@ export default function AdminDashboard() {
                             setEditImage(null)
                             setEditOpen(true)
                           }}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded transition font-bold"
+                          className="p-1.5 text-black border-2 border-black bg-cyan-200 hover:bg-cyan-300 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none rounded-none"
+                          aria-label={`Edit ${product.name}`}
                         >
-                          <Edit2 size={18} />
+                          <Edit2 size={16} className="stroke-[2.5]" />
                         </button>
                         <button
                           onClick={() => handleDeleteProduct(product)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded transition font-bold"
+                          className="p-1.5 text-black border-2 border-black bg-red-400 hover:bg-red-500 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none rounded-none"
+                          aria-label={`Delete ${product.name}`}
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={16} className="stroke-[2.5]" />
                         </button>
                       </div>
                     </td>
@@ -1002,7 +1025,9 @@ export default function AdminDashboard() {
       </div>
       {editOpen && (
         <Backdrop>
-          <h3 className="text-xl font-bold text-black mb-4">Edit Product</h3>
+          <div className="flex justify-between items-center mb-6 border-b-2 border-black pb-2 bg-yellow-200 -mx-6 -mt-6 p-4">
+            <h3 className="text-lg font-black text-black uppercase tracking-tight">Edit Product</h3>
+          </div>
           <form
             onSubmit={async (e) => {
               e.preventDefault()
@@ -1070,41 +1095,41 @@ export default function AdminDashboard() {
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold text-black mb-2">Name</label>
-                <input value={editForm.name} onChange={(e)=>setEditForm({...editForm, name:e.target.value})} className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold" required />
+                <label className="block text-xs font-black text-black mb-2 uppercase">Name</label>
+                <input value={editForm.name} onChange={(e)=>setEditForm({...editForm, name:e.target.value})} className="w-full px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all" required />
               </div>
               <div>
-                <label className="block text-sm font-bold text-black mb-2">Category</label>
-                <select value={editForm.category} onChange={(e)=>setEditForm({...editForm, category:e.target.value})} className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold">
+                <label className="block text-xs font-black text-black mb-2 uppercase">Category</label>
+                <select value={editForm.category} onChange={(e)=>setEditForm({...editForm, category:e.target.value})} className="w-full px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
                   <option value="electronics">Electronics</option>
                   <option value="accessories">Accessories</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-bold text-black mb-2">Stock</label>
-                <input type="number" value={editForm.stock} onChange={(e)=>setEditForm({...editForm, stock:e.target.value})} className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold" required />
+                <label className="block text-xs font-black text-black mb-2 uppercase">Stock</label>
+                <input type="number" value={editForm.stock} onChange={(e)=>setEditForm({...editForm, stock:e.target.value})} className="w-full px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all" required />
               </div>
               <div>
-                <label className="block text-sm font-bold text-black mb-2">Product Image</label>
-                <input type="file" accept="image/*" onChange={(e)=>setEditImage(e.target.files?.[0]||null)} className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700" />
+                <label className="block text-xs font-black text-black mb-2 uppercase">Product Image</label>
+                <input type="file" accept="image/*" onChange={(e)=>setEditImage(e.target.files?.[0]||null)} className="w-full px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold file:mr-4 file:py-1 file:px-3 file:border-2 file:border-black file:bg-yellow-200 file:text-black file:font-black file:uppercase file:rounded-none file:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:file:translate-x-[0.5px] hover:file:translate-y-[0.5px]" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Description</label>
-              <textarea value={editForm.description} onChange={(e)=>setEditForm({...editForm, description:e.target.value})} className="w-full min-h-24 px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold" />
+              <label className="block text-xs font-black text-black mb-2 uppercase">Description</label>
+              <textarea value={editForm.description} onChange={(e)=>setEditForm({...editForm, description:e.target.value})} className="w-full min-h-24 px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all" />
             </div>
             <div>
-              <label className="block text-sm font-bold text-black mb-2">Key Features</label>
+              <label className="block text-xs font-black text-black mb-2 uppercase">Key Features</label>
               <textarea
                 value={editForm.features}
                 onChange={(e)=>setEditForm({...editForm, features:e.target.value})}
                 placeholder="Comma or newline separated"
-                className="w-full min-h-24 px-4 py-2 border-2 border-gray-300 rounded-lg bg-white text-black font-bold"
+                className="w-full min-h-24 px-4 py-2 border-2 border-black rounded-none bg-white text-black font-bold focus:outline-none focus:translate-x-[0.5px] focus:translate-y-[0.5px] focus:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               />
             </div>
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={()=>{setEditOpen(false); setEditTarget(null)}} className="px-6 py-2 border-2 border-gray-300 text-black rounded-lg font-bold hover:bg-gray-100">Cancel</button>
-              <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700">Save</button>
+            <div className="flex justify-end gap-4 mt-6 border-t-2 border-black pt-4">
+              <button type="button" onClick={()=>{setEditOpen(false); setEditTarget(null)}} className="px-6 py-2.5 bg-white text-black border-2 border-black rounded-none font-black uppercase text-xs shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all">Cancel</button>
+              <button type="submit" className="px-6 py-2.5 bg-blue-300 text-black border-2 border-black rounded-none font-black uppercase text-xs shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all">Save</button>
             </div>
           </form>
         </Backdrop>
@@ -1117,9 +1142,9 @@ export default function AdminDashboard() {
 // Edit Modal (inline lightweight)
 function Backdrop({ children }: { children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" />
-      <div className="relative bg-white border-2 border-gray-300 rounded-xl shadow-xl w-full max-w-2xl p-6">
+      <div className="relative bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none w-full max-w-2xl p-6">
         {children}
       </div>
     </div>
